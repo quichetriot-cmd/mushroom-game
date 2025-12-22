@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -12,20 +12,21 @@ from datetime import datetime, date
 from typing import Optional, List
 from pydantic import BaseModel
 
-from scraper import run_incremental_scrape
-
 # Database setup
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./vintage.db")
-# Handle Railway's postgres:// vs postgresql://
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
+engine = create_engine(
+    DATABASE_URL, 
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
+    pool_pre_ping=True
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-# Models
+# Database Model
 class Item(Base):
     __tablename__ = "items"
     
@@ -34,7 +35,7 @@ class Item(Base):
     price_yen = Column(Integer)
     price_usd = Column(Integer, index=True)
     description = Column(Text)
-    images = Column(Text)  # JSON string of image URLs
+    images = Column(Text)
     sold_date = Column(Date, index=True)
     created_at = Column(Date, default=date.today)
 
@@ -73,20 +74,29 @@ def get_db():
         db.close()
 
 
-# Scheduler for daily scraping
+# Scheduler
 scheduler = BackgroundScheduler()
-last_scrape_time = None
+last_scrape_time = "Never"
+last_scrape_result = ""
 
 
 def scheduled_scrape():
-    global last_scrape_time
-    print(f"[{datetime.now()}] Running scheduled scrape...")
+    """Run daily scrape"""
+    global last_scrape_time, last_scrape_result
+    
+    print(f"\n[{datetime.now()}] Starting scheduled scrape...")
+    
     db = SessionLocal()
     try:
-        new_count = run_incremental_scrape(db)
-        last_scrape_time = datetime.now().isoformat()
-        print(f"[{datetime.now()}] Scrape complete. Added {new_count} new items.")
+        from scraper import run_smart_scrape
+        new_count = run_smart_scrape(db)
+        
+        last_scrape_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+        last_scrape_result = f"Added {new_count} new items"
+        
+        print(f"[{datetime.now()}] Scrape complete: {last_scrape_result}")
     except Exception as e:
+        last_scrape_result = f"Error: {str(e)}"
         print(f"[{datetime.now()}] Scrape failed: {e}")
     finally:
         db.close()
@@ -94,34 +104,31 @@ def scheduled_scrape():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
     global last_scrape_time
-    last_scrape_time = datetime.now().isoformat()
     
     # Schedule daily scrape at 6 AM UTC
     scheduler.add_job(scheduled_scrape, 'cron', hour=6, minute=0)
     scheduler.start()
-    print("Scheduler started - daily scrape at 6 AM UTC")
+    print("Scheduler started - scrapes daily at 6 AM UTC")
     
     yield
     
-    # Shutdown
     scheduler.shutdown()
 
 
 app = FastAPI(title="Vintage Mushroom API", lifespan=lifespan)
 
-# CORS - allow your frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# API Routes
+# ============ API ROUTES ============
+
 @app.get("/api/items", response_model=List[ItemResponse])
 def get_items(
     skip: int = 0,
@@ -136,17 +143,14 @@ def get_items(
     
     query = db.query(Item)
     
-    # Year filter
     if min_year:
         query = query.filter(Item.sold_date >= date(min_year, 1, 1))
     if max_year:
         query = query.filter(Item.sold_date <= date(max_year, 12, 31))
     
-    # Search
     if search:
         query = query.filter(Item.title.ilike(f"%{search}%"))
     
-    # Sort
     if sort == "price_desc":
         query = query.order_by(Item.price_usd.desc())
     elif sort == "price_asc":
@@ -158,7 +162,6 @@ def get_items(
     
     items = query.offset(skip).limit(limit).all()
     
-    # Convert to response format
     result = []
     for item in items:
         result.append(ItemResponse(
@@ -180,7 +183,6 @@ def get_random_items(
     min_year: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
-    """Get random items for the game"""
     import json
     from sqlalchemy.sql.expression import func
     
@@ -218,17 +220,42 @@ def get_stats(db: Session = Depends(get_db)):
         total_items=total,
         newest_date=newest.isoformat() if newest else "",
         oldest_date=oldest.isoformat() if oldest else "",
-        last_scrape=last_scrape_time or ""
+        last_scrape=f"{last_scrape_time} - {last_scrape_result}"
     )
 
 
 @app.post("/api/scrape")
 def trigger_scrape(db: Session = Depends(get_db)):
     """Manually trigger a scrape"""
-    global last_scrape_time
-    new_count = run_incremental_scrape(db)
-    last_scrape_time = datetime.now().isoformat()
-    return {"message": f"Scrape complete. Added {new_count} new items."}
+    global last_scrape_time, last_scrape_result
+    
+    try:
+        from scraper import run_smart_scrape
+        new_count = run_smart_scrape(db)
+        
+        last_scrape_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+        last_scrape_result = f"Added {new_count} new items"
+        
+        return {"message": last_scrape_result, "new_items": new_count}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/scrape/full")
+def trigger_full_scrape(db: Session = Depends(get_db)):
+    """Trigger a full scrape (use for initial population)"""
+    global last_scrape_time, last_scrape_result
+    
+    try:
+        from scraper import run_full_scrape
+        new_count = run_full_scrape(db)
+        
+        last_scrape_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+        last_scrape_result = f"Full scrape: Added {new_count} items"
+        
+        return {"message": last_scrape_result, "new_items": new_count}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/health")
@@ -238,7 +265,6 @@ def health_check():
 
 # Serve frontend
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
 
 @app.get("/")
 def serve_frontend():
