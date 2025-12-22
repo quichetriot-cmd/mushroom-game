@@ -283,7 +283,12 @@ def trigger_full_scrape(db: Session = Depends(get_db), user: str = Depends(verif
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
+@app.post("/api/clear")
+def clear_database(db: Session = Depends(get_db), user: str = Depends(verify_auth)):
+    """Delete all items and start fresh"""
+    db.query(Item).delete()
+    db.commit()
+    return {"message": "Database cleared"}
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "time": datetime.now().isoformat()}
