@@ -5,6 +5,5 @@ psycopg2-binary==2.9.9
 apscheduler==3.10.4
 requests==2.31.0
 beautifulsoup4==4.12.3
-googletrans==4.0.0-rc1
-httpx==0.26.0
+deep-translator==1.11.4
 python-multipart==0.0.6
