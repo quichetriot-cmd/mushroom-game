@@ -2,12 +2,14 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy import create_engine, Column, Integer, String, Float, Text, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from apscheduler.schedulers.background import BackgroundScheduler
 from contextlib import asynccontextmanager
 import os
+import secrets
 from datetime import datetime, date
 from typing import Optional, List
 from pydantic import BaseModel
@@ -74,6 +76,17 @@ def get_db():
         db.close()
 
 
+# Auth
+security = HTTPBasic()
+
+def verify_auth(credentials: HTTPBasicCredentials = Depends(security)):
+    correct_user = secrets.compare_digest(credentials.username, os.getenv("AUTH_USER", "admin"))
+    correct_pass = secrets.compare_digest(credentials.password, os.getenv("AUTH_PASS", "changeme"))
+    if not (correct_user and correct_pass):
+        raise HTTPException(status_code=401, detail="Unauthorized", headers={"WWW-Authenticate": "Basic"})
+    return credentials.username
+
+
 # Scheduler
 scheduler = BackgroundScheduler()
 last_scrape_time = "Never"
@@ -126,6 +139,7 @@ async def lifespan(app: FastAPI):
     
     scheduler.shutdown()
 
+
 app = FastAPI(title="Vintage Mushroom API", lifespan=lifespan)
 
 app.add_middleware(
@@ -147,7 +161,8 @@ def get_items(
     max_year: Optional[int] = None,
     search: Optional[str] = None,
     sort: str = "price_desc",
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: str = Depends(verify_auth)
 ):
     import json
     
@@ -191,7 +206,8 @@ def get_items(
 def get_random_items(
     count: int = 20,
     min_year: Optional[int] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: str = Depends(verify_auth)
 ):
     import json
     from sqlalchemy.sql.expression import func
@@ -219,7 +235,7 @@ def get_random_items(
 
 
 @app.get("/api/stats", response_model=StatsResponse)
-def get_stats(db: Session = Depends(get_db)):
+def get_stats(db: Session = Depends(get_db), user: str = Depends(verify_auth)):
     from sqlalchemy import func
     
     total = db.query(Item).count()
@@ -235,7 +251,7 @@ def get_stats(db: Session = Depends(get_db)):
 
 
 @app.post("/api/scrape")
-def trigger_scrape(db: Session = Depends(get_db)):
+def trigger_scrape(db: Session = Depends(get_db), user: str = Depends(verify_auth)):
     """Manually trigger a scrape"""
     global last_scrape_time, last_scrape_result
     
@@ -252,7 +268,7 @@ def trigger_scrape(db: Session = Depends(get_db)):
 
 
 @app.post("/api/scrape/full")
-def trigger_full_scrape(db: Session = Depends(get_db)):
+def trigger_full_scrape(db: Session = Depends(get_db), user: str = Depends(verify_auth)):
     """Trigger a full scrape (use for initial population)"""
     global last_scrape_time, last_scrape_result
     
@@ -273,9 +289,9 @@ def health_check():
     return {"status": "ok", "time": datetime.now().isoformat()}
 
 
-# Serve frontend
+# Serve frontend (protected)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
-def serve_frontend():
+def serve_frontend(user: str = Depends(verify_auth)):
     return FileResponse("static/index.html")
