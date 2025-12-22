@@ -108,13 +108,23 @@ async def lifespan(app: FastAPI):
     
     # Schedule daily scrape at 6 AM UTC
     scheduler.add_job(scheduled_scrape, 'cron', hour=6, minute=0)
+    
+    # Also run immediately on startup if database is empty
+    from scraper import get_item_count
+    db = SessionLocal()
+    count = get_item_count(db)
+    db.close()
+    
+    if count == 0:
+        print("Database empty - starting initial scrape in background...")
+        scheduler.add_job(scheduled_scrape, 'date')  # Run once now
+    
     scheduler.start()
-    print("Scheduler started - scrapes daily at 6 AM UTC")
+    print(f"Scheduler started - {count} items in database, scrapes daily at 6 AM UTC")
     
     yield
     
     scheduler.shutdown()
-
 
 app = FastAPI(title="Vintage Mushroom API", lifespan=lifespan)
 
