@@ -28,12 +28,11 @@ session.mount('https://', adapter)
 
 
 def translate_text(text: str) -> str:
-    """Translate Japanese to English using Google Translate"""
+    """Translate Japanese to English"""
     try:
-        from googletrans import Translator
-        translator = Translator()
-        result = translator.translate(text, src='ja', dest='en')
-        return result.text
+        from deep_translator import GoogleTranslator
+        result = GoogleTranslator(source='ja', target='en').translate(text)
+        return result
     except Exception as e:
         logging.warning(f"Translation failed: {e}")
         return text
