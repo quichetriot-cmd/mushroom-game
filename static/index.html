@@ -408,6 +408,77 @@
             cursor: pointer;
         }
         
+        /* Info Section */
+        .info-section {
+            display: none;
+            padding: 24px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .info-section.active { display: block; }
+        .info-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .info-card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .info-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #4ade80;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .info-card p {
+            color: #aaa;
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+        .info-card p:last-child { margin-bottom: 0; }
+        .info-card ul {
+            color: #aaa;
+            font-size: 14px;
+            line-height: 1.7;
+            margin-left: 20px;
+        }
+        .info-card li { margin-bottom: 6px; }
+        .info-card code {
+            background: #0a0a0a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #fbbf24;
+        }
+        .info-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .info-stat {
+            background: #0a0a0a;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .info-stat-val {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4ade80;
+        }
+        .info-stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
         /* Modal */
         .modal {
             display: none;
@@ -477,6 +548,7 @@
             <div class="mode-tabs">
                 <button class="mode-tab active" id="galleryTab">Gallery</button>
                 <button class="mode-tab" id="gameTab">🎮 Play</button>
+                <button class="mode-tab" id="infoTab">ℹ️ Info</button>
             </div>
         </div>
         
@@ -502,6 +574,73 @@
                 <button class="page-btn" id="prevBtn">←</button>
                 <span id="pageInfo">1/1</span>
                 <button class="page-btn" id="nextBtn">→</button>
+            </div>
+        </div>
+        
+        <!-- Info Section -->
+        <div class="info-section" id="infoSection">
+            <div class="info-title">About This App</div>
+            
+            <div class="info-card">
+                <div class="info-card-title">Purpose</div>
+                <p>A training tool for vintage clothing dealers to sharpen pricing instincts. Browse sold items from Mushroom Vintage (Tokyo) and test your ability to estimate prices in the flashcard game.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-title">Data Source</div>
+                <p>All items are scraped from <code>vintage-mushroom.net</code>, a high-end vintage store in Tokyo. Only items sold for ¥65,000+ (~$430 USD) are included.</p>
+                <p>Prices are converted at ¥150 = $1 USD. Descriptions are auto-translated from Japanese using Google Translate.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-title">Tech Stack</div>
+                <ul>
+                    <li><strong>Frontend:</strong> Vanilla HTML/CSS/JS (no framework)</li>
+                    <li><strong>Backend:</strong> Python FastAPI</li>
+                    <li><strong>Database:</strong> PostgreSQL on Railway</li>
+                    <li><strong>Scraper:</strong> BeautifulSoup + deep-translator</li>
+                    <li><strong>Hosting:</strong> Railway (auto-deploy from GitHub)</li>
+                    <li><strong>Auth:</strong> HTTP Basic Auth</li>
+                </ul>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-title">Update Schedule</div>
+                <p>The scraper runs automatically every day at <strong>6:00 AM UTC</strong> (1 AM Eastern, 10 PM Pacific).</p>
+                <p>It checks for new listings, stops when it hits 5 consecutive items already in the database. New items appear automatically - no manual intervention needed.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-title">Known Limitations</div>
+                <ul>
+                    <li>~2,000 older items (pre-2016) not yet scraped due to initial connection timeout</li>
+                    <li>Some Japanese characters display incorrectly in titles</li>
+                    <li>Translation quality varies - some descriptions are awkward</li>
+                    <li>Measurements extracted via regex - may miss unusual formats</li>
+                    <li>Images hosted on Mushroom's server - may break if they change URLs</li>
+                </ul>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-title">Live Stats</div>
+                <div class="info-stats">
+                    <div class="info-stat">
+                        <div class="info-stat-val" id="infoTotalItems">-</div>
+                        <div class="info-stat-label">Total Items</div>
+                    </div>
+                    <div class="info-stat">
+                        <div class="info-stat-val" id="infoNewest">-</div>
+                        <div class="info-stat-label">Newest Item</div>
+                    </div>
+                    <div class="info-stat">
+                        <div class="info-stat-val" id="infoOldest">-</div>
+                        <div class="info-stat-label">Oldest Item</div>
+                    </div>
+                    <div class="info-stat">
+                        <div class="info-stat-val" id="infoLastScrape">-</div>
+                        <div class="info-stat-label">Last Scrape</div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -623,7 +762,7 @@
 
 <script>
 // ========== CONFIG ==========
-const API_BASE = '';  // Empty for same-origin, or set to your API URL
+const API_BASE = '';
 const ITEMS_PER_PAGE = 24;
 const ROUNDS = 20;
 
@@ -645,6 +784,9 @@ let total = 0;
 let perfects = 0;
 let highScore = parseInt(localStorage.getItem('vHighScore') || '0');
 let selectedYear = null;
+
+// Stats for info page
+let statsData = null;
 
 // ========== HELPERS ==========
 function cmToInches(cm) {
@@ -690,6 +832,12 @@ function formatDate(dateStr) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function formatDateShort(dateStr) {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
 // ========== API ==========
 async function fetchItems(params = {}) {
     const url = new URL(API_BASE + '/api/items', window.location.origin);
@@ -724,9 +872,9 @@ async function init() {
         document.getElementById('loadingText').textContent = 'Loading inventory...';
         
         // Fetch stats
-        const stats = await fetchStats();
-        document.getElementById('statsBadge').textContent = `${stats.total_items.toLocaleString()} items`;
-        totalItems = stats.total_items;
+        statsData = await fetchStats();
+        document.getElementById('statsBadge').textContent = `${statsData.total_items.toLocaleString()} items`;
+        totalItems = statsData.total_items;
         
         // Fetch first page
         allItems = await fetchItems({ sort: currentSort, limit: ITEMS_PER_PAGE });
@@ -844,20 +992,49 @@ document.getElementById('modalClose').onclick = () => document.getElementById('m
 document.getElementById('modal').onclick = e => { if (e.target.id === 'modal') document.getElementById('modal').classList.remove('active'); };
 
 // ========== MODE SWITCH ==========
-document.getElementById('galleryTab').onclick = () => {
-    document.getElementById('galleryTab').classList.add('active');
-    document.getElementById('gameTab').classList.remove('active');
-    document.getElementById('gallerySection').classList.remove('hidden');
+function hideAllSections() {
+    document.getElementById('gallerySection').classList.add('hidden');
     document.getElementById('gameSection').classList.remove('active');
     document.getElementById('filterScreen').classList.remove('active');
+    document.getElementById('infoSection').classList.remove('active');
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+}
+
+document.getElementById('galleryTab').onclick = () => {
+    hideAllSections();
+    document.getElementById('galleryTab').classList.add('active');
+    document.getElementById('gallerySection').classList.remove('hidden');
 };
 
 document.getElementById('gameTab').onclick = () => {
+    hideAllSections();
     document.getElementById('gameTab').classList.add('active');
-    document.getElementById('galleryTab').classList.remove('active');
-    document.getElementById('gallerySection').classList.add('hidden');
     showFilterScreen();
 };
+
+document.getElementById('infoTab').onclick = () => {
+    hideAllSections();
+    document.getElementById('infoTab').classList.add('active');
+    document.getElementById('infoSection').classList.add('active');
+    updateInfoStats();
+};
+
+function updateInfoStats() {
+    if (statsData) {
+        document.getElementById('infoTotalItems').textContent = statsData.total_items.toLocaleString();
+        document.getElementById('infoNewest').textContent = formatDateShort(statsData.newest_date);
+        document.getElementById('infoOldest').textContent = formatDateShort(statsData.oldest_date);
+        
+        // Parse last scrape info
+        const lastScrape = statsData.last_scrape || '';
+        if (lastScrape.includes(' - ')) {
+            const parts = lastScrape.split(' - ');
+            document.getElementById('infoLastScrape').textContent = parts[1] || '-';
+        } else {
+            document.getElementById('infoLastScrape').textContent = '-';
+        }
+    }
+}
 
 // ========== YEAR FILTER ==========
 function showFilterScreen() {
@@ -891,8 +1068,6 @@ async function selectYear(year) {
         }
     });
     
-    // Get count from API
-    const items = await fetchItems({ min_year: year, limit: 1 });
     document.getElementById('filterInfo').textContent = `Training on items from ${year} onward`;
     document.getElementById('startBtn').classList.add('active');
 }
@@ -903,7 +1078,6 @@ document.getElementById('startBtn').onclick = async () => {
     document.getElementById('filterScreen').classList.remove('active');
     document.getElementById('gameSection').classList.add('active');
     
-    // Fetch random items for game
     deck = await fetchRandomItems(selectedYear, ROUNDS);
     startGame();
 };
