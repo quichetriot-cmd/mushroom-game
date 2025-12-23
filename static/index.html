@@ -799,10 +799,16 @@ function detectGarmentCategory(title) {
     // Shoes
     if (/shoes|boots|sneaker|loafer|oxford|moccasin/.test(t)) return 'shoes';
     
-    // Coveralls/Overalls - measured like tops
-    if (/coverall|overall/.test(t)) return 'tops';
+    // All-in-ones (jumpsuits) - need BOTH top and bottom measurements
+    if (/all in one|all-in-one|allinone|union.?alls/.test(t)) return 'allinone';
     
-    // Bottoms (pants/jeans only)
+    // Coveralls = chore coats (Akira's naming) - measured like tops
+    if (/coverall/.test(t)) return 'tops';
+    
+    // Overalls = bib overalls - measured like pants
+    if (/overall/.test(t)) return 'bottoms';
+    
+    // Bottoms (pants/jeans)
     if (/jeans|pants|trousers|dungaree|shorts|chino/.test(t)) return 'bottoms';
     
     // Accessories - skip measurements
@@ -846,7 +852,7 @@ function extractMeasurements(desc, title = '') {
         return m;
     }
     
-    // BOTTOMS (jeans/pants)
+    // BOTTOMS (jeans/pants/overalls)
     if (category === 'bottoms') {
         const waistMatch = desc.match(/W\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
         if (waistMatch) {
@@ -869,7 +875,40 @@ function extractMeasurements(desc, title = '') {
         return m;
     }
     
-    // TOPS (jackets, shirts, sweats, coveralls)
+    // ALL-IN-ONE (jumpsuits) - need both chest AND waist
+    if (category === 'allinone') {
+        // Chest
+        const widthPatterns = [
+            /[Bb]ody\s*[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)\s*cm/,
+            /[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)\s*cm/,
+        ];
+        for (const pattern of widthPatterns) {
+            const match = desc.match(pattern);
+            if (match) {
+                const cm = parseFloat(match[1]);
+                if (cm >= 35 && cm <= 85) {
+                    m['Chest'] = cmToInches(cm) + '"';
+                    break;
+                }
+            }
+        }
+        // Waist
+        const waistMatch = desc.match(/W\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
+        if (waistMatch) {
+            m['Waist'] = cmToInches(parseFloat(waistMatch[1])) + '"';
+        }
+        // Inseam
+        const inseamMatch = desc.match(/(?<![a-zA-Z])L\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
+        if (inseamMatch) {
+            const inches = parseFloat(cmToInches(parseFloat(inseamMatch[1])));
+            if (inches >= 20 && inches <= 50) {
+                m['Inseam'] = inches.toFixed(1) + '"';
+            }
+        }
+        return m;
+    }
+    
+    // TOPS (jackets, shirts, sweats, coveralls/chore coats)
     if (category === 'tops') {
         // Chest patterns
         const widthPatterns = [
