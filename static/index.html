@@ -1051,8 +1051,8 @@ function extractMeasurements(desc, title = '') {
     const category = detectGarmentCategory(title);
     if (category === 'accessory') return {};
     
-    // Extract just the "Actual size:" section (must have colon and cm to avoid prose mentions)
-    const actualSizeMatch = desc.match(/Actual size:\s*(.+?cm.+?)(?=Condition|Degree|Details|Approximately)/i);
+    // Extract just the "Actual size:" or "Actual measurements:" section
+    const actualSizeMatch = desc.match(/Actual (?:size|measurements):\s*(.+?cm.+?)(?=Condition|Degree|Details|Approximately)/i);
     const sizeSection = actualSizeMatch ? actualSizeMatch[1] : '';
     
     const m = {};
@@ -1138,8 +1138,8 @@ function extractMeasurements(desc, title = '') {
             }
         }
         
-        // Length: "/ Length 55 cm" but not "Sleeve length" or "Total length"
-        const lengthMatch = sizeSection.match(/\/\s*Length\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+        // Length: "/ Length 55 cm" or "/ Length about 61 cm" - but not "Sleeve length" or "Total length"
+        const lengthMatch = sizeSection.match(/\/\s*Length\s*(?:about|approx(?:imately)?\.?)?\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
         if (lengthMatch) {
             const cm = parseFloat(lengthMatch[1]);
             const inches = parseFloat(cmToInches(cm));
