@@ -1014,25 +1014,25 @@ function detectGarmentCategory(title) {
     const t = title.toLowerCase();
     
     // Shoes first
-    if (/\b(shoes|boots|sneaker|loafer|oxford|moccasin|converse)\b/.test(t)) return 'shoes';
+    if (/\b(shoes|boots|sneaker|loafer|oxford|moccasin|converse|slip-on)\b/.test(t)) return 'shoes';
     
-    // All-in-ones (jumpsuits) - need BOTH top and bottom measurements
-    if (/all in one|all-in-one|allinone|union.?alls|jumperalls/.test(t)) return 'allinone';
+    // All-in-ones (jumpsuits, playsuits) - need BOTH top and bottom measurements
+    if (/all in one|all-in-one|allinone|union.?alls|jumperalls|playsuit/.test(t)) return 'allinone';
     
     // Coveralls = chore coats (Akira's naming) - measured like tops
     if (/\bcoverall\b/.test(t)) return 'tops';
     
     // Overalls = bib overalls - measured like pants
-    if (/\boverall\b/.test(t)) return 'bottoms';
+    if (/\boveralls?\b/.test(t)) return 'bottoms';
     
     // Bottoms (pants/jeans)
-    if (/\b(jeans|jeens|pants|trouser|dungaree|shorts|chino)\b/.test(t)) return 'bottoms';
+    if (/\b(jeans|jeens|pants|trousers?|dungaree|shorts|chino)\b/.test(t)) return 'bottoms';
     
     // Vests don't need length
     if (/\bvest\b/.test(t)) return 'vest';
     
     // If it has a garment word, it's a top (not an accessory)
-    if (/\b(jacket|coat|shirt|parka|cardigan|sweater|sweatshirt|hoodie|hoody|blazer|pullover|anorak|windbreaker|bomber|blouson)\b/.test(t)) return 'tops';
+    if (/\b(jacket|coat|shirt|parka|cardigan|sweater|sweatshirt|hoodie|hoody|blazer|pullover|anorak|windbreaker|bomber|blouson|smock|jkt|snap-t|fleece|weave|jumper)\b/.test(t)) return 'tops';
     
     // Accessories - only if NO garment word above matched
     const accessoryPattern = /\b(bag|tote|backpack|back pack|rucksack|wallet|belt|hat|cap|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|sign|lamp|banner|display|showcase|umbrella|fixture|neon|poster|key holder|thermometer|clip|bracelet|trash can|fabric|scrap|watch fob|fob|ashtray|pin|medal|coin|token|lighter|glasses|apron|flasher|paper sleeve|stool|table|bench|furniture|mittens|gloves|globe|rack|hanger)\b/;
