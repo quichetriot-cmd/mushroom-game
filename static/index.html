@@ -1052,7 +1052,8 @@ function extractMeasurements(desc, title = '') {
     if (category === 'accessory') return {};
     
     // Extract just the "Actual size:" or "Actual measurements:" or "Notation:" section
-    const actualSizeMatch = desc.match(/(?:Actual (?:size|measurements)|Notation):\s*(.+?cm.+?)(?=\s+Approximately|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
+    // Stop at grade markers (: A, : AB, etc) or section headers, but not "approximately 55 cm"
+    const actualSizeMatch = desc.match(/(?:Actual (?:size|measurements)|Notation):\s*(.+?cm.+?)(?=\s+Approximately\s*:|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
     const sizeSection = actualSizeMatch ? actualSizeMatch[1] : '';
     
     const m = {};
