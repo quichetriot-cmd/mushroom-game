@@ -1017,7 +1017,7 @@ function detectGarmentCategory(title) {
     if (/shoes|boots|sneaker|loafer|oxford|moccasin/.test(t)) return 'shoes';
     
     // All-in-ones (jumpsuits) - need BOTH top and bottom measurements
-    if (/all in one|all-in-one|allinone|union.?alls/.test(t)) return 'allinone';
+    if (/all in one|all-in-one|allinone|union.?alls|jumperalls/.test(t)) return 'allinone';
     
     // Coveralls = chore coats (Akira's naming) - measured like tops
     if (/coverall/.test(t)) return 'tops';
@@ -1026,7 +1026,7 @@ function detectGarmentCategory(title) {
     if (/overall/.test(t)) return 'bottoms';
     
     // Bottoms (pants/jeans)
-    if (/jeans|pants|trousers|dungaree|shorts|chino/.test(t)) return 'bottoms';
+    if (/jeans|jeens|pants|trouser|dungaree|shorts|chino/.test(t)) return 'bottoms';
     
     // Accessories - skip measurements
     const accessories = [
@@ -1093,21 +1093,29 @@ function extractMeasurements(desc, title = '') {
     
     // ALL-IN-ONE (jumpsuits) - need both chest AND waist
     if (category === 'allinone') {
-        // Chest: "Body width 55 cm"
-        const chestMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
-        if (chestMatch) {
-            const cm = parseFloat(chestMatch[1]);
-            if (cm >= 35 && cm <= 85) {
-                m['Chest'] = cmToInches(cm) + '"';
-            }
+        // Chest: same patterns as tops
+        let chestCm = null;
+        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+        if (bodyMatch) chestCm = parseFloat(bodyMatch[1]);
+        if (!chestCm) {
+            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+            if (slashWidthMatch) chestCm = parseFloat(slashWidthMatch[1]);
         }
-        // Waist
-        const waistMatch = sizeSection.match(/W\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
+        if (!chestCm) {
+            const startWidthMatch = sizeSection.match(/^Width\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+            if (startWidthMatch) chestCm = parseFloat(startWidthMatch[1]);
+        }
+        if (chestCm && chestCm >= 35 && chestCm <= 90) {
+            m['Chest'] = cmToInches(chestCm) + '"';
+        }
+        
+        // Waist: "W 109 cm" or "/ W 89 cm"
+        const waistMatch = sizeSection.match(/W\s*(\d+(?:\.\d+)?)\s*cm/);
         if (waistMatch) {
             m['Waist'] = cmToInches(parseFloat(waistMatch[1])) + '"';
         }
-        // Inseam
-        const inseamMatch = sizeSection.match(/\/\s*L\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
+        // Inseam: "/ L 69.5 cm"
+        const inseamMatch = sizeSection.match(/\/\s*L\s*(\d+(?:\.\d+)?)\s*cm/);
         if (inseamMatch) {
             const inches = parseFloat(cmToInches(parseFloat(inseamMatch[1])));
             if (inches >= 20 && inches <= 50) {
@@ -1119,23 +1127,27 @@ function extractMeasurements(desc, title = '') {
     
     // TOPS (jackets, shirts, sweats, coveralls/chore coats)
     if (category === 'tops') {
-        // Chest: "Body width 52 cm" - must have "Body" to avoid matching Shoulder/Hem width
-        const chestMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
-        if (chestMatch) {
-            const cm = parseFloat(chestMatch[1]);
-            if (cm >= 35 && cm <= 85) {
-                m['Chest'] = cmToInches(cm) + '"';
-            }
+        // Chest: Try patterns in order of specificity
+        let chestCm = null;
+        
+        // 1. "Body width 52 cm"
+        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+        if (bodyMatch) chestCm = parseFloat(bodyMatch[1]);
+        
+        // 2. "/ Width 62 cm" or "/ Width width 48.5 cm" 
+        if (!chestCm) {
+            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+            if (slashWidthMatch) chestCm = parseFloat(slashWidthMatch[1]);
         }
-        // Fallback: "/ Width 62 cm" or "/ Width width 48.5 cm" (translation artifacts)
-        if (!m['Chest']) {
-            const widthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
-            if (widthMatch) {
-                const cm = parseFloat(widthMatch[1]);
-                if (cm >= 35 && cm <= 85) {
-                    m['Chest'] = cmToInches(cm) + '"';
-                }
-            }
+        
+        // 3. "Width 56.5 cm" at the START (raglan sleeves, no shoulder measurement)
+        if (!chestCm) {
+            const startWidthMatch = sizeSection.match(/^Width\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+            if (startWidthMatch) chestCm = parseFloat(startWidthMatch[1]);
+        }
+        
+        if (chestCm && chestCm >= 35 && chestCm <= 90) {
+            m['Chest'] = cmToInches(chestCm) + '"';
         }
         
         // Length: "/ Length 55 cm" or "/ Length about 61 cm" - but not "Sleeve length" or "Total length"
