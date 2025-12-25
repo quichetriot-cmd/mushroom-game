@@ -1051,9 +1051,13 @@ function extractMeasurements(desc, title = '') {
     const category = detectGarmentCategory(title);
     if (category === 'accessory') return {};
     
-    // Extract just the "Actual size:" or "Actual measurements:" or "Notation:" section
-    // Stop at grade markers (: A, : AB, etc) or section headers, but not "approximately 55 cm"
-    const actualSizeMatch = desc.match(/(?:Actual (?:size|measurements)|Notation):\s*(.+?cm.+?)(?=\s+Approximately\s*:|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
+    // Extract the "Actual size:" section - try this first, fallback to "Notation:" for jeans
+    // (Some items have "Notation: X-LARGE Actual size:..." - we want just the Actual size part)
+    let actualSizeMatch = desc.match(/Actual (?:size|measurements):\s*(.+?cm.+?)(?=\s+Approximately\s*:|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
+    if (!actualSizeMatch) {
+        // Fallback for jeans that only have "Notation: W 93 cm / L 93.5 cm..."
+        actualSizeMatch = desc.match(/Notation:\s*(W\s*\d+.*?cm.+?)(?=\s+Approximately\s*:|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
+    }
     const sizeSection = actualSizeMatch ? actualSizeMatch[1] : '';
     
     const m = {};
