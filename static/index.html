@@ -1106,11 +1106,11 @@ function extractMeasurements(desc, title = '') {
         if (waistMatch) {
             m['Waist'] = cmToInches(parseFloat(waistMatch[1])) + '"';
         }
-        // Inseam: "L 64.5 cm" - but not "Total length"
-        const inseamMatch = sizeSection.match(/\/\s*L\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
+        // Inseam: "/L30cm" or "/69.5cm" or "/ L left 69.5 cm" or "/ (Left) L 71 cm"
+        const inseamMatch = sizeSection.match(/\/\s*(?:\(?\s*left\s*\)?\s*)?(?:L\s*)?(?:\(?\s*left\s*\)?\s*)?(\d+(?:\.\d+)?)\s*cm/i);
         if (inseamMatch) {
             const inches = parseFloat(cmToInches(parseFloat(inseamMatch[1])));
-            if (inches >= 20 && inches <= 50) {
+            if (inches >= 5 && inches <= 50) {  // Lowered min for cut-offs
                 m['Inseam'] = inches.toFixed(1) + '"';
             }
         }
@@ -1447,10 +1447,14 @@ async function loadDebugItems(filter) {
             const m = extractMeasurements(item.description, item.title);
             const count = Object.keys(m).length;
             
+            // Vests only need 1 measurement (chest), so don't flag them
+            // Tops need 2 (chest + length), bottoms need 2 (waist + inseam)
+            const expectedCount = (cat === 'vest') ? 1 : 2;
+            
             let include = false;
             if (filter === 0) include = count === 0;
-            else if (filter === 1) include = count === 1;
-            else include = count <= 1; // 'all' = 0 or 1
+            else if (filter === 1) include = count === 1 && cat !== 'vest'; // Don't flag vests
+            else include = count < expectedCount; // 'all' = less than expected
             
             if (include) debugItems.push(item);
         }
