@@ -651,7 +651,7 @@
             <div class="info-card">
                 <div class="info-card-title">Data Source</div>
                 <p>All items are scraped from <code>vintage-mushroom.net</code>, a high-end vintage store in Niigata. Only items sold for ¥65,000+ (~$430 USD) are included.</p>
-                <p>Prices are converted at ¥150 = $1 USD. Descriptions are auto-translated from Japanese using Deep Translator.</p>
+                <p>Prices are converted at ¥150 = $1 USD. Descriptions are auto-translated from Japanese using Google Translate.</p>
             </div>
             
             <div class="info-card">
@@ -669,7 +669,7 @@
             <div class="info-card">
                 <div class="info-card-title">Update Schedule</div>
                 <p>The scraper runs automatically every day at <strong>6:00 AM UTC</strong> (1 AM Eastern, 10 PM Pacific).</p>
-                <p>It checks for new listings, stops when it hits 5 consecutive items already in the database. New items appear automatically - no manual intervention needed. This was one of the main reasons I decided to host the stack with Railway.</p>
+                <p>It checks for new listings, stops when it hits 5 consecutive items already in the database. New items appear automatically - no manual intervention needed.</p>
             </div>
             
             <div class="info-card">
@@ -1119,10 +1119,13 @@ async function fetchItems(params = {}) {
     return res.json();
 }
 
-async function fetchRandomItems(minYear, count = 20) {
+async function fetchRandomItems(minYear, count = 20, excludeIds = []) {
     const url = new URL(API_BASE + '/api/items/random', window.location.origin);
     url.searchParams.set('count', count);
     if (minYear) url.searchParams.set('min_year', minYear);
+    if (excludeIds.length > 0) {
+        url.searchParams.set('exclude', excludeIds.join(','));
+    }
     
     const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch random items');
@@ -1402,7 +1405,7 @@ function startGame() {
 
 function showCard() {
     const item = deck[cardIndex];
-    sessionItemIds.add(item.id || item.url);
+    sessionItemIds.add(item.id);
     
     document.getElementById('gameImg').src = item.images?.[0] || '';
     document.getElementById('gameTitle').textContent = item.title;
@@ -1456,7 +1459,7 @@ function submitGuess() {
     const pct = (diff / actual) * 100;
     
     // Record for spaced repetition
-    const itemId = item.id || item.url;
+    const itemId = item.id;
     recordGuess(itemId, pct);
     
     total++;
@@ -1516,9 +1519,10 @@ async function nextCard() {
         // Endless mode - fetch more items if running low
         if (cardIndex >= deck.length - 5) {
             try {
-                const newItems = await fetchRandomItems(selectedYear, BATCH_SIZE);
-                // Filter out items already seen this session
-                const fresh = newItems.filter(item => !sessionItemIds.has(item.id || item.url));
+                const excludeIds = Array.from(sessionItemIds);
+                const newItems = await fetchRandomItems(selectedYear, BATCH_SIZE, excludeIds);
+                // Filter out items already seen this session (extra safety)
+                const fresh = newItems.filter(item => !sessionItemIds.has(item.id));
                 deck = deck.concat(sortByPriority(fresh));
             } catch (e) {
                 console.error('Failed to fetch more items:', e);
