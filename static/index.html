@@ -1154,14 +1154,14 @@ function extractMeasurements(desc, title = '') {
     // VESTS - just chest, no length needed
     if (category === 'vest') {
         let chestCm = null;
-        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
+        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*(?:\([^)]+\)\s*)?:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
         if (bodyMatch) chestCm = parseFloat(bodyMatch[1]);
         if (!chestCm) {
-            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
+            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*(?:\([^)]+\)\s*)?:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
             if (slashWidthMatch) chestCm = parseFloat(slashWidthMatch[1]);
         }
         if (!chestCm) {
-            const startWidthMatch = sizeSection.match(/^Width\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
+            const startWidthMatch = sizeSection.match(/^Width\s*(?:\([^)]+\)\s*)?:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
             if (startWidthMatch) chestCm = parseFloat(startWidthMatch[1]);
         }
         if (chestCm && chestCm >= 25 && chestCm <= 90) {
@@ -1176,18 +1176,18 @@ function extractMeasurements(desc, title = '') {
         let chestCm = null;
         
         // 1. "Body width 52 cm" or "Body width 61-65 cm" (take first number of range)
-        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
+        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*(?:\([^)]+\)\s*)?:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
         if (bodyMatch) chestCm = parseFloat(bodyMatch[1]);
         
-        // 2. "/ Width 62 cm" or "/ Width approx. 58 cm"
+        // 2. "/ Width 62 cm" or "/ Width (measured at...) 58 cm"
         if (!chestCm) {
-            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
+            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*(?:\([^)]+\)\s*)?:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
             if (slashWidthMatch) chestCm = parseFloat(slashWidthMatch[1]);
         }
         
         // 3. "Width 56.5 cm" or "Width approximately 53 cm" at START
         if (!chestCm) {
-            const startWidthMatch = sizeSection.match(/^Width\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
+            const startWidthMatch = sizeSection.match(/^Width\s*(?:\([^)]+\)\s*)?:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
             if (startWidthMatch) chestCm = parseFloat(startWidthMatch[1]);
         }
         
