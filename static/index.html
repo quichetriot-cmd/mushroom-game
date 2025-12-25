@@ -1033,8 +1033,12 @@ function cmToInches(cm) {
 function detectGarmentCategory(title) {
     const t = title.toLowerCase();
     
-    // Accessories FIRST - before any garment checks (catches "OVERALLS ADVERTISING SIGN")
-    const accessoryPattern = /\b(bag|tote|backpack|back pack|rucksack|wallet|belt|hat|cap|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|sign|lamp|banner|display|showcase|umbrella|fixture|neon|poster|key holder|thermometer|clip|bracelet|trash can|fabric|scrap|watch fob|fob|ashtray|pin|medal|coin|token|lighter|glasses|apron|flasher|paper sleeve|stool|stools|table|bench|furniture|mittens|gloves|globe|rack|hanger)\b/;
+    // Accessories FIRST - before any garment checks
+    // Signs, banners, statues are ALWAYS accessories regardless of other words
+    if (/\b(sign|banner|statue|poster|display)\b/.test(t)) return 'accessory';
+    
+    // Other accessories - only if no garment word present
+    const accessoryPattern = /\b(bag|tote|backpack|back pack|rucksack|wallet|belt|hat|cap|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|lamp|showcase|umbrella|fixture|neon|key holder|thermometer|clip|bracelet|trash can|fabric|scrap|watch fob|fob|ashtray|pin|medal|coin|token|lighter|glasses|apron|flasher|paper sleeve|stool|stools|table|bench|furniture|mittens|gloves|globe|rack|hanger)\b/;
     if (accessoryPattern.test(t) && !/\b(jacket|coat|shirt|vest|jeans|pants|trousers?)\b/.test(t)) return 'accessory';
     
     // Shoes
@@ -1471,7 +1475,7 @@ function renderDebugList() {
         
         // Get the Actual size section for debugging
         const desc = item.description || '';
-        const sectionMatch = desc.match(/Actual (?:size|measurements):\s*([^A-Z]*)/i);
+        const sectionMatch = desc.match(/Actual (?:size|measurements):\s*((?:Shoulder|Width|Body|W\s*\d).+?cm.+?)(?=\s+Approximately\s*:|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
         const section = sectionMatch ? sectionMatch[1].substring(0, 150) : 'No Actual size found';
         
         return `
