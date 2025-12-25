@@ -1033,11 +1033,22 @@ function cmToInches(cm) {
 function detectGarmentCategory(title) {
     const t = title.toLowerCase();
     
-    // Shoes first
+    // Accessories FIRST - before any garment checks (catches "OVERALLS ADVERTISING SIGN")
+    const accessoryPattern = /\b(bag|tote|backpack|back pack|rucksack|wallet|belt|hat|cap|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|sign|lamp|banner|display|showcase|umbrella|fixture|neon|poster|key holder|thermometer|clip|bracelet|trash can|fabric|scrap|watch fob|fob|ashtray|pin|medal|coin|token|lighter|glasses|apron|flasher|paper sleeve|stool|stools|table|bench|furniture|mittens|gloves|globe|rack|hanger)\b/;
+    if (accessoryPattern.test(t) && !/\b(jacket|coat|shirt|vest|jeans|pants|trousers?)\b/.test(t)) return 'accessory';
+    
+    // Shoes
     if (/\b(shoes|boots|sneaker|loafer|oxford|moccasin|converse|slip-on)\b/.test(t)) return 'shoes';
     
-    // All-in-ones (jumpsuits, playsuits) - need BOTH top and bottom measurements
+    // All-in-ones (jumpsuits, playsuits)
     if (/all in one|all-in-one|allinone|union.?alls|jumperalls|playsuit/.test(t)) return 'allinone';
+    
+    // TOPS first - jacket/coat/shirt/jumper before checking bottoms keywords
+    // This ensures "DUNGAREE DENIM JUMPER" -> tops (jumper), not bottoms (dungaree)
+    if (/\b(jacket|coat|shirt|parka|cardigan|sweater|sweatshirt|hoodie|hoody|blazer|pullover|anorak|windbreaker|bomber|blouson|smock|jkt|snap-t|fleece|weave|jumper)\b/.test(t)) return 'tops';
+    
+    // Vests - after tops check
+    if (/\bvest\b/.test(t)) return 'vest';
     
     // Coveralls = chore coats (Akira's naming) - measured like tops
     if (/\bcoverall\b/.test(t)) return 'tops';
@@ -1045,18 +1056,8 @@ function detectGarmentCategory(title) {
     // Overalls = bib overalls - measured like pants
     if (/\boveralls?\b/.test(t)) return 'bottoms';
     
-    // Bottoms (pants/jeans)
+    // Bottoms (pants/jeans) - AFTER tops check
     if (/\b(jeans|jeens|pants|trousers?|dungaree|shorts|chino)\b/.test(t)) return 'bottoms';
-    
-    // Vests don't need length
-    if (/\bvest\b/.test(t)) return 'vest';
-    
-    // If it has a garment word, it's a top (not an accessory)
-    if (/\b(jacket|coat|shirt|parka|cardigan|sweater|sweatshirt|hoodie|hoody|blazer|pullover|anorak|windbreaker|bomber|blouson|smock|jkt|snap-t|fleece|weave|jumper)\b/.test(t)) return 'tops';
-    
-    // Accessories - only if NO garment word above matched
-    const accessoryPattern = /\b(bag|tote|backpack|back pack|rucksack|wallet|belt|hat|cap|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|sign|lamp|banner|display|showcase|umbrella|fixture|neon|poster|key holder|thermometer|clip|bracelet|trash can|fabric|scrap|watch fob|fob|ashtray|pin|medal|coin|token|lighter|glasses|apron|flasher|paper sleeve|stool|table|bench|furniture|mittens|gloves|globe|rack|hanger)\b/;
-    if (accessoryPattern.test(t)) return 'accessory';
     
     return 'tops';
 }
@@ -1142,6 +1143,25 @@ function extractMeasurements(desc, title = '') {
             if (inches >= 20 && inches <= 50) {
                 m['Inseam'] = inches.toFixed(1) + '"';
             }
+        }
+        return m;
+    }
+    
+    // VESTS - just chest, no length needed
+    if (category === 'vest') {
+        let chestCm = null;
+        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
+        if (bodyMatch) chestCm = parseFloat(bodyMatch[1]);
+        if (!chestCm) {
+            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
+            if (slashWidthMatch) chestCm = parseFloat(slashWidthMatch[1]);
+        }
+        if (!chestCm) {
+            const startWidthMatch = sizeSection.match(/^Width\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
+            if (startWidthMatch) chestCm = parseFloat(startWidthMatch[1]);
+        }
+        if (chestCm && chestCm >= 25 && chestCm <= 90) {
+            m['Chest'] = cmToInches(chestCm) + '"';
         }
         return m;
     }
