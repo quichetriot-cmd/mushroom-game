@@ -159,7 +159,42 @@
         }
         .filter-screen.active { display: flex; }
         .filter-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
-        .filter-subtitle { color: #666; margin-bottom: 32px; }
+        .filter-subtitle { color: #666; margin-bottom: 24px; }
+        
+        .mode-select {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .mode-option {
+            flex: 1;
+            padding: 16px 24px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            color: #888;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mode-option:hover { border-color: #4ade80; color: #fff; }
+        .mode-option.selected { background: #4ade80; border-color: #4ade80; color: #000; }
+        .mode-desc { color: #666; font-size: 13px; margin-bottom: 24px; }
+        .filter-section-title { color: #888; font-size: 14px; margin-bottom: 12px; }
+        
+        .study-stats {
+            margin-top: 24px;
+            padding: 16px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            font-size: 13px;
+            color: #888;
+            text-align: center;
+        }
+        .study-stats-row { margin: 4px 0; }
+        .study-stats-val { color: #4ade80; font-weight: 600; }
+        
         .year-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -408,6 +443,23 @@
             cursor: pointer;
         }
         
+        .endless-controls {
+            display: none;
+            margin-top: 16px;
+            text-align: center;
+        }
+        .endless-controls.active { display: block; }
+        .quit-btn {
+            padding: 12px 24px;
+            background: #333;
+            border: none;
+            border-radius: 10px;
+            color: #888;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .quit-btn:hover { background: #444; color: #fff; }
+        
         /* Info Section */
         .info-section {
             display: none;
@@ -554,11 +606,21 @@
         
         <!-- Year Filter Screen (for game) -->
         <div class="filter-screen" id="filterScreen">
-            <div class="filter-title">📅 Select Date Range</div>
-            <div class="filter-subtitle">Train on items sold from this year onward</div>
+            <div class="filter-title">🎮 Game Setup</div>
+            <div class="filter-subtitle">Select mode and date range</div>
+            
+            <div class="mode-select">
+                <button class="mode-option selected" id="mode20">20 Rounds</button>
+                <button class="mode-option" id="modeEndless">♾️ Endless</button>
+            </div>
+            <div class="mode-desc" id="modeDesc">Quick 20-item session with scoring</div>
+            
+            <div class="filter-section-title">Items sold from:</div>
             <div class="year-grid" id="yearGrid"></div>
             <div class="filter-info" id="filterInfo">Select a year</div>
             <button class="start-btn" id="startBtn">Start Game →</button>
+            
+            <div class="study-stats" id="studyStats"></div>
         </div>
         
         <!-- Gallery -->
@@ -709,7 +771,7 @@
                 </div>
             </div>
             
-            <div class="progress-wrap">
+            <div class="progress-wrap" id="progressWrap">
                 <div class="progress-bar">
                     <div class="progress-fill" id="progFill"></div>
                 </div>
@@ -717,6 +779,10 @@
                     <span id="progText">1 / 20</span>
                     <span id="highScoreText">Best: 0</span>
                 </div>
+            </div>
+            
+            <div class="endless-controls" id="endlessControls">
+                <button class="quit-btn" id="quitBtn">End Session</button>
             </div>
             
             <div class="game-over" id="gameOver">
@@ -765,6 +831,7 @@
 const API_BASE = '';
 const ITEMS_PER_PAGE = 24;
 const ROUNDS = 20;
+const BATCH_SIZE = 50;
 
 // ========== STATE ==========
 let allItems = [];
@@ -784,9 +851,84 @@ let total = 0;
 let perfects = 0;
 let highScore = parseInt(localStorage.getItem('vHighScore') || '0');
 let selectedYear = null;
+let gameMode = '20'; // '20' or 'endless'
+let sessionItemIds = new Set(); // Track items shown this session
+
+// Spaced repetition history: { itemId: { lastSeen, timesShown, lastError, avgError } }
+let studyHistory = JSON.parse(localStorage.getItem('vStudyHistory') || '{}');
+let allTimeStats = JSON.parse(localStorage.getItem('vAllTimeStats') || '{"total":0,"correct":0}');
 
 // Stats for info page
 let statsData = null;
+
+// ========== SPACED REPETITION ==========
+function saveStudyHistory() {
+    localStorage.setItem('vStudyHistory', JSON.stringify(studyHistory));
+    localStorage.setItem('vAllTimeStats', JSON.stringify(allTimeStats));
+}
+
+function recordGuess(itemId, pctError) {
+    const now = Date.now();
+    const wasCorrect = pctError <= 30;
+    
+    // Update all-time stats
+    allTimeStats.total++;
+    if (wasCorrect) allTimeStats.correct++;
+    
+    // Update item history
+    if (!studyHistory[itemId]) {
+        studyHistory[itemId] = { lastSeen: now, timesShown: 1, lastError: pctError, avgError: pctError };
+    } else {
+        const h = studyHistory[itemId];
+        h.avgError = (h.avgError * h.timesShown + pctError) / (h.timesShown + 1);
+        h.timesShown++;
+        h.lastError = pctError;
+        h.lastSeen = now;
+    }
+    
+    saveStudyHistory();
+}
+
+function getPriority(item) {
+    const id = item.id || item.url;
+    const h = studyHistory[id];
+    
+    if (!h) return 100; // Never seen = high priority
+    
+    const daysSince = (Date.now() - h.lastSeen) / (1000 * 60 * 60 * 24);
+    const recencyBoost = Math.min(daysSince, 30); // Max 30 days boost
+    
+    // Higher avgError = show more often, older = show more often
+    const priority = (h.avgError / 100) * 50 + recencyBoost * 2;
+    
+    // If they got it right recently, lower priority
+    if (h.lastError <= 30 && daysSince < 3) {
+        return priority * 0.3;
+    }
+    
+    return priority;
+}
+
+function sortByPriority(items) {
+    return items.sort((a, b) => getPriority(b) - getPriority(a));
+}
+
+function getStudyStatsHtml() {
+    const totalStudied = Object.keys(studyHistory).length;
+    const allTimeAcc = allTimeStats.total > 0 
+        ? Math.round(allTimeStats.correct / allTimeStats.total * 100) 
+        : 0;
+    
+    // Find weak items (high avgError)
+    const weakCount = Object.values(studyHistory).filter(h => h.avgError > 40).length;
+    
+    return `
+        <div class="study-stats-row">All-time: <span class="study-stats-val">${allTimeStats.total}</span> guesses</div>
+        <div class="study-stats-row">Unique items studied: <span class="study-stats-val">${totalStudied}</span></div>
+        <div class="study-stats-row">Overall accuracy: <span class="study-stats-val">${allTimeAcc}%</span></div>
+        ${weakCount > 0 ? `<div class="study-stats-row">Items needing review: <span class="study-stats-val">${weakCount}</span></div>` : ''}
+    `;
+}
 
 // ========== HELPERS ==========
 function cmToInches(cm) {
@@ -1168,6 +1310,11 @@ function showFilterScreen() {
     document.getElementById('filterScreen').classList.add('active');
     document.getElementById('gameSection').classList.remove('active');
     
+    // Mode selection
+    document.getElementById('mode20').onclick = () => selectMode('20');
+    document.getElementById('modeEndless').onclick = () => selectMode('endless');
+    selectMode('20'); // Default
+    
     const yearGrid = document.getElementById('yearGrid');
     yearGrid.innerHTML = '';
     
@@ -1183,6 +1330,21 @@ function showFilterScreen() {
     selectedYear = null;
     document.getElementById('startBtn').classList.remove('active');
     document.getElementById('filterInfo').textContent = 'Select a year';
+    
+    // Show study stats
+    document.getElementById('studyStats').innerHTML = getStudyStatsHtml();
+}
+
+function selectMode(mode) {
+    gameMode = mode;
+    document.getElementById('mode20').classList.toggle('selected', mode === '20');
+    document.getElementById('modeEndless').classList.toggle('selected', mode === 'endless');
+    
+    if (mode === '20') {
+        document.getElementById('modeDesc').textContent = 'Quick 20-item session with scoring';
+    } else {
+        document.getElementById('modeDesc').textContent = 'Endless practice with spaced repetition - items you miss come back more often';
+    }
 }
 
 async function selectYear(year) {
@@ -1205,7 +1367,19 @@ document.getElementById('startBtn').onclick = async () => {
     document.getElementById('filterScreen').classList.remove('active');
     document.getElementById('gameSection').classList.add('active');
     
-    deck = await fetchRandomItems(selectedYear, ROUNDS);
+    sessionItemIds.clear();
+    
+    if (gameMode === '20') {
+        deck = await fetchRandomItems(selectedYear, ROUNDS);
+        document.getElementById('progressWrap').style.display = 'block';
+        document.getElementById('endlessControls').classList.remove('active');
+    } else {
+        deck = await fetchRandomItems(selectedYear, BATCH_SIZE);
+        deck = sortByPriority(deck); // Sort by spaced repetition priority
+        document.getElementById('progressWrap').style.display = 'none';
+        document.getElementById('endlessControls').classList.add('active');
+    }
+    
     startGame();
 };
 
@@ -1228,6 +1402,7 @@ function startGame() {
 
 function showCard() {
     const item = deck[cardIndex];
+    sessionItemIds.add(item.id || item.url);
     
     document.getElementById('gameImg').src = item.images?.[0] || '';
     document.getElementById('gameTitle').textContent = item.title;
@@ -1249,8 +1424,13 @@ function showCard() {
     document.getElementById('guessPhase').classList.remove('hidden');
     document.getElementById('resultPhase').classList.remove('active');
     
-    document.getElementById('progFill').style.width = (cardIndex / ROUNDS * 100) + '%';
-    document.getElementById('progText').textContent = `${cardIndex + 1} / ${ROUNDS}`;
+    if (gameMode === '20') {
+        document.getElementById('progFill').style.width = (cardIndex / ROUNDS * 100) + '%';
+        document.getElementById('progText').textContent = `${cardIndex + 1} / ${ROUNDS}`;
+    } else {
+        // Endless mode - show session stats
+        document.getElementById('progText').textContent = `Item ${total + 1} this session`;
+    }
     
     document.getElementById('guessInput').focus();
 }
@@ -1270,9 +1450,14 @@ function submitGuess() {
         return;
     }
     
-    const actual = deck[cardIndex].price_usd;
+    const item = deck[cardIndex];
+    const actual = item.price_usd;
     const diff = Math.abs(guess - actual);
     const pct = (diff / actual) * 100;
+    
+    // Record for spaced repetition
+    const itemId = item.id || item.url;
+    recordGuess(itemId, pct);
     
     total++;
     
@@ -1318,18 +1503,45 @@ function submitGuess() {
     updateStats();
 }
 
-function nextCard() {
+async function nextCard() {
     cardIndex++;
-    if (cardIndex >= ROUNDS) {
-        endGame();
+    
+    if (gameMode === '20') {
+        if (cardIndex >= ROUNDS) {
+            endGame();
+        } else {
+            showCard();
+        }
     } else {
-        showCard();
+        // Endless mode - fetch more items if running low
+        if (cardIndex >= deck.length - 5) {
+            try {
+                const newItems = await fetchRandomItems(selectedYear, BATCH_SIZE);
+                // Filter out items already seen this session
+                const fresh = newItems.filter(item => !sessionItemIds.has(item.id || item.url));
+                deck = deck.concat(sortByPriority(fresh));
+            } catch (e) {
+                console.error('Failed to fetch more items:', e);
+            }
+        }
+        
+        if (cardIndex < deck.length) {
+            showCard();
+        } else {
+            // No more items available
+            endGame();
+        }
     }
+}
+
+function quitEndless() {
+    endGame();
 }
 
 function endGame() {
     document.getElementById('gameCard').classList.add('hidden');
     document.getElementById('gameOver').classList.add('active');
+    document.getElementById('endlessControls').classList.remove('active');
     
     document.getElementById('goScore').textContent = score.toLocaleString();
     document.getElementById('goAcc').textContent = Math.round(correct / total * 100) + '%';
@@ -1337,23 +1549,33 @@ function endGame() {
     document.getElementById('goPerfect').textContent = perfects;
     
     let emoji = '😅';
-    if (score >= 5000) emoji = '🏆';
-    else if (score >= 3000) emoji = '⭐';
-    else if (score >= 1500) emoji = '🔥';
-    else if (score >= 500) emoji = '👍';
-    document.getElementById('goEmoji').textContent = emoji;
-    
-    if (score > highScore) {
-        highScore = score;
-        localStorage.setItem('vHighScore', highScore);
-        document.getElementById('highScoreText').textContent = 'Best: ' + highScore + ' 🎉';
+    if (gameMode === 'endless') {
+        // Endless mode - base emoji on items studied
+        if (total >= 100) emoji = '🏆';
+        else if (total >= 50) emoji = '⭐';
+        else if (total >= 25) emoji = '🔥';
+        else if (total >= 10) emoji = '👍';
+        document.getElementById('goScore').textContent = total + ' items';
+    } else {
+        if (score >= 5000) emoji = '🏆';
+        else if (score >= 3000) emoji = '⭐';
+        else if (score >= 1500) emoji = '🔥';
+        else if (score >= 500) emoji = '👍';
+        
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('vHighScore', highScore);
+            document.getElementById('highScoreText').textContent = 'Best: ' + highScore + ' 🎉';
+        }
     }
+    document.getElementById('goEmoji').textContent = emoji;
 }
 
 // ========== CONTROLS ==========
 document.getElementById('submitBtn').onclick = submitGuess;
 document.getElementById('nextCardBtn').onclick = nextCard;
 document.getElementById('restartBtn').onclick = () => showFilterScreen();
+document.getElementById('quitBtn').onclick = quitEndless;
 
 document.querySelectorAll('.quick-btn').forEach(btn => {
     btn.onclick = () => {
