@@ -1029,7 +1029,7 @@ function detectGarmentCategory(title) {
     if (/jeans|jeens|pants|trouser|dungaree|shorts|chino/.test(t)) return 'bottoms';
     
     // Accessories - skip measurements (use word boundaries to avoid matching 'tag' in 'patagonia')
-    const accessoryPattern = /\b(bag|tote|backpack|rucksack|wallet|belt|hat|cap|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|sign|lamp|banner|display|showcase|umbrella|fixture|neon|poster|key holder|thermometer|clip|bracelet|trash can|fabric|scrap|watch fob|fob|ashtray|pin|medal|coin|token|lighter|sample)\b/;
+    const accessoryPattern = /\b(bag|tote|backpack|rucksack|wallet|belt|hat|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|sign|lamp|banner|display|showcase|umbrella|fixture|neon|poster|key holder|thermometer|clip|bracelet|trash can|fabric|scrap|watch fob|fob|ashtray|pin|medal|coin|token|lighter)\b/;
     if (accessoryPattern.test(t)) return 'accessory';
     
     return 'tops';
@@ -1125,23 +1125,23 @@ function extractMeasurements(desc, title = '') {
         // Chest: Try patterns in order of specificity
         let chestCm = null;
         
-        // 1. "Body width 52 cm"
-        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+        // 1. "Body width 52 cm" or "Body width 61-65 cm" (take first number of range)
+        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
         if (bodyMatch) chestCm = parseFloat(bodyMatch[1]);
         
         // 2. "/ Width 62 cm" or "/ Width width 48.5 cm" 
         if (!chestCm) {
-            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
             if (slashWidthMatch) chestCm = parseFloat(slashWidthMatch[1]);
         }
         
         // 3. "Width 56.5 cm" at the START (raglan sleeves, no shoulder measurement)
         if (!chestCm) {
-            const startWidthMatch = sizeSection.match(/^Width\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+            const startWidthMatch = sizeSection.match(/^Width\s*:?\s*(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
             if (startWidthMatch) chestCm = parseFloat(startWidthMatch[1]);
         }
         
-        if (chestCm && chestCm >= 25 && chestCm <= 90) {  // Lowered min for kids items
+        if (chestCm && chestCm >= 25 && chestCm <= 90) {
             m['Chest'] = cmToInches(chestCm) + '"';
         }
         
@@ -1150,7 +1150,7 @@ function extractMeasurements(desc, title = '') {
         if (lengthMatch) {
             const cm = parseFloat(lengthMatch[1]);
             const inches = parseFloat(cmToInches(cm));
-            if (inches >= 10 && inches <= 45) {  // Lowered min for kids items
+            if (inches >= 10 && inches <= 45) {
                 m['Length'] = inches.toFixed(1) + '"';
             }
         }
