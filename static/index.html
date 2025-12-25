@@ -1051,18 +1051,22 @@ function extractMeasurements(desc, title = '') {
     const category = detectGarmentCategory(title);
     if (category === 'accessory') return {};
     
+    // Extract just the "Actual size:" section
+    const actualSizeMatch = desc.match(/Actual size[:\s]+(.+?)(?=Condition|Degree|Details|Approximately)/i);
+    const sizeSection = actualSizeMatch ? actualSizeMatch[1] : desc;
+    
     const m = {};
     
     // SHOES
     if (category === 'shoes') {
-        const usMatch = desc.match(/US\s*(\d{1,2})\s*(1\/2)?/i);
+        const usMatch = sizeSection.match(/US\s*(\d{1,2})\s*(1\/2)?/i);
         if (usMatch) {
             let size = parseFloat(usMatch[1]);
             if (usMatch[2]) size += 0.5;
             m['US Size'] = size;
             return m;
         }
-        const outsoleMatch = desc.match(/[Oo]utsole\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
+        const outsoleMatch = sizeSection.match(/[Oo]utsole\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
         if (outsoleMatch) {
             m['Outsole'] = cmToInches(parseFloat(outsoleMatch[1])) + '"';
         }
@@ -1071,22 +1075,17 @@ function extractMeasurements(desc, title = '') {
     
     // BOTTOMS (jeans/pants/overalls)
     if (category === 'bottoms') {
-        const waistMatch = desc.match(/W\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
+        // Waist: "W 93 cm" or "W93cm" or "W:93cm"
+        const waistMatch = sizeSection.match(/W\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
         if (waistMatch) {
             m['Waist'] = cmToInches(parseFloat(waistMatch[1])) + '"';
         }
-        const wlMatch = desc.match(/W(\d{2})L(\d{2})/);
-        if (wlMatch && !m['Waist']) {
-            m['Waist'] = wlMatch[1] + '"';
-            m['Inseam'] = wlMatch[2] + '"';
-        }
-        if (!m['Inseam']) {
-            const inseamMatch = desc.match(/(?<![a-zA-Z])L\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
-            if (inseamMatch) {
-                const inches = parseFloat(cmToInches(parseFloat(inseamMatch[1])));
-                if (inches >= 20 && inches <= 50) {
-                    m['Inseam'] = inches.toFixed(1) + '"';
-                }
+        // Inseam: "L 64.5 cm" - but not "Total length"
+        const inseamMatch = sizeSection.match(/\/\s*L\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
+        if (inseamMatch) {
+            const inches = parseFloat(cmToInches(parseFloat(inseamMatch[1])));
+            if (inches >= 20 && inches <= 50) {
+                m['Inseam'] = inches.toFixed(1) + '"';
             }
         }
         return m;
@@ -1094,28 +1093,21 @@ function extractMeasurements(desc, title = '') {
     
     // ALL-IN-ONE (jumpsuits) - need both chest AND waist
     if (category === 'allinone') {
-        // Chest
-        const widthPatterns = [
-            /[Bb]ody\s*[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)\s*cm/,
-            /[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)\s*cm/,
-        ];
-        for (const pattern of widthPatterns) {
-            const match = desc.match(pattern);
-            if (match) {
-                const cm = parseFloat(match[1]);
-                if (cm >= 35 && cm <= 85) {
-                    m['Chest'] = cmToInches(cm) + '"';
-                    break;
-                }
+        // Chest: "Body width 55 cm"
+        const chestMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+        if (chestMatch) {
+            const cm = parseFloat(chestMatch[1]);
+            if (cm >= 35 && cm <= 85) {
+                m['Chest'] = cmToInches(cm) + '"';
             }
         }
         // Waist
-        const waistMatch = desc.match(/W\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
+        const waistMatch = sizeSection.match(/W\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
         if (waistMatch) {
             m['Waist'] = cmToInches(parseFloat(waistMatch[1])) + '"';
         }
         // Inseam
-        const inseamMatch = desc.match(/(?<![a-zA-Z])L\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
+        const inseamMatch = sizeSection.match(/\/\s*L\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
         if (inseamMatch) {
             const inches = parseFloat(cmToInches(parseFloat(inseamMatch[1])));
             if (inches >= 20 && inches <= 50) {
@@ -1127,41 +1119,32 @@ function extractMeasurements(desc, title = '') {
     
     // TOPS (jackets, shirts, sweats, coveralls/chore coats)
     if (category === 'tops') {
-        // Chest patterns
-        const widthPatterns = [
-            /[Bb]ody\s*[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)\s*cm/,
-            /[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)\s*cm/,
-            /[Ww]idth\s+(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)\s*cm/,
-            /[Ww]idth\s+(?:of\s+)?(\d+(?:\.\d+)?)\s*cm/,
-            /[Ww]idth\s+(\d+)-\d+\s*cm/,
-            /[Ww]idth\s+width\s+(\d+(?:\.\d+)?)\s*cm/,
-        ];
-        for (const pattern of widthPatterns) {
-            const match = desc.match(pattern);
-            if (match) {
-                const cm = parseFloat(match[1]);
+        // Chest: "Body width 52 cm" - must have "Body" to avoid matching Shoulder/Hem width
+        const chestMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+        if (chestMatch) {
+            const cm = parseFloat(chestMatch[1]);
+            if (cm >= 35 && cm <= 85) {
+                m['Chest'] = cmToInches(cm) + '"';
+            }
+        }
+        // Fallback: just "Width" at start or after "/" but not Shoulder/Sleeve/Hem/Thigh
+        if (!m['Chest']) {
+            const widthMatch = sizeSection.match(/(?:^|\/)\s*Width\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+            if (widthMatch) {
+                const cm = parseFloat(widthMatch[1]);
                 if (cm >= 35 && cm <= 85) {
                     m['Chest'] = cmToInches(cm) + '"';
-                    break;
                 }
             }
         }
         
-        // Length patterns
-        const lengthPatterns = [
-            /\/\s*[Ll]ength\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)\s*cm/,
-            /[Ll]ength\s*(?:of\s+)?(\d+(?:\.\d+)?)\s*cm/,
-            /[Ll]ength\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)\s*cm/,
-        ];
-        for (const pattern of lengthPatterns) {
-            const match = desc.match(pattern);
-            if (match) {
-                const cm = parseFloat(match[1]);
-                const inches = parseFloat(cmToInches(cm));
-                if (inches >= 18 && inches <= 42) {
-                    m['Length'] = inches.toFixed(1) + '"';
-                    break;
-                }
+        // Length: "/ Length 55 cm" but not "Sleeve length" or "Total length"
+        const lengthMatch = sizeSection.match(/\/\s*Length\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+        if (lengthMatch) {
+            const cm = parseFloat(lengthMatch[1]);
+            const inches = parseFloat(cmToInches(cm));
+            if (inches >= 18 && inches <= 42) {
+                m['Length'] = inches.toFixed(1) + '"';
             }
         }
         return m;
