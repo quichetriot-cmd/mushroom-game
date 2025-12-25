@@ -32,7 +32,6 @@ class Item(Base):
     __tablename__ = "items"
     
     id = Column(Integer, primary_key=True, index=True)
-    url = Column(String(500), unique=True, index=True)
     title = Column(String(500), index=True)
     price_yen = Column(Integer)
     price_usd = Column(Integer, index=True)
@@ -45,7 +44,6 @@ class Item(Base):
 # Pydantic models
 class ItemResponse(BaseModel):
     id: int
-    url: Optional[str] = None
     title: str
     price_yen: int
     price_usd: int
@@ -188,7 +186,6 @@ def get_items(
     for item in items:
         result.append(ItemResponse(
             id=item.id,
-            url=item.url,
             title=item.title,
             price_yen=item.price_yen,
             price_usd=item.price_usd,
@@ -240,7 +237,6 @@ def get_random_items(
     for item in items:
         result.append(ItemResponse(
             id=item.id,
-            url=item.url,
             title=item.title,
             price_yen=item.price_yen,
             price_usd=item.price_usd,
