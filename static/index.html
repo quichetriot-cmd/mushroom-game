@@ -1402,22 +1402,41 @@ async function loadDebugItems(filter) {
     document.getElementById('debugFilter1').classList.toggle('active', filter === 1);
     document.getElementById('debugFilterAll').classList.toggle('active', filter === 'all');
     
-    // Fetch all items (we need to check measurements client-side)
-    const res = await fetch(API_BASE + '/api/items?limit=10000');
-    const items = await res.json();
+    document.getElementById('debugCount').textContent = 'Loading...';
+    document.getElementById('debugList').innerHTML = '<div style="text-align:center;padding:40px;color:#666;">Scanning items...</div>';
     
-    // Filter to items with missing measurements
-    debugItems = items.filter(item => {
-        const cat = detectGarmentCategory(item.title);
-        if (cat === 'accessory' || cat === 'shoes') return false;
+    // Fetch items in batches
+    debugItems = [];
+    let skip = 0;
+    const batchSize = 100;
+    
+    while (true) {
+        const res = await fetch(API_BASE + `/api/items?limit=${batchSize}&skip=${skip}&sort=date_desc`);
+        const items = await res.json();
+        if (items.length === 0) break;
         
-        const m = extractMeasurements(item.description, item.title);
-        const count = Object.keys(m).length;
+        // Filter to items with missing measurements
+        for (const item of items) {
+            const cat = detectGarmentCategory(item.title);
+            if (cat === 'accessory' || cat === 'shoes') continue;
+            
+            const m = extractMeasurements(item.description, item.title);
+            const count = Object.keys(m).length;
+            
+            let include = false;
+            if (filter === 0) include = count === 0;
+            else if (filter === 1) include = count === 1;
+            else include = count <= 1; // 'all' = 0 or 1
+            
+            if (include) debugItems.push(item);
+        }
         
-        if (filter === 0) return count === 0;
-        if (filter === 1) return count === 1;
-        return count <= 1; // 'all' = 0 or 1
-    });
+        skip += batchSize;
+        document.getElementById('debugCount').textContent = `Scanned ${skip}... Found ${debugItems.length}`;
+        
+        // Stop after enough items or if we have enough debug items
+        if (skip >= 5000 || debugItems.length >= 200) break;
+    }
     
     document.getElementById('debugCount').textContent = debugItems.length;
     renderDebugList();
@@ -1435,22 +1454,22 @@ function renderDebugList() {
         const sectionMatch = desc.match(/Actual (?:size|measurements):\s*([^A-Z]*)/i);
         const section = sectionMatch ? sectionMatch[1].substring(0, 150) : 'No Actual size found';
         
-        return \`
+        return `
             <div class="info-card" style="margin-top: 12px;">
-                <div style="font-size: 13px; color: #4ade80; margin-bottom: 4px;">\${cat.toUpperCase()} | \${measKeys.length} measurements</div>
-                <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">\${item.title}</div>
+                <div style="font-size: 13px; color: #4ade80; margin-bottom: 4px;">${cat.toUpperCase()} | ${measKeys.length} measurements</div>
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">${item.title}</div>
                 <div style="font-size: 12px; color: #888; margin-bottom: 8px;">
-                    \${measKeys.length > 0 ? measKeys.map(k => k + ': ' + m[k]).join(' | ') : 'None extracted'}
+                    ${measKeys.length > 0 ? measKeys.map(k => k + ': ' + m[k]).join(' | ') : 'None extracted'}
                 </div>
                 <div style="font-size: 11px; color: #666; font-family: monospace; background: #0a0a0a; padding: 8px; border-radius: 6px; word-break: break-all;">
-                    \${section}
+                    ${section}
                 </div>
             </div>
-        \`;
+        `;
     }).join('');
     
     if (debugItems.length > 50) {
-        list.innerHTML += \`<div style="text-align: center; padding: 20px; color: #666;">Showing first 50 of \${debugItems.length} items</div>\`;
+        list.innerHTML += `<div style="text-align: center; padding: 20px; color: #666;">Showing first 50 of ${debugItems.length} items</div>`;
     }
 }
 
