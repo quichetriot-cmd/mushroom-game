@@ -1051,9 +1051,9 @@ function extractMeasurements(desc, title = '') {
     const category = detectGarmentCategory(title);
     if (category === 'accessory') return {};
     
-    // Extract just the "Actual size:" section
-    const actualSizeMatch = desc.match(/Actual size[:\s]+(.+?)(?=Condition|Degree|Details|Approximately)/i);
-    const sizeSection = actualSizeMatch ? actualSizeMatch[1] : desc;
+    // Extract just the "Actual size:" section (must have colon and cm to avoid prose mentions)
+    const actualSizeMatch = desc.match(/Actual size:\s*(.+?cm.+?)(?=Condition|Degree|Details|Approximately)/i);
+    const sizeSection = actualSizeMatch ? actualSizeMatch[1] : '';
     
     const m = {};
     
