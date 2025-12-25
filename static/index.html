@@ -1013,23 +1013,29 @@ function cmToInches(cm) {
 function detectGarmentCategory(title) {
     const t = title.toLowerCase();
     
-    // Shoes
-    if (/shoes|boots|sneaker|loafer|oxford|moccasin/.test(t)) return 'shoes';
+    // Shoes first
+    if (/\b(shoes|boots|sneaker|loafer|oxford|moccasin|converse)\b/.test(t)) return 'shoes';
     
     // All-in-ones (jumpsuits) - need BOTH top and bottom measurements
     if (/all in one|all-in-one|allinone|union.?alls|jumperalls/.test(t)) return 'allinone';
     
     // Coveralls = chore coats (Akira's naming) - measured like tops
-    if (/coverall/.test(t)) return 'tops';
+    if (/\bcoverall\b/.test(t)) return 'tops';
     
     // Overalls = bib overalls - measured like pants
-    if (/overall/.test(t)) return 'bottoms';
+    if (/\boverall\b/.test(t)) return 'bottoms';
     
     // Bottoms (pants/jeans)
-    if (/jeans|jeens|pants|trouser|dungaree|shorts|chino/.test(t)) return 'bottoms';
+    if (/\b(jeans|jeens|pants|trouser|dungaree|shorts|chino)\b/.test(t)) return 'bottoms';
     
-    // Accessories - skip measurements (use word boundaries to avoid matching 'tag' in 'patagonia')
-    const accessoryPattern = /\b(bag|tote|backpack|rucksack|wallet|belt|hat|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|sign|lamp|banner|display|showcase|umbrella|fixture|neon|poster|key holder|thermometer|clip|bracelet|trash can|fabric|scrap|watch fob|fob|ashtray|pin|medal|coin|token|lighter)\b/;
+    // Vests don't need length
+    if (/\bvest\b/.test(t)) return 'vest';
+    
+    // If it has a garment word, it's a top (not an accessory)
+    if (/\b(jacket|coat|shirt|parka|cardigan|sweater|sweatshirt|hoodie|hoody|blazer|pullover|anorak|windbreaker|bomber|blouson)\b/.test(t)) return 'tops';
+    
+    // Accessories - only if NO garment word above matched
+    const accessoryPattern = /\b(bag|tote|backpack|back pack|rucksack|wallet|belt|hat|cap|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|sign|lamp|banner|display|showcase|umbrella|fixture|neon|poster|key holder|thermometer|clip|bracelet|trash can|fabric|scrap|watch fob|fob|ashtray|pin|medal|coin|token|lighter|glasses|apron|flasher|paper sleeve|stool|table|bench|furniture|mittens|gloves|globe|rack|hanger)\b/;
     if (accessoryPattern.test(t)) return 'accessory';
     
     return 'tops';
@@ -1041,9 +1047,9 @@ function extractMeasurements(desc, title = '') {
     const category = detectGarmentCategory(title);
     if (category === 'accessory') return {};
     
-    // Extract the "Actual size:" section - try this first, fallback to "Notation:" for jeans
-    // (Some items have "Notation: X-LARGE Actual size:..." - we want just the Actual size part)
-    let actualSizeMatch = desc.match(/Actual (?:size|measurements):\s*(.+?cm.+?)(?=\s+Approximately\s*:|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
+    // Extract the "Actual size:" section - must start with a measurement word to avoid prose
+    // (Some items have "Actual size: SZ40 inches. I bought..." then later "Actual size: Shoulder width...")
+    let actualSizeMatch = desc.match(/Actual (?:size|measurements):\s*((?:Shoulder|Width|Body|W\s*\d).+?cm.+?)(?=\s+Approximately\s*:|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
     if (!actualSizeMatch) {
         // Fallback for jeans that only have "Notation: W 93 cm / L 93.5 cm..."
         actualSizeMatch = desc.match(/Notation:\s*(W\s*\d+.*?cm.+?)(?=\s+Approximately\s*:|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
@@ -1126,18 +1132,18 @@ function extractMeasurements(desc, title = '') {
         let chestCm = null;
         
         // 1. "Body width 52 cm" or "Body width 61-65 cm" (take first number of range)
-        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
+        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
         if (bodyMatch) chestCm = parseFloat(bodyMatch[1]);
         
-        // 2. "/ Width 62 cm" or "/ Width width 48.5 cm" 
+        // 2. "/ Width 62 cm" or "/ Width approx. 58 cm"
         if (!chestCm) {
-            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
+            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
             if (slashWidthMatch) chestCm = parseFloat(slashWidthMatch[1]);
         }
         
-        // 3. "Width 56.5 cm" at the START (raglan sleeves, no shoulder measurement)
+        // 3. "Width 56.5 cm" or "Width approximately 53 cm" at START
         if (!chestCm) {
-            const startWidthMatch = sizeSection.match(/^Width\s*:?\s*(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
+            const startWidthMatch = sizeSection.match(/^Width\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
             if (startWidthMatch) chestCm = parseFloat(startWidthMatch[1]);
         }
         
@@ -1145,12 +1151,12 @@ function extractMeasurements(desc, title = '') {
             m['Chest'] = cmToInches(chestCm) + '"';
         }
         
-        // Length: "/ Length 55 cm" or "/ Length about 61 cm" or "/ Length approximately 55 cm"
-        const lengthMatch = sizeSection.match(/\/\s*Length\s*(?:about|approx(?:imately)?\.?)?\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+        // Length: "/ Length 55 cm" or "/ Length (from collar) 64 cm" or "/ Length about 75 cm"
+        const lengthMatch = sizeSection.match(/\/\s*Length\s*(?:\([^)]+\)\s*)?(?:about|approx(?:imately)?\.?)?\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
         if (lengthMatch) {
             const cm = parseFloat(lengthMatch[1]);
             const inches = parseFloat(cmToInches(cm));
-            if (inches >= 10 && inches <= 45) {
+            if (inches >= 10 && inches <= 50) {  // Up to 50" for long coats
                 m['Length'] = inches.toFixed(1) + '"';
             }
         }
