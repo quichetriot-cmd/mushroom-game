@@ -601,6 +601,7 @@
                 <button class="mode-tab active" id="galleryTab">Gallery</button>
                 <button class="mode-tab" id="gameTab">🎮 Play</button>
                 <button class="mode-tab" id="infoTab">ℹ️ Info</button>
+                <button class="mode-tab" id="debugTab">🔧 Debug</button>
             </div>
         </div>
         
@@ -736,6 +737,25 @@
                     </div>
                 </div>
             </div>
+        </div>
+        
+        <!-- Debug Section -->
+        <div class="info-section" id="debugSection">
+            <div class="info-title">🔧 Measurement Debug</div>
+            
+            <div class="info-card">
+                <div class="info-card-title">Filter</div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="sort-btn active" id="debugFilter0">0 Measurements</button>
+                    <button class="sort-btn" id="debugFilter1">1 Measurement</button>
+                    <button class="sort-btn" id="debugFilterAll">All Missing</button>
+                </div>
+                <div style="margin-top: 12px; color: #888; font-size: 13px;">
+                    Found: <span id="debugCount">0</span> items
+                </div>
+            </div>
+            
+            <div id="debugList"></div>
         </div>
         
         <!-- Game -->
@@ -1340,6 +1360,7 @@ function hideAllSections() {
     document.getElementById('gameSection').classList.remove('active');
     document.getElementById('filterScreen').classList.remove('active');
     document.getElementById('infoSection').classList.remove('active');
+    document.getElementById('debugSection').classList.remove('active');
     document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
 }
 
@@ -1361,6 +1382,81 @@ document.getElementById('infoTab').onclick = () => {
     document.getElementById('infoSection').classList.add('active');
     updateInfoStats();
 };
+
+document.getElementById('debugTab').onclick = () => {
+    hideAllSections();
+    document.getElementById('debugTab').classList.add('active');
+    document.getElementById('debugSection').classList.add('active');
+    loadDebugItems(0);
+};
+
+// ========== DEBUG ==========
+let debugItems = [];
+let debugFilter = 0; // 0 = zero measurements, 1 = one measurement
+
+async function loadDebugItems(filter) {
+    debugFilter = filter;
+    
+    // Update filter buttons
+    document.getElementById('debugFilter0').classList.toggle('active', filter === 0);
+    document.getElementById('debugFilter1').classList.toggle('active', filter === 1);
+    document.getElementById('debugFilterAll').classList.toggle('active', filter === 'all');
+    
+    // Fetch all items (we need to check measurements client-side)
+    const res = await fetch(API_BASE + '/api/items?limit=10000');
+    const items = await res.json();
+    
+    // Filter to items with missing measurements
+    debugItems = items.filter(item => {
+        const cat = detectGarmentCategory(item.title);
+        if (cat === 'accessory' || cat === 'shoes') return false;
+        
+        const m = extractMeasurements(item.description, item.title);
+        const count = Object.keys(m).length;
+        
+        if (filter === 0) return count === 0;
+        if (filter === 1) return count === 1;
+        return count <= 1; // 'all' = 0 or 1
+    });
+    
+    document.getElementById('debugCount').textContent = debugItems.length;
+    renderDebugList();
+}
+
+function renderDebugList() {
+    const list = document.getElementById('debugList');
+    list.innerHTML = debugItems.slice(0, 50).map((item, i) => {
+        const cat = detectGarmentCategory(item.title);
+        const m = extractMeasurements(item.description, item.title);
+        const measKeys = Object.keys(m);
+        
+        // Get the Actual size section for debugging
+        const desc = item.description || '';
+        const sectionMatch = desc.match(/Actual (?:size|measurements):\s*([^A-Z]*)/i);
+        const section = sectionMatch ? sectionMatch[1].substring(0, 150) : 'No Actual size found';
+        
+        return \`
+            <div class="info-card" style="margin-top: 12px;">
+                <div style="font-size: 13px; color: #4ade80; margin-bottom: 4px;">\${cat.toUpperCase()} | \${measKeys.length} measurements</div>
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">\${item.title}</div>
+                <div style="font-size: 12px; color: #888; margin-bottom: 8px;">
+                    \${measKeys.length > 0 ? measKeys.map(k => k + ': ' + m[k]).join(' | ') : 'None extracted'}
+                </div>
+                <div style="font-size: 11px; color: #666; font-family: monospace; background: #0a0a0a; padding: 8px; border-radius: 6px; word-break: break-all;">
+                    \${section}
+                </div>
+            </div>
+        \`;
+    }).join('');
+    
+    if (debugItems.length > 50) {
+        list.innerHTML += \`<div style="text-align: center; padding: 20px; color: #666;">Showing first 50 of \${debugItems.length} items</div>\`;
+    }
+}
+
+document.getElementById('debugFilter0').onclick = () => loadDebugItems(0);
+document.getElementById('debugFilter1').onclick = () => loadDebugItems(1);
+document.getElementById('debugFilterAll').onclick = () => loadDebugItems('all');
 
 function updateInfoStats() {
     if (statsData) {
