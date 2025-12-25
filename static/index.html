@@ -1028,19 +1028,9 @@ function detectGarmentCategory(title) {
     // Bottoms (pants/jeans)
     if (/jeans|jeens|pants|trouser|dungaree|shorts|chino/.test(t)) return 'bottoms';
     
-    // Accessories - skip measurements
-    const accessories = [
-        'bag', 'tote', 'backpack', 'rucksack', 'wallet', 'belt', 
-        'hat', 'cap', 'ring', 'blanket', 'rug', 'bandana', 'quilt', 
-        'doll', 'clock', 'toy', 'patch', 'tag', 'button', 'buckle', 
-        'box', 'chair', 'sign', 'lamp', 'banner', 'display', 'showcase', 
-        'umbrella', 'fixture', 'neon', 'poster', 'key holder', 'thermometer',
-        'clip', 'bracelet', 'trash can', 'fabric', 'scrap', 'watch fob',
-        'fob', 'ashtray', 'pin', 'medal', 'coin', 'token', 'lighter', 'sample'
-    ];
-    for (const acc of accessories) {
-        if (t.includes(acc)) return 'accessory';
-    }
+    // Accessories - skip measurements (use word boundaries to avoid matching 'tag' in 'patagonia')
+    const accessoryPattern = /\b(bag|tote|backpack|rucksack|wallet|belt|hat|cap|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|sign|lamp|banner|display|showcase|umbrella|fixture|neon|poster|key holder|thermometer|clip|bracelet|trash can|fabric|scrap|watch fob|fob|ashtray|pin|medal|coin|token|lighter|sample)\b/;
+    if (accessoryPattern.test(t)) return 'accessory';
     
     return 'tops';
 }
