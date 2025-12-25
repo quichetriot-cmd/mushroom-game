@@ -645,41 +645,73 @@
             
             <div class="info-card">
                 <div class="info-card-title">Purpose</div>
-                <p>A training tool for vintage clothing dealers to sharpen pricing instincts. Browse sold items from Mushroom Vintage (Niigata) and test your ability to estimate prices in the flashcard game.</p>
+                <p>A practical study tool for training my eye as a vintage dealer. By repeatedly guessing prices on high-end sold items, I build intuition for what drives value - era, brand, condition, size, and rarity.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-title">About Mushroom Vintage</div>
+                <p>Mushroom Vintage has been operating out of Niigata, Japan since 2002. Owner Akira travels frequently to the USA to source inventory, and the shop is famous in Japan for providing the highest grade American vintage money can buy.</p>
+                <p>I've done business with Akira in the past - his pricing reflects what serious collectors actually pay for top-tier pieces.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-title">Game Modes</div>
+                <p><strong>20 Rounds:</strong> Quick arcade-style session. Guess prices, earn points, track your high score. Good for a fast warmup.</p>
+                <p><strong>Endless Mode:</strong> Spaced repetition study. Items you miss come back more often. Tracks your accuracy per year range. This is where real learning happens.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-title">Spaced Repetition Algorithm</div>
+                <p>The endless mode implements a simplified spaced repetition system (SRS), similar to Anki or Quizlet's "Learn" mode. The goal is to optimize learning by showing difficult items more frequently while letting mastered items fade.</p>
+                <p><strong>How it works:</strong></p>
+                <p>Each item stores: <code>avgError</code> (running average of guess accuracy), <code>lastSeen</code> (timestamp), <code>timesShown</code> (exposure count), and <code>soldDate</code> (for year filtering).</p>
+                <p><strong>Priority formula:</strong></p>
+                <p><code>priority = (avgError / 100) * 50 + daysSinceLastSeen * 2</code></p>
+                <p>Items with higher priority are shown first. High error rate increases priority (you need more practice). More days since last seen increases priority (memory decay). If you got an item right recently (≤30% error, within 3 days), priority is reduced by 70%.</p>
+                <p><strong>Accuracy threshold:</strong> A guess within 30% of actual price counts as "correct" for learning purposes.</p>
+                <p><strong>Session recycling:</strong> When all items in a year range have been seen, the session resets and re-queues items weighted by their error rates - so items you struggled with appear first in the next pass.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-title">Gamification Mechanics</div>
+                <p>The 20-round mode uses point-based scoring to make practice engaging:</p>
+                <ul>
+                    <li><strong>Perfect (≤5% off):</strong> +500 pts</li>
+                    <li><strong>Great (≤15% off):</strong> +300 pts</li>
+                    <li><strong>Good (≤30% off):</strong> +150 pts</li>
+                    <li><strong>Close (≤50% off):</strong> +50 pts</li>
+                    <li><strong>Way off (≤100% off):</strong> -50 pts</li>
+                    <li><strong>Ouch (>100% off):</strong> -100 pts</li>
+                </ul>
+                <p><strong>Streak bonus:</strong> After 3 correct guesses in a row, each additional correct guess adds <code>(streak - 2) * 25</code> bonus points. This rewards consistency and creates risk/reward tension.</p>
+                <p><strong>High score persistence:</strong> Best score is stored in localStorage, creating a personal benchmark to beat.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-title">ML Application Notes</div>
+                <p>This system generates labeled training data: each guess creates a tuple of <code>(item_features, human_estimate, actual_price, error_rate)</code>. Over time, this builds a dataset of human pricing intuition that could be used to:</p>
+                <ul>
+                    <li>Train a model to predict which items humans find difficult to price (high variance in estimates)</li>
+                    <li>Identify feature gaps - items where human estimates consistently deviate from actual prices may have hidden value drivers not captured in text/images</li>
+                    <li>Compare human learning curves to model training curves on the same dataset</li>
+                    <li>Use human accuracy as a baseline for model evaluation (if humans average 35% accuracy, a model achieving 40% is meaningful)</li>
+                </ul>
             </div>
             
             <div class="info-card">
                 <div class="info-card-title">Data Source</div>
-                <p>All items are scraped from <code>vintage-mushroom.net</code>, a high-end vintage store in Niigata. Only items sold for ¥65,000+ (~$430 USD) are included.</p>
-                <p>Prices are converted at ¥150 = $1 USD. Descriptions are auto-translated from Japanese using Google Translate.</p>
+                <p>All items are scraped from <code>vintage-mushroom.net</code>. Only sold items priced ¥65,000+ (~$430 USD) are included.</p>
+                <p>Prices converted at ¥150 = $1 USD. Descriptions auto-translated from Japanese.</p>
             </div>
             
             <div class="info-card">
                 <div class="info-card-title">Tech Stack</div>
                 <ul>
-                    <li><strong>Frontend:</strong> Vanilla HTML/CSS/JS (no framework)</li>
+                    <li><strong>Frontend:</strong> Vanilla HTML/CSS/JS</li>
                     <li><strong>Backend:</strong> Python FastAPI</li>
                     <li><strong>Database:</strong> PostgreSQL on Railway</li>
                     <li><strong>Scraper:</strong> BeautifulSoup + deep-translator</li>
                     <li><strong>Hosting:</strong> Railway (auto-deploy from GitHub)</li>
-                    <li><strong>Auth:</strong> HTTP Basic Auth</li>
-                </ul>
-            </div>
-            
-            <div class="info-card">
-                <div class="info-card-title">Update Schedule</div>
-                <p>The scraper runs automatically every day at <strong>6:00 AM UTC</strong> (1 AM Eastern, 10 PM Pacific).</p>
-                <p>It checks for new listings, stops when it hits 5 consecutive items already in the database. New items appear automatically - no manual intervention needed.</p>
-            </div>
-            
-            <div class="info-card">
-                <div class="info-card-title">Known Limitations</div>
-                <ul>
-                    <li>~2,000 older items (pre-2016) not yet scraped due to initial connection timeout</li>
-                    <li>Some Japanese characters display incorrectly in titles</li>
-                    <li>Translation quality varies - some descriptions are awkward</li>
-                    <li>Measurements extracted via regex - may miss unusual formats</li>
-                    <li>Images hosted on Mushroom's server - may break if they change URLs</li>
                 </ul>
             </div>
             
@@ -854,41 +886,39 @@ let selectedYear = null;
 let gameMode = '20'; // '20' or 'endless'
 let sessionItemIds = new Set(); // Track items shown this session
 
-// Spaced repetition history: { visibleYear: { itemId: { lastSeen, timesShown, lastError, avgError } } }
-let studyHistory = JSON.parse(localStorage.getItem('vStudyHistory') || '{}');
-let allTimeStats = JSON.parse(localStorage.getItem('vAllTimeStats') || '{}');
+// Spaced repetition history: { itemId: { lastSeen, timesShown, lastError, avgError, soldDate } }
+let studyHistory = JSON.parse(localStorage.getItem('vStudyHistory2') || '{}');
 
 // Stats for info page
 let statsData = null;
 
 // ========== SPACED REPETITION ==========
 function saveStudyHistory() {
-    localStorage.setItem('vStudyHistory', JSON.stringify(studyHistory));
-    localStorage.setItem('vAllTimeStats', JSON.stringify(allTimeStats));
+    localStorage.setItem('vStudyHistory2', JSON.stringify(studyHistory));
 }
 
-function recordGuess(itemId, pctError) {
+function recordGuess(itemId, pctError, soldDate) {
     const now = Date.now();
-    const wasCorrect = pctError <= 30;
-    const year = selectedYear || 'all';
     
-    // Init year bucket if needed
-    if (!studyHistory[year]) studyHistory[year] = {};
-    if (!allTimeStats[year]) allTimeStats[year] = { total: 0, correct: 0 };
-    
-    // Update year stats
-    allTimeStats[year].total++;
-    if (wasCorrect) allTimeStats[year].correct++;
-    
-    // Update item history for this year
-    if (!studyHistory[year][itemId]) {
-        studyHistory[year][itemId] = { lastSeen: now, timesShown: 1, lastError: pctError, avgError: pctError };
+    if (!studyHistory[itemId]) {
+        studyHistory[itemId] = { 
+            lastSeen: now, 
+            timesShown: 1, 
+            lastError: pctError, 
+            avgError: pctError,
+            soldDate: soldDate || null,
+            correct: pctError <= 30 ? 1 : 0,
+            total: 1
+        };
     } else {
-        const h = studyHistory[year][itemId];
+        const h = studyHistory[itemId];
         h.avgError = (h.avgError * h.timesShown + pctError) / (h.timesShown + 1);
         h.timesShown++;
         h.lastError = pctError;
         h.lastSeen = now;
+        h.total++;
+        if (pctError <= 30) h.correct++;
+        if (soldDate) h.soldDate = soldDate;
     }
     
     saveStudyHistory();
@@ -896,19 +926,15 @@ function recordGuess(itemId, pctError) {
 
 function getPriority(item) {
     const id = item.id;
-    const year = selectedYear || 'all';
-    const yearHistory = studyHistory[year] || {};
-    const h = yearHistory[id];
+    const h = studyHistory[id];
     
     if (!h) return 100; // Never seen = high priority
     
     const daysSince = (Date.now() - h.lastSeen) / (1000 * 60 * 60 * 24);
-    const recencyBoost = Math.min(daysSince, 30); // Max 30 days boost
+    const recencyBoost = Math.min(daysSince, 30);
     
-    // Higher avgError = show more often, older = show more often
     const priority = (h.avgError / 100) * 50 + recencyBoost * 2;
     
-    // If they got it right recently, lower priority
     if (h.lastError <= 30 && daysSince < 3) {
         return priority * 0.3;
     }
@@ -920,53 +946,62 @@ function sortByPriority(items) {
     return items.sort((a, b) => getPriority(b) - getPriority(a));
 }
 
-function getStudyStatsHtml() {
-    // Get stats for currently selected year (or show prompt if none selected)
-    const year = selectedYear;
+function getStatsForYear(minYear) {
+    let totalGuesses = 0;
+    let totalCorrect = 0;
+    let itemCount = 0;
+    let weakCount = 0;
     
-    if (!year) {
-        // Show overall totals across all years
-        let totalGuesses = 0;
-        let totalCorrect = 0;
-        let totalItems = 0;
-        
-        for (const y of Object.keys(allTimeStats)) {
-            totalGuesses += allTimeStats[y].total || 0;
-            totalCorrect += allTimeStats[y].correct || 0;
-        }
-        for (const y of Object.keys(studyHistory)) {
-            totalItems += Object.keys(studyHistory[y]).length;
+    for (const [id, h] of Object.entries(studyHistory)) {
+        // Check if item's sold date is >= minYear
+        if (h.soldDate) {
+            const itemYear = new Date(h.soldDate).getFullYear();
+            if (itemYear < minYear) continue;
         }
         
-        if (totalGuesses === 0) {
-            return `<div class="study-stats-row">No study history yet</div>`;
-        }
+        itemCount++;
+        totalGuesses += h.total || h.timesShown || 1;
+        totalCorrect += h.correct || (h.avgError <= 30 ? h.timesShown : 0);
+        if (h.avgError > 40) weakCount++;
+    }
+    
+    return { totalGuesses, totalCorrect, itemCount, weakCount };
+}
+
+function getStudyStatsHtml() {
+    const totalItems = Object.keys(studyHistory).length;
+    
+    if (totalItems === 0) {
+        return `<div class="study-stats-row">No study history yet. Start an endless session!</div>`;
+    }
+    
+    if (!selectedYear) {
+        // Show overall stats
+        const stats = getStatsForYear(0);
+        const acc = stats.totalGuesses > 0 ? Math.round(stats.totalCorrect / stats.totalGuesses * 100) : 0;
         
-        const acc = Math.round(totalCorrect / totalGuesses * 100);
         return `
-            <div class="study-stats-row">All years: <span class="study-stats-val">${totalGuesses}</span> guesses</div>
-            <div class="study-stats-row">Unique items: <span class="study-stats-val">${totalItems}</span></div>
-            <div class="study-stats-row">Overall accuracy: <span class="study-stats-val">${acc}%</span></div>
-            <div class="study-stats-row" style="color:#666;font-size:12px;">Select a year to see specific stats</div>
+            <div class="study-stats-row">Total guesses: <span class="study-stats-val">${stats.totalGuesses}</span></div>
+            <div class="study-stats-row">Items studied: <span class="study-stats-val">${stats.itemCount}</span></div>
+            <div class="study-stats-row">Accuracy: <span class="study-stats-val">${acc}%</span></div>
+            ${stats.weakCount > 0 ? `<div class="study-stats-row">Need review: <span class="study-stats-val">${stats.weakCount}</span></div>` : ''}
         `;
     }
     
-    const yearStats = allTimeStats[year] || { total: 0, correct: 0 };
-    const yearHistory = studyHistory[year] || {};
-    const itemsStudied = Object.keys(yearHistory).length;
-    const weakCount = Object.values(yearHistory).filter(h => h.avgError > 40).length;
+    // Show stats for selected year filter
+    const stats = getStatsForYear(selectedYear);
     
-    if (yearStats.total === 0) {
-        return `<div class="study-stats-row">No ${year}+ items studied yet</div>`;
+    if (stats.itemCount === 0) {
+        return `<div class="study-stats-row">No items from ${selectedYear}+ studied yet</div>`;
     }
     
-    const acc = Math.round(yearStats.correct / yearStats.total * 100);
+    const acc = stats.totalGuesses > 0 ? Math.round(stats.totalCorrect / stats.totalGuesses * 100) : 0;
     
     return `
-        <div class="study-stats-row">${year}+ guesses: <span class="study-stats-val">${yearStats.total}</span></div>
-        <div class="study-stats-row">Items studied: <span class="study-stats-val">${itemsStudied}</span></div>
+        <div class="study-stats-row">${selectedYear}+ guesses: <span class="study-stats-val">${stats.totalGuesses}</span></div>
+        <div class="study-stats-row">Items studied: <span class="study-stats-val">${stats.itemCount}</span></div>
         <div class="study-stats-row">Accuracy: <span class="study-stats-val">${acc}%</span></div>
-        ${weakCount > 0 ? `<div class="study-stats-row">Need review: <span class="study-stats-val">${weakCount}</span></div>` : ''}
+        ${stats.weakCount > 0 ? `<div class="study-stats-row">Need review: <span class="study-stats-val">${stats.weakCount}</span></div>` : ''}
     `;
 }
 
@@ -1503,8 +1538,7 @@ function submitGuess() {
     
     // Record for spaced repetition (endless mode only)
     if (gameMode === 'endless') {
-        const itemId = item.id;
-        recordGuess(itemId, pct);
+        recordGuess(item.id, pct, item.sold_date);
     }
     
     total++;
