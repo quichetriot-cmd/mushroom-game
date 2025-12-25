@@ -1127,9 +1127,9 @@ function extractMeasurements(desc, title = '') {
                 m['Chest'] = cmToInches(cm) + '"';
             }
         }
-        // Fallback: just "Width" at start or after "/" but not Shoulder/Sleeve/Hem/Thigh
+        // Fallback: "/ Width 62 cm" or "/ Width width 48.5 cm" (translation artifacts)
         if (!m['Chest']) {
-            const widthMatch = sizeSection.match(/(?:^|\/)\s*Width\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+            const widthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
             if (widthMatch) {
                 const cm = parseFloat(widthMatch[1]);
                 if (cm >= 35 && cm <= 85) {
