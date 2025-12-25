@@ -854,9 +854,9 @@ let selectedYear = null;
 let gameMode = '20'; // '20' or 'endless'
 let sessionItemIds = new Set(); // Track items shown this session
 
-// Spaced repetition history: { itemId: { lastSeen, timesShown, lastError, avgError } }
+// Spaced repetition history: { visibleYear: { itemId: { lastSeen, timesShown, lastError, avgError } } }
 let studyHistory = JSON.parse(localStorage.getItem('vStudyHistory') || '{}');
-let allTimeStats = JSON.parse(localStorage.getItem('vAllTimeStats') || '{"total":0,"correct":0}');
+let allTimeStats = JSON.parse(localStorage.getItem('vAllTimeStats') || '{}');
 
 // Stats for info page
 let statsData = null;
@@ -870,16 +870,21 @@ function saveStudyHistory() {
 function recordGuess(itemId, pctError) {
     const now = Date.now();
     const wasCorrect = pctError <= 30;
+    const year = selectedYear || 'all';
     
-    // Update all-time stats
-    allTimeStats.total++;
-    if (wasCorrect) allTimeStats.correct++;
+    // Init year bucket if needed
+    if (!studyHistory[year]) studyHistory[year] = {};
+    if (!allTimeStats[year]) allTimeStats[year] = { total: 0, correct: 0 };
     
-    // Update item history
-    if (!studyHistory[itemId]) {
-        studyHistory[itemId] = { lastSeen: now, timesShown: 1, lastError: pctError, avgError: pctError };
+    // Update year stats
+    allTimeStats[year].total++;
+    if (wasCorrect) allTimeStats[year].correct++;
+    
+    // Update item history for this year
+    if (!studyHistory[year][itemId]) {
+        studyHistory[year][itemId] = { lastSeen: now, timesShown: 1, lastError: pctError, avgError: pctError };
     } else {
-        const h = studyHistory[itemId];
+        const h = studyHistory[year][itemId];
         h.avgError = (h.avgError * h.timesShown + pctError) / (h.timesShown + 1);
         h.timesShown++;
         h.lastError = pctError;
@@ -890,8 +895,10 @@ function recordGuess(itemId, pctError) {
 }
 
 function getPriority(item) {
-    const id = item.id || item.url;
-    const h = studyHistory[id];
+    const id = item.id;
+    const year = selectedYear || 'all';
+    const yearHistory = studyHistory[year] || {};
+    const h = yearHistory[id];
     
     if (!h) return 100; // Never seen = high priority
     
@@ -914,19 +921,52 @@ function sortByPriority(items) {
 }
 
 function getStudyStatsHtml() {
-    const totalStudied = Object.keys(studyHistory).length;
-    const allTimeAcc = allTimeStats.total > 0 
-        ? Math.round(allTimeStats.correct / allTimeStats.total * 100) 
-        : 0;
+    // Get stats for currently selected year (or show prompt if none selected)
+    const year = selectedYear;
     
-    // Find weak items (high avgError)
-    const weakCount = Object.values(studyHistory).filter(h => h.avgError > 40).length;
+    if (!year) {
+        // Show overall totals across all years
+        let totalGuesses = 0;
+        let totalCorrect = 0;
+        let totalItems = 0;
+        
+        for (const y of Object.keys(allTimeStats)) {
+            totalGuesses += allTimeStats[y].total || 0;
+            totalCorrect += allTimeStats[y].correct || 0;
+        }
+        for (const y of Object.keys(studyHistory)) {
+            totalItems += Object.keys(studyHistory[y]).length;
+        }
+        
+        if (totalGuesses === 0) {
+            return `<div class="study-stats-row">No study history yet</div>`;
+        }
+        
+        const acc = Math.round(totalCorrect / totalGuesses * 100);
+        return `
+            <div class="study-stats-row">All years: <span class="study-stats-val">${totalGuesses}</span> guesses</div>
+            <div class="study-stats-row">Unique items: <span class="study-stats-val">${totalItems}</span></div>
+            <div class="study-stats-row">Overall accuracy: <span class="study-stats-val">${acc}%</span></div>
+            <div class="study-stats-row" style="color:#666;font-size:12px;">Select a year to see specific stats</div>
+        `;
+    }
+    
+    const yearStats = allTimeStats[year] || { total: 0, correct: 0 };
+    const yearHistory = studyHistory[year] || {};
+    const itemsStudied = Object.keys(yearHistory).length;
+    const weakCount = Object.values(yearHistory).filter(h => h.avgError > 40).length;
+    
+    if (yearStats.total === 0) {
+        return `<div class="study-stats-row">No ${year}+ items studied yet</div>`;
+    }
+    
+    const acc = Math.round(yearStats.correct / yearStats.total * 100);
     
     return `
-        <div class="study-stats-row">All-time: <span class="study-stats-val">${allTimeStats.total}</span> guesses</div>
-        <div class="study-stats-row">Unique items studied: <span class="study-stats-val">${totalStudied}</span></div>
-        <div class="study-stats-row">Overall accuracy: <span class="study-stats-val">${allTimeAcc}%</span></div>
-        ${weakCount > 0 ? `<div class="study-stats-row">Items needing review: <span class="study-stats-val">${weakCount}</span></div>` : ''}
+        <div class="study-stats-row">${year}+ guesses: <span class="study-stats-val">${yearStats.total}</span></div>
+        <div class="study-stats-row">Items studied: <span class="study-stats-val">${itemsStudied}</span></div>
+        <div class="study-stats-row">Accuracy: <span class="study-stats-val">${acc}%</span></div>
+        ${weakCount > 0 ? `<div class="study-stats-row">Need review: <span class="study-stats-val">${weakCount}</span></div>` : ''}
     `;
 }
 
@@ -1362,6 +1402,9 @@ async function selectYear(year) {
     
     document.getElementById('filterInfo').textContent = `Training on items from ${year} onward`;
     document.getElementById('startBtn').classList.add('active');
+    
+    // Update stats for selected year
+    document.getElementById('studyStats').innerHTML = getStudyStatsHtml();
 }
 
 document.getElementById('startBtn').onclick = async () => {
@@ -1458,9 +1501,11 @@ function submitGuess() {
     const diff = Math.abs(guess - actual);
     const pct = (diff / actual) * 100;
     
-    // Record for spaced repetition
-    const itemId = item.id;
-    recordGuess(itemId, pct);
+    // Record for spaced repetition (endless mode only)
+    if (gameMode === 'endless') {
+        const itemId = item.id;
+        recordGuess(itemId, pct);
+    }
     
     total++;
     
@@ -1520,8 +1565,16 @@ async function nextCard() {
         if (cardIndex >= deck.length - 5) {
             try {
                 const excludeIds = Array.from(sessionItemIds);
-                const newItems = await fetchRandomItems(selectedYear, BATCH_SIZE, excludeIds);
-                // Filter out items already seen this session (extra safety)
+                let newItems = await fetchRandomItems(selectedYear, BATCH_SIZE, excludeIds);
+                
+                // If no new items, we've seen everything - reset and re-study
+                if (newItems.length === 0 && sessionItemIds.size > 0) {
+                    console.log('All items studied this session, resetting for re-study...');
+                    sessionItemIds.clear();
+                    newItems = await fetchRandomItems(selectedYear, BATCH_SIZE, []);
+                }
+                
+                // Filter and add to deck
                 const fresh = newItems.filter(item => !sessionItemIds.has(item.id));
                 deck = deck.concat(sortByPriority(fresh));
             } catch (e) {
@@ -1532,7 +1585,7 @@ async function nextCard() {
         if (cardIndex < deck.length) {
             showCard();
         } else {
-            // No more items available
+            // Truly no more items (empty database for this year filter)
             endGame();
         }
     }
