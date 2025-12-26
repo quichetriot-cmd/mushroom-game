@@ -2404,40 +2404,45 @@ function analyzeTrends(items) {
 function renderTrends() {
     const { stats } = trendsData;
     
-    // Sort by price change
-    const byPriceChange = Object.entries(stats)
-        .filter(([_, s]) => s.trailingCount >= 3) // Need baseline data
+    // Filter: need baseline data AND at least 1 item this month for price comparison
+    // Also exclude -100% (no items this month) from price analysis
+    const validForPrice = Object.entries(stats)
+        .filter(([_, s]) => s.trailingCount >= 3 && s.recentCount >= 1)
         .sort((a, b) => b[1].priceChange - a[1].priceChange);
     
-    // Hot categories (price up > 15%)
-    const hot = byPriceChange.filter(([_, s]) => s.priceChange > 15);
+    // Hot categories (price up > 20% with at least 1 recent sale)
+    const hot = validForPrice.filter(([_, s]) => s.priceChange > 20);
     document.getElementById('trendsHot').innerHTML = hot.length > 0 
         ? hot.slice(0, 5).map(([cat, s]) => renderTrendItem(cat, s, 'price')).join('')
         : '<div style="color: #666; padding: 12px;">No significant price increases this month</div>';
     
-    // Cold categories (price down < -15%)
-    const cold = byPriceChange.filter(([_, s]) => s.priceChange < -15).reverse();
+    // Cold categories (price down < -20% with at least 1 recent sale)
+    const cold = validForPrice.filter(([_, s]) => s.priceChange < -20).reverse();
     document.getElementById('trendsCold').innerHTML = cold.length > 0 
         ? cold.slice(0, 5).map(([cat, s]) => renderTrendItem(cat, s, 'price')).join('')
         : '<div style="color: #666; padding: 12px;">No significant price drops this month</div>';
     
-    // Volume changes
+    // Volume changes - include categories with 0 this month as "not listing"
     const byVolume = Object.entries(stats)
         .filter(([_, s]) => s.trailingCount >= 3)
         .sort((a, b) => b[1].volumeChange - a[1].volumeChange);
     
-    const volumeUp = byVolume.filter(([_, s]) => s.volumeChange > 50).slice(0, 3);
-    const volumeDown = byVolume.filter(([_, s]) => s.volumeChange < -50).reverse().slice(0, 3);
+    const volumeUp = byVolume.filter(([_, s]) => s.volumeChange > 50 && s.recentCount >= 2).slice(0, 3);
+    const volumeDown = byVolume.filter(([_, s]) => s.recentCount === 0 && s.trailingMonthlyAvg >= 1).slice(0, 5);
     
     document.getElementById('trendsVolume').innerHTML = 
-        (volumeUp.length > 0 ? '<div style="margin-bottom: 8px; color: #4ade80; font-weight: 600;">📈 More listings:</div>' + 
+        (volumeUp.length > 0 ? '<div style="margin-bottom: 8px; color: #4ade80; font-weight: 600;">📈 Listing more than usual:</div>' + 
             volumeUp.map(([cat, s]) => renderTrendItem(cat, s, 'volume')).join('') : '') +
-        (volumeDown.length > 0 ? '<div style="margin-top: 16px; margin-bottom: 8px; color: #f87171; font-weight: 600;">📉 Fewer listings:</div>' + 
-            volumeDown.map(([cat, s]) => renderTrendItem(cat, s, 'volume')).join('') : '') +
+        (volumeDown.length > 0 ? '<div style="margin-top: 16px; margin-bottom: 8px; color: #f87171; font-weight: 600;">📉 Not listing this month:</div>' + 
+            volumeDown.map(([cat, s]) => renderTrendItem(cat, s, 'none')).join('') : '') +
         (volumeUp.length === 0 && volumeDown.length === 0 ? '<div style="color: #666; padding: 12px;">Volume relatively stable</div>' : '');
     
-    // All categories
-    document.getElementById('trendsAll').innerHTML = byPriceChange
+    // All categories - only show ones with activity
+    const activeCategories = Object.entries(stats)
+        .filter(([_, s]) => s.trailingCount >= 3 && s.recentCount >= 1)
+        .sort((a, b) => b[1].priceChange - a[1].priceChange);
+    
+    document.getElementById('trendsAll').innerHTML = activeCategories
         .map(([cat, s]) => renderTrendItem(cat, s, 'both')).join('');
     
     // Generate AI summary
@@ -2449,9 +2454,26 @@ function renderTrendItem(cat, s, mode) {
     const priceArrow = s.priceChange > 0 ? '↑' : s.priceChange < 0 ? '↓' : '→';
     const volArrow = s.volumeChange > 0 ? '↑' : s.volumeChange < 0 ? '↓' : '→';
     
+    // Warning for small sample sizes
+    const smallSample = s.recentCount <= 2 ? ' <span style="color:#888;font-size:11px;">(n=' + s.recentCount + ')</span>' : '';
+    
     let details = '';
+    if (mode === 'none') {
+        // Category not listed this month
+        details = `Usually ${s.trailingMonthlyAvg.toFixed(1)}/mo · avg $${s.trailingAvgPrice.toLocaleString()}`;
+        return `
+            <div class="trend-item">
+                <div>
+                    <div class="trend-name">${cat}</div>
+                    <div class="trend-details">${details}</div>
+                </div>
+                <span class="trend-change neutral">0 listed</span>
+            </div>
+        `;
+    }
+    
     if (mode === 'price' || mode === 'both') {
-        details += `$${s.recentAvgPrice.toLocaleString()} avg (was $${s.trailingAvgPrice.toLocaleString()})`;
+        details += `$${s.recentAvgPrice.toLocaleString()} avg (was $${s.trailingAvgPrice.toLocaleString()})${smallSample}`;
     }
     if (mode === 'volume' || mode === 'both') {
         if (details) details += ' · ';
@@ -2479,27 +2501,32 @@ function renderTrendItem(cat, s, mode) {
 function generateSummary(hot, cold, volumeUp, volumeDown, stats) {
     let summary = '';
     
-    // What's hot
-    if (hot.length > 0) {
-        const topHot = hot.slice(0, 2).map(([cat, s]) => `${cat} (+${s.priceChange}%)`);
-        summary += `<strong>Akira is pushing prices up on:</strong> ${topHot.join(', ')}. `;
+    // What's hot - only mention if sample size is reasonable
+    const meaningfulHot = hot.filter(([_, s]) => s.recentCount >= 2);
+    if (meaningfulHot.length > 0) {
+        const topHot = meaningfulHot.slice(0, 2).map(([cat, s]) => `${cat} (+${s.priceChange}%)`);
+        summary += `<strong>Prices up on:</strong> ${topHot.join(', ')}. `;
+    } else if (hot.length > 0) {
+        summary += `<strong>Some price increases</strong> but sample sizes are small (1-2 items). `;
     }
     
     // What's cooling
-    if (cold.length > 0) {
-        const topCold = cold.slice(0, 2).map(([cat, s]) => `${cat} (${s.priceChange}%)`);
-        summary += `<strong>Prices softening on:</strong> ${topCold.join(', ')}. `;
+    const meaningfulCold = cold.filter(([_, s]) => s.recentCount >= 2);
+    if (meaningfulCold.length > 0) {
+        const topCold = meaningfulCold.slice(0, 2).map(([cat, s]) => `${cat} (${s.priceChange}%)`);
+        summary += `<strong>Prices down on:</strong> ${topCold.join(', ')}. `;
     }
     
-    // Volume shifts
+    // Not listing this month
+    if (volumeDown.length > 0) {
+        const notListed = volumeDown.slice(0, 3).map(([cat]) => cat);
+        summary += `<strong>Not listing this month:</strong> ${notListed.join(', ')}. `;
+    }
+    
+    // Volume up
     if (volumeUp.length > 0) {
         const topVol = volumeUp.slice(0, 2).map(([cat]) => cat);
-        summary += `<strong>Listing more:</strong> ${topVol.join(', ')} — could signal inventory buildup or market testing. `;
-    }
-    
-    if (volumeDown.length > 0) {
-        const lowVol = volumeDown.slice(0, 2).map(([cat]) => cat);
-        summary += `<strong>Listing less:</strong> ${lowVol.join(', ')} — possibly holding inventory or supply drying up. `;
+        summary += `<strong>Pushing more:</strong> ${topVol.join(', ')}. `;
     }
     
     // Total activity
@@ -2507,14 +2534,10 @@ function generateSummary(hot, cold, volumeUp, volumeDown, stats) {
     const totalTrailingAvg = Object.values(stats).reduce((sum, s) => sum + s.trailingMonthlyAvg, 0);
     const activityChange = totalTrailingAvg > 0 ? ((totalRecent - totalTrailingAvg) / totalTrailingAvg) * 100 : 0;
     
-    if (Math.abs(activityChange) > 20) {
-        summary += activityChange > 0 
-            ? `<strong>Overall activity up ${Math.round(activityChange)}%</strong> — Akira is moving more inventory this month.`
-            : `<strong>Overall activity down ${Math.round(Math.abs(activityChange))}%</strong> — slower month for sales.`;
-    }
+    summary += `<br><br><strong>This month:</strong> ${totalRecent} items sold (avg ${Math.round(totalTrailingAvg)}/mo).`;
     
-    if (!summary) {
-        summary = 'Market appears stable this month. No major price or volume shifts detected.';
+    if (!summary.includes('Prices') && !summary.includes('listing')) {
+        summary = 'Market appears stable this month. No major shifts detected. ' + summary;
     }
     
     document.getElementById('trendsSummaryText').innerHTML = summary;
