@@ -616,6 +616,12 @@
             </div>
             <div class="mode-desc" id="modeDesc">Quick 20-item session with scoring</div>
             
+            <div class="filter-section-title" style="margin-top: 20px;">Currency:</div>
+            <div class="mode-select">
+                <button class="mode-option selected" id="currencyUSD">$ USD</button>
+                <button class="mode-option" id="currencyYen">¥ Yen</button>
+            </div>
+            
             <div class="filter-section-title">Items sold from:</div>
             <div class="year-grid" id="yearGrid"></div>
             <div class="filter-info" id="filterInfo">Select a year</div>
@@ -904,6 +910,7 @@ let perfects = 0;
 let highScore = parseInt(localStorage.getItem('vHighScore') || '0');
 let selectedYear = null;
 let gameMode = '20'; // '20' or 'endless'
+let gameCurrency = 'usd'; // 'usd' or 'yen'
 let sessionItemIds = new Set(); // Track items shown this session
 
 // Spaced repetition history: { itemId: { lastSeen, timesShown, lastError, avgError, soldDate } }
@@ -1532,6 +1539,11 @@ function showFilterScreen() {
     document.getElementById('modeEndless').onclick = () => selectMode('endless');
     selectMode('20'); // Default
     
+    // Currency selection
+    document.getElementById('currencyUSD').onclick = () => selectCurrency('usd');
+    document.getElementById('currencyYen').onclick = () => selectCurrency('yen');
+    selectCurrency('usd'); // Default
+    
     const yearGrid = document.getElementById('yearGrid');
     yearGrid.innerHTML = '';
     
@@ -1550,6 +1562,12 @@ function showFilterScreen() {
     
     // Show study stats
     document.getElementById('studyStats').innerHTML = getStudyStatsHtml();
+}
+
+function selectCurrency(currency) {
+    gameCurrency = currency;
+    document.getElementById('currencyUSD').classList.toggle('selected', currency === 'usd');
+    document.getElementById('currencyYen').classList.toggle('selected', currency === 'yen');
 }
 
 function selectMode(mode) {
@@ -1628,6 +1646,28 @@ function showCard() {
     document.getElementById('gameTitle').textContent = item.title;
     document.getElementById('guessInput').value = '';
     
+    // Update currency display
+    const symbol = gameCurrency === 'yen' ? '¥' : '$';
+    document.querySelector('.dollar-sign').textContent = symbol;
+    
+    // Update quick buttons for currency
+    const quickBtns = document.querySelectorAll('.quick-btn');
+    if (gameCurrency === 'yen') {
+        const yenVals = ['10000', '50000', '100000', '300000', '500000', '1000000'];
+        const yenLabels = ['¥1万', '¥5万', '¥10万', '¥30万', '¥50万', '¥100万'];
+        quickBtns.forEach((btn, i) => {
+            btn.dataset.val = yenVals[i];
+            btn.textContent = yenLabels[i];
+        });
+    } else {
+        const usdVals = ['100', '500', '1000', '5000', '10000', '100000'];
+        const usdLabels = ['$100', '$500', '$1K', '$5K', '$10K', '$100K'];
+        quickBtns.forEach((btn, i) => {
+            btn.dataset.val = usdVals[i];
+            btn.textContent = usdLabels[i];
+        });
+    }
+    
     const measurements = extractMeasurements(item.description, item.title);
     let metaHtml = '';
     
@@ -1671,7 +1711,8 @@ function submitGuess() {
     }
     
     const item = deck[cardIndex];
-    const actual = item.price_usd;
+    const actual = gameCurrency === 'yen' ? item.price_yen : item.price_usd;
+    const symbol = gameCurrency === 'yen' ? '¥' : '$';
     const diff = Math.abs(guess - actual);
     const pct = (diff / actual) * 100;
     
@@ -1714,8 +1755,8 @@ function submitGuess() {
     document.getElementById('resMsg').className = 'result-msg ' + msgClass;
     document.getElementById('resPts').textContent = (pts >= 0 ? '+' : '') + pts;
     document.getElementById('resPts').className = 'result-pts ' + (pts >= 0 ? 'pos' : 'neg');
-    document.getElementById('resGuess').textContent = '$' + guess.toLocaleString();
-    document.getElementById('resActual').textContent = '$' + actual.toLocaleString();
+    document.getElementById('resGuess').textContent = symbol + guess.toLocaleString();
+    document.getElementById('resActual').textContent = symbol + actual.toLocaleString();
     document.getElementById('resDiff').textContent = Math.round(pct) + '%';
     
     document.getElementById('guessPhase').classList.add('hidden');
