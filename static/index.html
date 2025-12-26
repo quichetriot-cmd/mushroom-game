@@ -734,6 +734,33 @@
         .modal-section { background: #1a1a1a; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
         .modal-section-title { font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 10px; }
         .modal-desc { font-size: 14px; color: #aaa; line-height: 1.6; }
+        
+        /* Trends */
+        .trend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #222;
+        }
+        .trend-item:last-child { border-bottom: none; }
+        .trend-name { font-weight: 600; color: #fff; }
+        .trend-details { font-size: 12px; color: #888; margin-top: 4px; }
+        .trend-change { font-weight: 700; font-size: 16px; }
+        .trend-change.up { color: #4ade80; }
+        .trend-change.down { color: #f87171; }
+        .trend-change.neutral { color: #888; }
+        .trend-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .trend-badge.hot { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .trend-badge.cold { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .trend-badge.new { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
     </style>
 </head>
 <body>
@@ -756,6 +783,7 @@
                 <button class="mode-tab active" id="galleryTab">Gallery</button>
                 <button class="mode-tab" id="gameTab">🎮 Play</button>
                 <button class="mode-tab" id="infoTab">ℹ️ Info</button>
+                <button class="mode-tab" id="trendsTab">📈 Trends</button>
                 <button class="mode-tab" id="debugTab">🔧 Debug</button>
             </div>
         </div>
@@ -807,13 +835,21 @@
             
             <div class="info-card">
                 <div class="info-card-title">Purpose</div>
-                <p>A practical study tool for training my eye as a vintage dealer. By repeatedly guessing prices on high-end sold items, I build intuition for what drives value - era, brand, condition, size, and rarity.</p>
+                <p>A practical tool for vintage dealers to train pricing intuition and track market trends. Built around 9,000+ sold items from one of Japan's top vintage dealers.</p>
             </div>
             
             <div class="info-card">
                 <div class="info-card-title">About Mushroom Vintage</div>
                 <p>Mushroom Vintage has been operating out of Niigata, Japan since 2002. Owner Akira travels frequently to the USA to source inventory, and the shop is famous in Japan for providing the highest grade American vintage money can buy.</p>
-                <p>I've done business with Akira in the past - his pricing reflects what serious collectors actually pay for top-tier pieces.</p>
+                <p>His pricing reflects what serious collectors actually pay for top-tier pieces — making this data invaluable for understanding the high-end market.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-title">Features</div>
+                <p><strong>📸 Gallery:</strong> Browse all sold items with search, sort by price or date.</p>
+                <p><strong>🎮 Price Game:</strong> Test your pricing intuition. 20-round arcade mode or endless spaced-repetition study.</p>
+                <p><strong>📈 Market Trends:</strong> Track what Akira is pushing — price movements and volume shifts by category, comparing this month vs trailing 6-month average.</p>
+                <p><strong>💴 Currency Toggle:</strong> Train in USD or Yen to match your market.</p>
             </div>
             
             <div class="info-card">
@@ -823,20 +859,7 @@
             </div>
             
             <div class="info-card">
-                <div class="info-card-title">Spaced Repetition Algorithm</div>
-                <p>The endless mode implements a simplified spaced repetition system (SRS), similar to Anki or Quizlet's "Learn" mode. The goal is to optimize learning by showing difficult items more frequently while letting mastered items fade.</p>
-                <p><strong>How it works:</strong></p>
-                <p>Each item stores: <code>avgError</code> (running average of guess accuracy), <code>lastSeen</code> (timestamp), <code>timesShown</code> (exposure count), and <code>soldDate</code> (for year filtering).</p>
-                <p><strong>Priority formula:</strong></p>
-                <p><code>priority = (avgError / 100) * 50 + daysSinceLastSeen * 2</code></p>
-                <p>Items with higher priority are shown first. High error rate increases priority (you need more practice). More days since last seen increases priority (memory decay). If you got an item right recently (≤30% error, within 3 days), priority is reduced by 70%.</p>
-                <p><strong>Accuracy threshold:</strong> A guess within 30% of actual price counts as "correct" for learning purposes.</p>
-                <p><strong>Session recycling:</strong> When all items in a year range have been seen, the session resets and re-queues items weighted by their error rates - so items you struggled with appear first in the next pass.</p>
-            </div>
-            
-            <div class="info-card">
-                <div class="info-card-title">Gamification Mechanics</div>
-                <p>The 20-round mode uses point-based scoring to make practice engaging:</p>
+                <div class="info-card-title">Scoring (20-Round Mode)</div>
                 <ul>
                     <li><strong>Perfect (≤5% off):</strong> +500 pts</li>
                     <li><strong>Great (≤15% off):</strong> +300 pts</li>
@@ -845,25 +868,36 @@
                     <li><strong>Way off (≤100% off):</strong> -50 pts</li>
                     <li><strong>Ouch (>100% off):</strong> -100 pts</li>
                 </ul>
-                <p><strong>Streak bonus:</strong> After 3 correct guesses in a row, each additional correct guess adds <code>(streak - 2) * 25</code> bonus points. This rewards consistency and creates risk/reward tension.</p>
-                <p><strong>High score persistence:</strong> Best score is stored in localStorage, creating a personal benchmark to beat.</p>
+                <p><strong>Streak bonus:</strong> After 3 correct in a row, earn <code>(streak - 2) × 25</code> bonus points.</p>
             </div>
             
             <div class="info-card">
-                <div class="info-card-title">ML Application Notes</div>
-                <p>This system generates labeled training data: each guess creates a tuple of <code>(item_features, human_estimate, actual_price, error_rate)</code>. Over time, this builds a dataset of human pricing intuition that could be used to:</p>
+                <div class="info-card-title">Measurements</div>
+                <p>Key measurements are extracted from descriptions and displayed during the game:</p>
                 <ul>
-                    <li>Train a model to predict which items humans find difficult to price (high variance in estimates)</li>
-                    <li>Identify feature gaps - items where human estimates consistently deviate from actual prices may have hidden value drivers not captured in text/images</li>
-                    <li>Compare human learning curves to model training curves on the same dataset</li>
-                    <li>Use human accuracy as a baseline for model evaluation (if humans average 35% accuracy, a model achieving 40% is meaningful)</li>
+                    <li><strong>Tops:</strong> Chest (body width) + Length</li>
+                    <li><strong>Bottoms:</strong> Waist + Inseam</li>
+                    <li><strong>Vests:</strong> Chest only</li>
                 </ul>
+                <p>All measurements converted from cm to inches. Size matters for pricing — "golden size" (W32-34) and "big size" (44+) command premiums.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-title">Categories Tracked</div>
+                <p>The Trends dashboard monitors 30+ categories based on vintage market segments:</p>
+                <p><strong>Denim:</strong> Levi's (501XX, Big E, 506XX, 507XX, 557), Lee, Wrangler</p>
+                <p><strong>Sweatshirts:</strong> Champion (Reverse Weave, Afterhoody), vintage brands</p>
+                <p><strong>Military:</strong> Navy Deck, G-1, A-2, MA-1, M-65, P-44 HBT, Army Denim</p>
+                <p><strong>Workwear:</strong> Premium brands (Carhartt, Sweet-Orr, Head Light), coveralls, chambray</p>
+                <p><strong>Outdoor:</strong> Patagonia, L.L.Bean, North Face, Brown's Beach</p>
+                <p><strong>Other:</strong> Souvenir jackets, Hawaiian shirts, band tees, Mackinaw</p>
             </div>
             
             <div class="info-card">
                 <div class="info-card-title">Data Source</div>
-                <p>All items are scraped from <code>vintage-mushroom.net</code>. Only sold items priced ¥65,000+ (~$430 USD) are included.</p>
+                <p>All items scraped from <code>vintage-mushroom.net</code>. Only sold items ¥65,000+ (~$430 USD) included.</p>
                 <p>Prices converted at ¥150 = $1 USD. Descriptions auto-translated from Japanese.</p>
+                <p>Date range: 2015 - Present</p>
             </div>
             
             <div class="info-card">
@@ -872,8 +906,7 @@
                     <li><strong>Frontend:</strong> Vanilla HTML/CSS/JS</li>
                     <li><strong>Backend:</strong> Python FastAPI</li>
                     <li><strong>Database:</strong> PostgreSQL on Railway</li>
-                    <li><strong>Scraper:</strong> BeautifulSoup + deep-translator</li>
-                    <li><strong>Hosting:</strong> Railway (auto-deploy from GitHub)</li>
+                    <li><strong>ML Model:</strong> Random Forest (52% R², 180 features)</li>
                 </ul>
             </div>
             
@@ -896,6 +929,49 @@
                         <div class="info-stat-val" id="infoLastScrape">-</div>
                         <div class="info-stat-label">Last Scrape</div>
                     </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Trends Section -->
+        <div class="info-section" id="trendsSection">
+            <div class="info-title">📈 Market Trends</div>
+            <div style="color: #666; text-align: center; margin-bottom: 24px;">Comparing this month vs trailing 6-month average</div>
+            
+            <div id="trendsLoading" style="text-align: center; padding: 40px; color: #666;">
+                <div class="loading-spinner" style="margin: 0 auto 16px;"></div>
+                Analyzing market data...
+            </div>
+            
+            <div id="trendsContent" style="display: none;">
+                <!-- AI Summary -->
+                <div class="info-card" id="trendsSummary">
+                    <div class="info-card-title">🤖 Market Summary</div>
+                    <p id="trendsSummaryText" style="line-height: 1.7; color: #ccc;"></p>
+                </div>
+                
+                <!-- Hot Categories -->
+                <div class="info-card">
+                    <div class="info-card-title">🔥 Heating Up</div>
+                    <div id="trendsHot"></div>
+                </div>
+                
+                <!-- Cooling Categories -->
+                <div class="info-card">
+                    <div class="info-card-title">❄️ Cooling Down</div>
+                    <div id="trendsCold"></div>
+                </div>
+                
+                <!-- Volume Changes -->
+                <div class="info-card">
+                    <div class="info-card-title">📦 Volume Shifts</div>
+                    <div id="trendsVolume"></div>
+                </div>
+                
+                <!-- Category Details -->
+                <div class="info-card">
+                    <div class="info-card-title">📊 All Categories</div>
+                    <div id="trendsAll"></div>
                 </div>
             </div>
         </div>
@@ -1548,6 +1624,7 @@ function hideAllSections() {
     document.getElementById('gameSection').classList.remove('active');
     document.getElementById('filterScreen').classList.remove('active');
     document.getElementById('infoSection').classList.remove('active');
+    document.getElementById('trendsSection').classList.remove('active');
     document.getElementById('debugSection').classList.remove('active');
     document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
 }
@@ -1569,6 +1646,13 @@ document.getElementById('infoTab').onclick = () => {
     document.getElementById('infoTab').classList.add('active');
     document.getElementById('infoSection').classList.add('active');
     updateInfoStats();
+};
+
+document.getElementById('trendsTab').onclick = () => {
+    hideAllSections();
+    document.getElementById('trendsTab').classList.add('active');
+    document.getElementById('trendsSection').classList.add('active');
+    loadTrends();
 };
 
 document.getElementById('debugTab').onclick = () => {
@@ -2030,6 +2114,272 @@ document.addEventListener('keydown', e => {
 
 // ========== START ==========
 init();
+
+// ========== TRENDS ANALYSIS ==========
+const CATEGORIES = {
+    // DENIM - Levi's
+    "Levi's 501XX (Pre-1966)": /levi.*501.*xx|levi.*501.*buckleback|levi.*s501|levi.*501.*'4[67]/i,
+    "Levi's 501 Big E": /levi.*501.*big\s*e|levi.*501(?!.*xx)(?!.*66)/i,
+    "Levi's 506XX (1st Type)": /levi.*506xx|levi.*s506/i,
+    "Levi's 507XX (2nd Type)": /levi.*507xx|levi.*517xx/i,
+    "Levi's 557/3rd Type": /levi.*557|levi.*70505|levi.*559|levi.*558/i,
+    "Levi's 505": /levi.*505/i,
+    "Lee Chore/Coverall": /\blee\b.*(?:91-j|coverall|chore)/i,
+    "Lee 101": /\blee\b.*101/i,
+    "Lee Other": /\blee\b/i,
+    "Wrangler": /wrangler|111mj|11mwz/i,
+    
+    // SWEATSHIRTS
+    "Champion Reverse Weave": /champion.*reverse|reverse.*weave/i,
+    "Champion Afterhoody": /afterhoody|after.*hood/i,
+    "Champion Other": /champion/i,
+    "Vintage Sweatshirts": /sweat.*shirt|duxbak|spalding|spruce|bodygard/i,
+    
+    // MILITARY
+    "Navy Deck Jacket": /deck.*jacket|n-1\b|blue.*deck/i,
+    "Navy Denim": /navy.*denim|dungaree.*jacket|gunner.*smock/i,
+    "G-1 Flight": /\bg-1\b/i,
+    "A-2 Flight": /\ba-2\b/i,
+    "MA-1": /ma-1/i,
+    "M-65/M-51/M-43": /m-65|m-51|m-43|m-48/i,
+    "P-44 HBT": /p-44|p-42/i,
+    "Army Denim": /army.*denim|army.*dungaree|army.*jumper/i,
+    
+    // WORKWEAR
+    "Premium Workwear": /boss.*road|carhartt|sweet.?orr|head\s*light|can't\s*bust|hercules|stronghold/i,
+    "Coveralls": /coverall/i,
+    "Chambray Shirts": /chambray/i,
+    "Work Pants": /painter|logger|double\s*knee/i,
+    
+    // OUTDOOR
+    "Patagonia": /patagonia/i,
+    "L.L.Bean": /l\.?l\.?\s*bean/i,
+    "North Face": /north\s*face/i,
+    "Brown's Beach": /brown.*beach/i,
+    "Eddie Bauer": /eddie\s*bauer/i,
+    
+    // OTHER
+    "Souvenir Jacket": /souvenir|sukajan/i,
+    "Hawaiian Shirt": /hawaiian|aloha|kamehameha|kahanamoku/i,
+    "Band/Tour Tees": /nirvana|soundgarden|radiohead|pearl\s*jam|green\s*day|sonic\s*youth/i,
+    "Mackinaw": /mackinaw|pendleton.*blanket/i,
+};
+
+let trendsData = null;
+
+async function loadTrends() {
+    if (trendsData) {
+        renderTrends();
+        return;
+    }
+    
+    document.getElementById('trendsLoading').style.display = 'block';
+    document.getElementById('trendsContent').style.display = 'none';
+    
+    // Fetch all items
+    let allItems = [];
+    let skip = 0;
+    const batchSize = 100;
+    
+    while (true) {
+        const res = await fetch(API_BASE + `/api/items?limit=${batchSize}&skip=${skip}&sort=date_desc`);
+        const items = await res.json();
+        if (items.length === 0) break;
+        allItems = allItems.concat(items);
+        skip += batchSize;
+        if (skip >= 10000) break; // Safety limit
+    }
+    
+    // Analyze trends
+    trendsData = analyzeTrends(allItems);
+    
+    document.getElementById('trendsLoading').style.display = 'none';
+    document.getElementById('trendsContent').style.display = 'block';
+    
+    renderTrends();
+}
+
+function analyzeTrends(items) {
+    const now = new Date();
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+    
+    // Categorize each item
+    const categorized = items.map(item => {
+        const soldDate = new Date(item.sold_date);
+        let category = 'Other';
+        
+        for (const [cat, regex] of Object.entries(CATEGORIES)) {
+            if (regex.test(item.title)) {
+                category = cat;
+                break;
+            }
+        }
+        
+        return { ...item, category, soldDate };
+    });
+    
+    // Split into this month vs trailing 6 months
+    const thisMonthItems = categorized.filter(i => i.soldDate >= thisMonth);
+    const trailingItems = categorized.filter(i => i.soldDate >= sixMonthsAgo && i.soldDate < thisMonth);
+    
+    // Calculate stats per category
+    const stats = {};
+    
+    for (const cat of Object.keys(CATEGORIES)) {
+        const recent = thisMonthItems.filter(i => i.category === cat);
+        const trailing = trailingItems.filter(i => i.category === cat);
+        
+        const recentAvgPrice = recent.length > 0 
+            ? recent.reduce((sum, i) => sum + i.price_usd, 0) / recent.length 
+            : 0;
+        const trailingAvgPrice = trailing.length > 0 
+            ? trailing.reduce((sum, i) => sum + i.price_usd, 0) / trailing.length 
+            : 0;
+        
+        // Monthly average volume over 6 months
+        const trailingMonthlyVol = trailing.length / 6;
+        
+        const priceChange = trailingAvgPrice > 0 
+            ? ((recentAvgPrice - trailingAvgPrice) / trailingAvgPrice) * 100 
+            : 0;
+        const volumeChange = trailingMonthlyVol > 0 
+            ? ((recent.length - trailingMonthlyVol) / trailingMonthlyVol) * 100 
+            : (recent.length > 0 ? 100 : 0);
+        
+        stats[cat] = {
+            recentCount: recent.length,
+            trailingCount: trailing.length,
+            trailingMonthlyAvg: trailingMonthlyVol,
+            recentAvgPrice: Math.round(recentAvgPrice),
+            trailingAvgPrice: Math.round(trailingAvgPrice),
+            priceChange: Math.round(priceChange),
+            volumeChange: Math.round(volumeChange),
+            recentItems: recent.slice(0, 5),
+        };
+    }
+    
+    return { stats, thisMonthItems, trailingItems };
+}
+
+function renderTrends() {
+    const { stats } = trendsData;
+    
+    // Sort by price change
+    const byPriceChange = Object.entries(stats)
+        .filter(([_, s]) => s.trailingCount >= 3) // Need baseline data
+        .sort((a, b) => b[1].priceChange - a[1].priceChange);
+    
+    // Hot categories (price up > 15%)
+    const hot = byPriceChange.filter(([_, s]) => s.priceChange > 15);
+    document.getElementById('trendsHot').innerHTML = hot.length > 0 
+        ? hot.slice(0, 5).map(([cat, s]) => renderTrendItem(cat, s, 'price')).join('')
+        : '<div style="color: #666; padding: 12px;">No significant price increases this month</div>';
+    
+    // Cold categories (price down < -15%)
+    const cold = byPriceChange.filter(([_, s]) => s.priceChange < -15).reverse();
+    document.getElementById('trendsCold').innerHTML = cold.length > 0 
+        ? cold.slice(0, 5).map(([cat, s]) => renderTrendItem(cat, s, 'price')).join('')
+        : '<div style="color: #666; padding: 12px;">No significant price drops this month</div>';
+    
+    // Volume changes
+    const byVolume = Object.entries(stats)
+        .filter(([_, s]) => s.trailingCount >= 3)
+        .sort((a, b) => b[1].volumeChange - a[1].volumeChange);
+    
+    const volumeUp = byVolume.filter(([_, s]) => s.volumeChange > 50).slice(0, 3);
+    const volumeDown = byVolume.filter(([_, s]) => s.volumeChange < -50).reverse().slice(0, 3);
+    
+    document.getElementById('trendsVolume').innerHTML = 
+        (volumeUp.length > 0 ? '<div style="margin-bottom: 8px; color: #4ade80; font-weight: 600;">📈 More listings:</div>' + 
+            volumeUp.map(([cat, s]) => renderTrendItem(cat, s, 'volume')).join('') : '') +
+        (volumeDown.length > 0 ? '<div style="margin-top: 16px; margin-bottom: 8px; color: #f87171; font-weight: 600;">📉 Fewer listings:</div>' + 
+            volumeDown.map(([cat, s]) => renderTrendItem(cat, s, 'volume')).join('') : '') +
+        (volumeUp.length === 0 && volumeDown.length === 0 ? '<div style="color: #666; padding: 12px;">Volume relatively stable</div>' : '');
+    
+    // All categories
+    document.getElementById('trendsAll').innerHTML = byPriceChange
+        .map(([cat, s]) => renderTrendItem(cat, s, 'both')).join('');
+    
+    // Generate AI summary
+    generateSummary(hot, cold, volumeUp, volumeDown, stats);
+}
+
+function renderTrendItem(cat, s, mode) {
+    const priceClass = s.priceChange > 0 ? 'up' : s.priceChange < 0 ? 'down' : 'neutral';
+    const priceArrow = s.priceChange > 0 ? '↑' : s.priceChange < 0 ? '↓' : '→';
+    const volArrow = s.volumeChange > 0 ? '↑' : s.volumeChange < 0 ? '↓' : '→';
+    
+    let details = '';
+    if (mode === 'price' || mode === 'both') {
+        details += `$${s.recentAvgPrice.toLocaleString()} avg (was $${s.trailingAvgPrice.toLocaleString()})`;
+    }
+    if (mode === 'volume' || mode === 'both') {
+        if (details) details += ' · ';
+        details += `${s.recentCount} this month (avg ${s.trailingMonthlyAvg.toFixed(1)}/mo)`;
+    }
+    
+    let changeDisplay = '';
+    if (mode === 'volume') {
+        changeDisplay = `<span class="trend-change ${s.volumeChange > 0 ? 'up' : 'down'}">${volArrow} ${Math.abs(s.volumeChange)}%</span>`;
+    } else {
+        changeDisplay = `<span class="trend-change ${priceClass}">${priceArrow} ${Math.abs(s.priceChange)}%</span>`;
+    }
+    
+    return `
+        <div class="trend-item">
+            <div>
+                <div class="trend-name">${cat}</div>
+                <div class="trend-details">${details}</div>
+            </div>
+            ${changeDisplay}
+        </div>
+    `;
+}
+
+function generateSummary(hot, cold, volumeUp, volumeDown, stats) {
+    let summary = '';
+    
+    // What's hot
+    if (hot.length > 0) {
+        const topHot = hot.slice(0, 2).map(([cat, s]) => `${cat} (+${s.priceChange}%)`);
+        summary += `<strong>Akira is pushing prices up on:</strong> ${topHot.join(', ')}. `;
+    }
+    
+    // What's cooling
+    if (cold.length > 0) {
+        const topCold = cold.slice(0, 2).map(([cat, s]) => `${cat} (${s.priceChange}%)`);
+        summary += `<strong>Prices softening on:</strong> ${topCold.join(', ')}. `;
+    }
+    
+    // Volume shifts
+    if (volumeUp.length > 0) {
+        const topVol = volumeUp.slice(0, 2).map(([cat]) => cat);
+        summary += `<strong>Listing more:</strong> ${topVol.join(', ')} — could signal inventory buildup or market testing. `;
+    }
+    
+    if (volumeDown.length > 0) {
+        const lowVol = volumeDown.slice(0, 2).map(([cat]) => cat);
+        summary += `<strong>Listing less:</strong> ${lowVol.join(', ')} — possibly holding inventory or supply drying up. `;
+    }
+    
+    // Total activity
+    const totalRecent = Object.values(stats).reduce((sum, s) => sum + s.recentCount, 0);
+    const totalTrailingAvg = Object.values(stats).reduce((sum, s) => sum + s.trailingMonthlyAvg, 0);
+    const activityChange = totalTrailingAvg > 0 ? ((totalRecent - totalTrailingAvg) / totalTrailingAvg) * 100 : 0;
+    
+    if (Math.abs(activityChange) > 20) {
+        summary += activityChange > 0 
+            ? `<strong>Overall activity up ${Math.round(activityChange)}%</strong> — Akira is moving more inventory this month.`
+            : `<strong>Overall activity down ${Math.round(Math.abs(activityChange))}%</strong> — slower month for sales.`;
+    }
+    
+    if (!summary) {
+        summary = 'Market appears stable this month. No major price or volume shifts detected.';
+    }
+    
+    document.getElementById('trendsSummaryText').innerHTML = summary;
+}
 </script>
 </body>
 </html>
