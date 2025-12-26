@@ -2206,7 +2206,8 @@ const CATEGORIES = {
     "Spalding Sweat": /spalding/i,
     "Duxbak Sweat": /duxbak/i,
     "Spruce Sweat": /spruce/i,
-    "Sweatshirt (Other)": /sweat\s*(shirt|hoody)|hoody/i,
+    "Sweat Hoody": /sweat\s*hoody|w\/f\s*sweat|s\/f\s*sweat/i,
+    "Sweatshirt": /sweat\s*shirt|sweatshirt/i,
     
     // === U.S. NAVY ===
     "Navy N-1 Deck": /n-1|deck\s*jacket/i,
@@ -2285,6 +2286,9 @@ const CATEGORIES = {
     "Arc'teryx": /arc.teryx/i,
     "Filson": /filson/i,
     "Sierra Designs": /sierra\s*designs/i,
+    "Alpine Designs": /alpine\s*designs/i,
+    "Gerry": /\bgerry\b/i,
+    "Down Jacket": /down\s*(jacket|parka|vest|hoody)|expedition.*down/i,
     
     // === SOUVENIR JACKETS ===
     "Vietnam Souvenir": /viet-?nam.*souvenir/i,
@@ -2336,13 +2340,13 @@ const CATEGORIES = {
     // === CATCH-ALLS ===
     "Denim Jacket": /denim\s*jacket/i,
     "Denim Jeans": /jeans/i,
-    "Down/Puffer": /down\s*(jacket|parka|vest)|puffer/i,
     "Gore-Tex": /gore-tex/i,
     "Corduroy": /corduroy/i,
     "Polo/Ralph Lauren": /polo|ralph\s*lauren/i,
     "Leather Jacket": /leather.*jacket/i,
     "Work Jacket": /work\s*jacket/i,
     "Boat Jacket": /boat\s*jacket/i,
+    "Parka": /parka/i,
     "Jacket (Other)": /jacket/i,
     "Shirt (Other)": /shirt/i,
     "Trousers": /trouser|pants/i,
