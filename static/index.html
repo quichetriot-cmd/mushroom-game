@@ -2659,11 +2659,48 @@ function testCategoryClick() {
         }
     }
     
+    // Get stats for this category
+    const { stats } = trendsData;
+    const catStats = stats[result.category];
+    
     let html = `
         <div style="margin-bottom: 12px;">
             <strong>Assigned to:</strong> <span style="color: ${result.category.includes('Other') ? '#f87171' : '#4ade80'}">${result.category}</span>
         </div>
     `;
+    
+    // Show category stats
+    if (catStats) {
+        const priceChange = catStats.priceChange;
+        const priceColor = priceChange > 15 ? '#4ade80' : priceChange < -15 ? '#f87171' : '#888';
+        html += `
+            <div style="background: #0f0f1a; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                <div style="font-size: 12px; color: #888; margin-bottom: 8px;">Category Stats:</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
+                    <div>
+                        <div style="color: #666;">This Month</div>
+                        <div style="color: #fff; font-weight: 600;">${catStats.recentCount} items</div>
+                        <div style="color: #ccc;">$${catStats.recentAvgPrice.toLocaleString()} avg</div>
+                    </div>
+                    <div>
+                        <div style="color: #666;">Trailing 6mo</div>
+                        <div style="color: #fff; font-weight: 600;">${catStats.trailingCount} items (${catStats.trailingMonthlyAvg.toFixed(1)}/mo)</div>
+                        <div style="color: #ccc;">$${catStats.trailingAvgPrice.toLocaleString()} avg</div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #333;">
+                    <span style="color: ${priceColor}; font-weight: 600;">
+                        ${priceChange > 0 ? '↑' : priceChange < 0 ? '↓' : '→'} ${Math.abs(priceChange)}% price change
+                    </span>
+                    <span style="color: #888; margin-left: 12px;">
+                        ${catStats.volumeChange > 0 ? '↑' : catStats.volumeChange < 0 ? '↓' : '→'} ${Math.abs(catStats.volumeChange)}% volume
+                    </span>
+                </div>
+            </div>
+        `;
+    } else {
+        html += `<div style="color: #888; margin-bottom: 12px;">No historical data for this category</div>`;
+    }
     
     if (allMatches.length > 1) {
         html += `<div style="color: #fbbf24; margin-bottom: 12px;">⚠️ Multiple matches (first one wins):</div>`;
