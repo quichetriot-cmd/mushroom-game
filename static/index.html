@@ -972,6 +972,27 @@
                     <div class="info-card-title">📊 All Categories</div>
                     <div id="trendsAll"></div>
                 </div>
+                
+                <!-- Debug Section -->
+                <div class="info-card" style="background: #1a1a2e; border: 1px solid #f87171;">
+                    <div class="info-card-title" style="color: #f87171;">🔧 Debug: Test Categories</div>
+                    <div style="margin-bottom: 12px;">
+                        <input type="text" id="trendsDebugInput" placeholder="Paste an item title to test categorization..." 
+                            style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #333; background: #0a0a0f; color: #fff; font-size: 14px;">
+                    </div>
+                    <button id="trendsDebugBtn" style="padding: 8px 16px; background: #f87171; border: none; border-radius: 6px; color: #000; cursor: pointer; font-weight: 600;">Test Category</button>
+                    <div id="trendsDebugResult" style="margin-top: 12px; padding: 12px; background: #0a0a0f; border-radius: 6px; display: none;"></div>
+                    
+                    <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 16px;">
+                        <div style="color: #888; font-size: 13px; margin-bottom: 8px;">Quick Stats:</div>
+                        <div id="trendsDebugStats" style="color: #ccc; font-size: 13px; line-height: 1.8;"></div>
+                    </div>
+                    
+                    <div style="margin-top: 16px;">
+                        <div style="color: #888; font-size: 13px; margin-bottom: 8px;">This Month's Items (click to test):</div>
+                        <div id="trendsDebugThisMonth" style="max-height: 300px; overflow-y: auto; font-size: 12px;"></div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -2564,6 +2585,96 @@ function generateSummary(hot, cold, volumeUp, volumeDown, stats) {
     }
     
     document.getElementById('trendsSummaryText').innerHTML = summary;
+    
+    // Populate debug section
+    renderTrendsDebug();
+}
+
+function testCategory(title) {
+    for (const [cat, regex] of Object.entries(CATEGORIES)) {
+        if (regex.test(title)) {
+            return { category: cat, regex: regex.toString() };
+        }
+    }
+    return { category: 'UNCATEGORIZED', regex: null };
+}
+
+function renderTrendsDebug() {
+    if (!trendsData) return;
+    
+    const { stats, thisMonthItems, trailingItems } = trendsData;
+    
+    // Stats
+    const totalCategories = Object.keys(CATEGORIES).length;
+    const usedCategories = Object.values(stats).filter(s => s.recentCount > 0 || s.trailingCount > 0).length;
+    const uncategorized = thisMonthItems.filter(i => i.category === 'UNCATEGORIZED' || !i.category).length;
+    
+    document.getElementById('trendsDebugStats').innerHTML = `
+        <div>Total categories defined: <strong>${totalCategories}</strong></div>
+        <div>Categories with data: <strong>${usedCategories}</strong></div>
+        <div>This month items: <strong>${thisMonthItems.length}</strong></div>
+        <div>Trailing 6mo items: <strong>${trailingItems.length}</strong></div>
+        <div style="color: ${uncategorized > 0 ? '#f87171' : '#4ade80'}">Uncategorized this month: <strong>${uncategorized}</strong></div>
+    `;
+    
+    // This month's items
+    const thisMonthHtml = thisMonthItems.map(item => {
+        const cat = item.category || 'UNCATEGORIZED';
+        const isUncategorized = cat === 'UNCATEGORIZED' || cat.includes('Other') || cat.includes('(Other)');
+        return `
+            <div style="padding: 8px; margin: 4px 0; background: ${isUncategorized ? '#2a1a1a' : '#1a1a2e'}; border-radius: 4px; cursor: pointer;" 
+                 onclick="document.getElementById('trendsDebugInput').value = this.dataset.title; testCategoryClick();"
+                 data-title="${item.title.replace(/"/g, '&quot;')}">
+                <div style="color: ${isUncategorized ? '#f87171' : '#4ade80'}; font-size: 11px; margin-bottom: 4px;">${cat}</div>
+                <div style="color: #ccc;">${item.title.substring(0, 70)}${item.title.length > 70 ? '...' : ''}</div>
+                <div style="color: #888; font-size: 11px; margin-top: 4px;">$${item.price_usd.toLocaleString()} · ${item.sold_date}</div>
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('trendsDebugThisMonth').innerHTML = thisMonthHtml || '<div style="color: #666;">No items this month</div>';
+    
+    // Debug button
+    document.getElementById('trendsDebugBtn').onclick = testCategoryClick;
+    document.getElementById('trendsDebugInput').onkeyup = (e) => {
+        if (e.key === 'Enter') testCategoryClick();
+    };
+}
+
+function testCategoryClick() {
+    const input = document.getElementById('trendsDebugInput').value;
+    if (!input) return;
+    
+    const result = testCategory(input);
+    const allMatches = [];
+    
+    // Find all matching categories (not just first)
+    for (const [cat, regex] of Object.entries(CATEGORIES)) {
+        if (regex.test(input)) {
+            allMatches.push({ cat, regex: regex.toString() });
+        }
+    }
+    
+    let html = `
+        <div style="margin-bottom: 12px;">
+            <strong>Assigned to:</strong> <span style="color: ${result.category.includes('Other') ? '#f87171' : '#4ade80'}">${result.category}</span>
+        </div>
+    `;
+    
+    if (allMatches.length > 1) {
+        html += `<div style="color: #fbbf24; margin-bottom: 12px;">⚠️ Multiple matches (first one wins):</div>`;
+        allMatches.forEach((m, i) => {
+            html += `<div style="padding: 6px; background: ${i === 0 ? '#1a2e1a' : '#1a1a2e'}; border-radius: 4px; margin: 4px 0; font-size: 12px;">
+                <div style="color: ${i === 0 ? '#4ade80' : '#888'}">${m.cat}</div>
+                <div style="color: #666; font-family: monospace; font-size: 10px; word-break: break-all;">${m.regex}</div>
+            </div>`;
+        });
+    } else if (result.regex) {
+        html += `<div style="color: #666; font-family: monospace; font-size: 11px; word-break: break-all;">Matched: ${result.regex}</div>`;
+    }
+    
+    document.getElementById('trendsDebugResult').style.display = 'block';
+    document.getElementById('trendsDebugResult').innerHTML = html;
 }
 </script>
 </body>
