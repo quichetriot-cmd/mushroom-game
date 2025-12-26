@@ -2184,9 +2184,11 @@ const CATEGORIES = {
     "Lee 101-J Jacket": /lee.*101-?j\b/i,
     "Lee 91-J Chore": /lee.*91-j|lee.*91j/i,
     "Lee 91-B": /lee.*91-b/i,
+    "Lee 91-SB": /lee.*91-sb/i,
     "Lee 101Z": /lee.*101z/i,
     "Lee 101B Cowboy": /lee.*101b|lee.*cowboy/i,
     "Lee 191": /lee.*191/i,
+    "Lee 220": /lee.*220/i,
     "Lee Westerner": /lee.*westerner/i,
     "Lee Riders": /lee.*riders/i,
     "Lee Storm Rider": /lee.*storm\s*rider/i,
@@ -2195,12 +2197,24 @@ const CATEGORIES = {
     "Lee Princeton": /lee.*princeton/i,
     "Lee Jelt": /lee.*jelt/i,
     "Lee Frisco": /lee.*frisco/i,
+    "Lee Leens": /lee.*leens/i,
+    "Lee Painter": /lee.*painter/i,
+    "Lee Boss/Logger": /lee.*boss|lee.*logger/i,
+    "Lee Advertising": /lee.*advertising|lee.*sign/i,
     "Buddy Lee Doll": /buddy\s*lee/i,
     "Lee Other": /\blee\b/i,
     
     // === WRANGLER ===
     "Wrangler 111MJ": /wrangler.*111mj|111mj/i,
+    "Wrangler 11MJZ": /wrangler.*11mjz/i,
     "Wrangler 11MWZ": /wrangler.*11mwz|11mwz/i,
+    "Wrangler 11MW": /wrangler.*11mw\b/i,
+    "Wrangler 24MJ": /wrangler.*24mj/i,
+    "Wrangler 27MW": /wrangler.*27mw/i,
+    "Wrangler 77MJZ": /wrangler.*77mjz/i,
+    "Wrangler 124MJ": /wrangler.*124mj/i,
+    "Wrangler 12MJZ": /wrangler.*12mjz/i,
+    "Wrangler 888MJ": /wrangler.*888mj/i,
     "Wrangler Other": /wrangler/i,
     
     // === CHAMPION ===
@@ -2257,7 +2271,8 @@ const CATEGORIES = {
     "Tiger Stripe Camo": /tiger\s*stripe/i,
     "WW1 Military": /ww1/i,
     "WW2 Military": /ww2/i,
-    "Military Surplus": /military.*level|ecwcs|pcu|bdu/i,
+    "PCU/ECWCS": /pcu|ecwcs|level\s*\d.*jacket/i,
+    "Military Surplus": /military|bdu/i,
     
     // === WORKWEAR BRANDS ===
     "Carhartt": /carhartt/i,
@@ -2302,6 +2317,7 @@ const CATEGORIES = {
     // === OUTDOOR BRANDS ===
     "Patagonia": /patagonia/i,
     "L.L.Bean Tote": /l\.?l\.?\s*bean.*tote/i,
+    "L.L.Bean Warden": /l\.?l\.?\s*bean.*warden/i,
     "L.L.Bean Other": /l\.?l\.?\s*bean/i,
     "North Face": /north\s*face/i,
     "Eddie Bauer": /eddie\s*bauer/i,
@@ -2313,15 +2329,25 @@ const CATEGORIES = {
     "Sierra Designs": /sierra\s*designs/i,
     "Alpine Designs": /alpine\s*designs/i,
     "Gerry": /\bgerry\b/i,
+    "Barbour": /barbour/i,
+    "Willis & Geiger": /willis.*geiger/i,
     "Down Jacket": /down\s*(jacket|parka|vest|hoody)|expedition.*down/i,
     "Hunting Jacket": /hunting.*jacket|shooting/i,
     "Ski Jacket": /ski\s*jacket/i,
     
-    // === SOUVENIR JACKETS ===
+    // === SOUVENIR/TOUR JACKETS ===
     "Vietnam Souvenir": /viet-?nam.*souvenir/i,
     "Vietnam Tour": /viet-?nam.*tour/i,
     "Japan Souvenir": /japan.*souvenir|sukajan/i,
     "Souvenir Jacket Other": /souvenir/i,
+    
+    // === JACKET TYPES ===
+    "Award/Car Club": /award\s*jacket|car\s*club/i,
+    "Pharaoh Jacket": /pharaoh/i,
+    "Drizzler Jacket": /drizzler/i,
+    "Western Jacket": /western.*jacket|gabardine.*jacket/i,
+    "Fake Fur Jacket": /fake\s*fur/i,
+    "Logger Cruiser": /logger.*cruiser|cruiser.*jacket/i,
     
     // === SHIRTS ===
     "Hawaiian/Aloha": /hawaiian|aloha/i,
@@ -2339,6 +2365,7 @@ const CATEGORIES = {
     "Photo Print Tee": /photo.*print|bruce\s*weber/i,
     "Vintage T-Shirt": /t-shirt/i,
     "Mohair Cardigan": /mohair/i,
+    "Cowichan Jacket": /cowichan.*jacket/i,
     "Cowichan Sweater": /cowichan/i,
     "Pendleton": /pendleton/i,
     "Mackinaw": /mackinaw/i,
@@ -2352,6 +2379,10 @@ const CATEGORIES = {
     "Beck Leather": /\bbeck\b/i,
     "Horsehide": /horsehide/i,
     "Car Coat": /car\s*coat/i,
+    
+    // === PREMIUM BRANDS ===
+    "Brooks Brothers": /brooks\s*brothers/i,
+    "McGregor": /mcgregor/i,
     
     // === COLLEGE/SPORTS ===
     "Beer Jacket": /beer\s*jacket/i,
