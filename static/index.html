@@ -2621,6 +2621,28 @@ function renderTrendsDebug() {
         <div style="color: ${uncategorized > 0 ? '#f87171' : '#4ade80'}">Uncategorized this month: <strong>${uncategorized}</strong></div>
     `;
     
+    // Build exportable data table
+    const activeCategories = Object.entries(stats)
+        .filter(([_, s]) => s.recentCount > 0 || s.trailingCount >= 3)
+        .sort((a, b) => b[1].trailingCount - a[1].trailingCount);
+    
+    let tableHtml = `
+        <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 16px;">
+            <div style="color: #888; font-size: 13px; margin-bottom: 8px;">All Category Data (copy for debugging):</div>
+            <textarea id="trendsExportData" style="width: 100%; height: 300px; background: #0a0a0f; color: #ccc; border: 1px solid #333; border-radius: 6px; padding: 10px; font-family: monospace; font-size: 11px;" readonly>Category\tThis Mo\tThis Mo Avg\t6mo Total\t6mo/mo\t6mo Avg\tPrice Chg\n`;
+    
+    activeCategories.forEach(([cat, s]) => {
+        tableHtml += `${cat}\t${s.recentCount}\t$${s.recentAvgPrice}\t${s.trailingCount}\t${s.trailingMonthlyAvg.toFixed(1)}\t$${s.trailingAvgPrice}\t${s.priceChange}%\n`;
+    });
+    
+    tableHtml += `</textarea>
+            <button onclick="document.getElementById('trendsExportData').select(); document.execCommand('copy'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy to Clipboard', 2000);" 
+                style="margin-top: 8px; padding: 8px 16px; background: #333; border: none; border-radius: 6px; color: #fff; cursor: pointer;">Copy to Clipboard</button>
+        </div>
+    `;
+    
+    document.getElementById('trendsDebugStats').innerHTML += tableHtml;
+    
     // This month's items
     const thisMonthHtml = thisMonthItems.map(item => {
         const cat = item.category || 'UNCATEGORIZED';
