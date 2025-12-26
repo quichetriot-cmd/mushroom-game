@@ -883,26 +883,34 @@
             </div>
             
             <div class="info-card">
-                <div class="info-card-title">Categories Tracked</div>
-                <p>The Trends dashboard monitors 30+ categories based on vintage market segments:</p>
-                <p><strong>Denim:</strong> Levi's (501XX, Big E, 506XX, 507XX, 557), Lee, Wrangler</p>
-                <p><strong>Sweatshirts:</strong> Champion (Reverse Weave, Afterhoody), vintage brands</p>
-                <p><strong>Military:</strong> Navy Deck, G-1, A-2, MA-1, M-65, P-44 HBT, Army Denim</p>
-                <p><strong>Workwear:</strong> Premium brands (Carhartt, Sweet-Orr, Head Light), coveralls, chambray</p>
-                <p><strong>Outdoor:</strong> Patagonia, L.L.Bean, North Face, Brown's Beach</p>
-                <p><strong>Other:</strong> Souvenir jackets, Hawaiian shirts, band tees, Mackinaw</p>
+                <div class="info-card-title">Market Trends: Why We Track Categories</div>
+                <p>The Trends dashboard uses 170+ regex patterns to categorize every sold item. By tracking specific categories (not just brands), we can detect market shifts that generic searches would miss.</p>
+                <p style="margin-top: 12px;"><strong>Why granular categories matter:</strong></p>
+                <ul style="margin: 8px 0 8px 20px; line-height: 1.8;">
+                    <li>"Levi's jacket" is too broad — a 506XX (1st type) and 70506 are completely different markets</li>
+                    <li>Separating 501XX from 501 Big E from 501 66 Single lets us see which era is heating up</li>
+                    <li>Lee 101-J jacket vs Lee 91-J chore coat have different collector bases</li>
+                </ul>
+                <p style="margin-top: 12px;"><strong>What we track:</strong></p>
+                <p><strong>Levi's (30+ categories):</strong> 501XX, 501 Big E, 501 66 Single, 505/606 Big E, 506XX, 507XX, 517XX, 557XX, 70505, 70506, Shorthorn, and more</p>
+                <p><strong>Lee:</strong> 101-J Jacket, 91-J Chore, 101Z, 101B Cowboy, Westerner, Storm Rider, Coverall</p>
+                <p><strong>Champion:</strong> Reverse Weave, W/F Double Face, Football Tee, Flock Print, Water Print</p>
+                <p><strong>Military:</strong> Navy N-1 Deck, Dungaree Jacket/Pants, Flight Jackets (A-2, G-1, MA-1, L-2B, B-15), USMC P-44 HBT, Army M-65, Tiger Stripe</p>
+                <p><strong>Workwear:</strong> Carhartt, Hercules, Head Light, Big Yank, Sweet-Orr, Pay Day, Finck's, Can't Bust'Em — plus types like Coverall, Painter, Chore Coat, Chinstrap, Buckleback</p>
+                <p><strong>Outdoor:</strong> Patagonia, L.L.Bean, North Face, Brown's Beach, Eddie Bauer, Filson, Down Jackets</p>
+                <p><strong>Patterns:</strong> Wabash, Hickory, Salt &amp; Pepper, Duck Canvas</p>
+                <p><strong>Other:</strong> Souvenir Jackets (Vietnam/Japan), Hawaiian, Mohair, Cowichan, Navajo/Chimayo, Peanuts/Snoopy</p>
             </div>
             
             <div class="info-card">
                 <div class="info-card-title">Data Source</div>
-                <p>All items scraped from <code>vintage-mushroom.net</code>. Only sold items ¥65,000+ (~$430 USD) included.</p>
-                <p>Prices converted at ¥150 = $1 USD. Descriptions auto-translated from Japanese.</p>
-                <p>Date range: 2015 - Present</p>
+                <p>All items scraped from Mushroom Vintage's sold archive (<code>vintage-mushroom.net</code>). Only items ¥65,000+ (~$430 USD) included — this filters for the high-end pieces serious collectors buy.</p>
+                <p style="margin-top: 12px;">Prices converted at ¥150 = $1 USD. Japanese descriptions auto-translated. Date range: 2015 - Present.</p>
             </div>
             
             <div class="info-card">
                 <div class="info-card-title">Tech Stack</div>
-                <ul>
+                <ul style="margin: 0 0 0 20px;">
                     <li><strong>Frontend:</strong> Vanilla HTML/CSS/JS</li>
                     <li><strong>Backend:</strong> Python FastAPI</li>
                     <li><strong>Database:</strong> PostgreSQL on Railway</li>
@@ -2173,6 +2181,7 @@ const CATEGORIES = {
     "Levi's Other": /levi/i,
     
     // === LEE ===
+    "Lee 101-J Jacket": /lee.*101-?j\b/i,
     "Lee 91-J Chore": /lee.*91-j|lee.*91j/i,
     "Lee 91-B": /lee.*91-b/i,
     "Lee 101Z": /lee.*101z/i,
@@ -2184,6 +2193,8 @@ const CATEGORIES = {
     "Lee Coverall": /lee.*coverall/i,
     "Lee HBT": /lee.*hbt/i,
     "Lee Princeton": /lee.*princeton/i,
+    "Lee Jelt": /lee.*jelt/i,
+    "Lee Frisco": /lee.*frisco/i,
     "Buddy Lee Doll": /buddy\s*lee/i,
     "Lee Other": /\blee\b/i,
     
@@ -2206,15 +2217,19 @@ const CATEGORIES = {
     "Spalding Sweat": /spalding/i,
     "Duxbak Sweat": /duxbak/i,
     "Spruce Sweat": /spruce/i,
+    "Peanuts/Snoopy": /peanuts|snoopy|charlie\s*brown|schroeder|pig\s*pen/i,
     "Sweat Hoody": /sweat\s*hoody|w\/f\s*sweat|s\/f\s*sweat/i,
     "Sweatshirt": /sweat\s*shirt|sweatshirt/i,
     
     // === U.S. NAVY ===
     "Navy N-1 Deck": /n-1|deck\s*jacket/i,
-    "Navy Dungaree Jacket": /navy.*dungaree.*jacket|usn.*dungaree/i,
+    "Navy Dungaree Jacket": /navy.*d[ua]ngaree.*jacket|usn.*dungaree.*jacket/i,
+    "Navy Dungaree Pants": /navy.*d[ua]ngaree.*(trouser|pants)|usn.*dungaree.*(trouser|pants)/i,
+    "Navy Flight Jacket": /navy.*flight|u\.s\.n.*flight/i,
     "Navy Gunner Smock": /gunner\s*smock/i,
     "Navy HBT": /navy.*hbt|usn.*hbt/i,
     "Navy Catapult Jacket": /catapult/i,
+    "Navy Sweat": /navy.*sweat/i,
     "Navy Other": /u\.s\.navy|u\.s\.n\b/i,
     
     // === U.S. ARMY ===
@@ -2259,20 +2274,30 @@ const CATEGORIES = {
     "Boss of the Road": /boss\s*(of\s*the\s*)?road/i,
     "Stronghold": /stronghold/i,
     "Montgomery Ward": /montgomery\s*ward/i,
+    "Sears/Roebucks": /sears|roebucks/i,
+    "JCPenney/Foremost": /j\.?c\.?\s*penney|jcp|penneys|foremost/i,
     
     // === WORKWEAR TYPES ===
     "Coverall": /coverall/i,
     "Overall (Bib)": /overall/i,
     "Painter Pants": /painter/i,
+    "Double Knee": /double\s*knee/i,
+    "Engineer Pants": /engineer/i,
+    "Logger Pants": /logger/i,
     "Shop Coat": /shop\s*coat/i,
     "Chore Coat": /chore/i,
     "Chambray Shirt": /chambray/i,
     "Chinstrap": /chinstrap/i,
     "Buckleback": /buckleback/i,
+    "Railroad": /railroad/i,
+    "Prison": /prison/i,
     
-    // === PATTERNS ===
+    // === PATTERNS/MATERIALS ===
     "Wabash Stripe": /wabash/i,
     "Hickory Stripe": /hickory/i,
+    "Salt & Pepper": /salt.*pepper/i,
+    "Duck Canvas": /duck\s*canvas|canvas\s*duck|brown\s*duck/i,
+    "Blanket Lined": /blanket\s*lined/i,
     
     // === OUTDOOR BRANDS ===
     "Patagonia": /patagonia/i,
@@ -2289,6 +2314,8 @@ const CATEGORIES = {
     "Alpine Designs": /alpine\s*designs/i,
     "Gerry": /\bgerry\b/i,
     "Down Jacket": /down\s*(jacket|parka|vest|hoody)|expedition.*down/i,
+    "Hunting Jacket": /hunting.*jacket|shooting/i,
+    "Ski Jacket": /ski\s*jacket/i,
     
     // === SOUVENIR JACKETS ===
     "Vietnam Souvenir": /viet-?nam.*souvenir/i,
@@ -2301,9 +2328,16 @@ const CATEGORIES = {
     "Rayon Shirt": /rayon/i,
     "Flannel Shirt": /flannel/i,
     "Western Shirt": /western.*shirt/i,
+    "Wool Shirt": /wool.*shirt/i,
+    "Work Shirt": /work.*shirt/i,
+    "Denim Shirt": /denim.*shirt/i,
+    "Corduroy Shirt": /corduroy.*shirt/i,
     "Arrow Shirt": /arrow/i,
     
-    // === KNITS/SWEATERS ===
+    // === TEES ===
+    "Band/Tour Tee": /tour.*t-shirt|t-shirt.*tour/i,
+    "Photo Print Tee": /photo.*print|bruce\s*weber/i,
+    "Vintage T-Shirt": /t-shirt/i,
     "Mohair Cardigan": /mohair/i,
     "Cowichan Sweater": /cowichan/i,
     "Pendleton": /pendleton/i,
@@ -2319,30 +2353,35 @@ const CATEGORIES = {
     "Horsehide": /horsehide/i,
     "Car Coat": /car\s*coat/i,
     
-    // === TEES ===
-    "Band/Tour Tee": /tour.*t-shirt|t-shirt.*tour/i,
-    "Photo Print Tee": /photo.*print|bruce\s*weber/i,
-    "Flock Print": /flock\s*print/i,
-    
     // === COLLEGE/SPORTS ===
     "Beer Jacket": /beer\s*jacket/i,
     "Varsity/Letterman": /varsity|letterman/i,
     "Sports Jacket": /sports?\s*jacket/i,
+    "Flock Print": /flock\s*print/i,
+    "Military Academy": /usafa|usma|usna|west\s*point|naval\s*academy|air\s*force\s*academy/i,
     
     // === SHOES ===
     "Converse": /converse/i,
     
     // === ACCESSORIES ===
-    "Advertising/Display": /advertising|banner|display/i,
+    "Advertising/Display": /advertising|banner|display|sign\b/i,
     "Tote Bag": /tote/i,
     "Quilt": /quilt/i,
     
+    // === KNITS/SWEATERS ===
+    "Cardigan": /cardigan/i,
+    "Vest": /\bvest\b/i,
+    "Pullover Sweater": /pullover/i,
+    
     // === CATCH-ALLS ===
+    "Cafe Racer": /cafe\s*racer/i,
+    "Motorcycle Jacket": /motorcycle/i,
     "Denim Jacket": /denim\s*jacket/i,
     "Denim Jeans": /jeans/i,
     "Gore-Tex": /gore-tex/i,
     "Corduroy": /corduroy/i,
     "Polo/Ralph Lauren": /polo|ralph\s*lauren/i,
+    "Anorak": /anorak/i,
     "Leather Jacket": /leather.*jacket/i,
     "Work Jacket": /work\s*jacket/i,
     "Boat Jacket": /boat\s*jacket/i,
