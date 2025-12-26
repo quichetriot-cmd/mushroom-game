@@ -2162,14 +2162,18 @@ const CATEGORIES = {
     "Levi's 550ZXX": /levi.*550/i,
     
     // === LEVI'S JACKETS ===
-    "Levi's 506XX (1st)": /levi.*506xx|levi.*s506/i,
+    "Levi's 213 (Pre-Type1)": /levi.*\b213\b/i,
+    "Levi's S506XX (WW2)": /s506xx/i,
+    "Levi's 506XXE (Big E)": /506xxe/i,
+    "Levi's 506XX (1st)": /506xx/i,
     "Levi's 507XX (2nd)": /levi.*507.*xx|levi.*507bxx/i,
     "Levi's 517XX": /levi.*517xx/i,
-    "Levi's 519XX": /levi.*519/i,
+    "Levi's 519XX (Blanket)": /levi.*519/i,
     "Levi's 557XX": /levi.*557.*xx|levi.*557e\b/i,
     "Levi's 557 (3rd)": /levi.*\b557\b/i,
     "Levi's 558XX": /levi.*558.*xx|levi.*558e\b/i,
     "Levi's 559XX": /levi.*559.*xx|levi.*559e\b/i,
+    "Levi's 70505-0117": /70505-0117/i,
     "Levi's 70505 (3rd)": /levi.*70505/i,
     "Levi's 70506": /levi.*70506/i,
     "Levi's 70507": /levi.*70507/i,
@@ -2183,6 +2187,8 @@ const CATEGORIES = {
     // === LEE ===
     "Lee 101-J Jacket": /lee.*101-?j\b/i,
     "Lee 91-J Chore": /lee.*91-j|lee.*91j/i,
+    "Lee S91-J (WW2)": /lee.*s91-?j/i,
+    "Lee 98-J": /lee.*98-?j/i,
     "Lee 91-B": /lee.*91-b/i,
     "Lee 91-SB": /lee.*91-sb/i,
     "Lee 101Z": /lee.*101z/i,
@@ -2218,9 +2224,10 @@ const CATEGORIES = {
     "Wrangler Other": /wrangler/i,
     
     // === CHAMPION ===
-    "Champion Reverse Weave": /reverse\s*weave/i,
-    "Champion Afterhoody": /afterhoody/i,
+    "Champion Rock Hood": /rock\s*hood/i,
+    "Champion Afterhoody": /afterhoody|after\s*hoody/i,
     "Champion W/F Double Face": /champion.*w\/f|double\s*face/i,
+    "Champion Reverse Weave": /reverse\s*weave/i,
     "Champion Football Tee": /champion.*football/i,
     "Champion Flock Print": /champion.*flock/i,
     "Champion Water Print": /champion.*water/i,
@@ -2231,20 +2238,36 @@ const CATEGORIES = {
     "Spalding Sweat": /spalding/i,
     "Duxbak Sweat": /duxbak/i,
     "Spruce Sweat": /spruce/i,
+    "Bodygard Sweat": /bodygard/i,
+    "Akom Sweat": /akom/i,
+    "Russell Sweat": /russell/i,
+    "Two-Tone Sweat": /two-?\s*tone.*sweat|sweat.*two-?\s*tone/i,
+    "Water Print Sweat": /water\s*print/i,
+    "Composer Print": /beethoven|bach|brahms|nietzsche/i,
     "Peanuts/Snoopy": /peanuts|snoopy|charlie\s*brown|schroeder|pig\s*pen/i,
     "Sweat Hoody": /sweat\s*hoody|w\/f\s*sweat|s\/f\s*sweat/i,
     "Sweatshirt": /sweat\s*shirt|sweatshirt/i,
     
     // === U.S. NAVY ===
+    "Navy Blue N-1 Deck": /blue.*n-1|n-1.*blue|blue.*deck/i,
     "Navy N-1 Deck": /n-1|deck\s*jacket/i,
-    "Navy Dungaree Jacket": /navy.*d[ua]ngaree.*jacket|usn.*dungaree.*jacket/i,
-    "Navy Dungaree Pants": /navy.*d[ua]ngaree.*(trouser|pants)|usn.*dungaree.*(trouser|pants)/i,
+    "Navy Dangaree (Shawl)": /dangaree/i,
+    "Navy Dungaree Jacket": /navy.*dungaree.*jacket|usn.*dungaree.*jacket/i,
+    "Navy Dungaree Pants": /navy.*dungaree.*(trouser|pants)|usn.*dungaree.*(trouser|pants)/i,
+    "Navy NAF-1168": /naf-1168/i,
     "Navy Flight Jacket": /navy.*flight|u\.s\.n.*flight/i,
+    "Navy P-Coat": /navy.*p-coat|navy.*pea\s*coat/i,
     "Navy Gunner Smock": /gunner\s*smock/i,
     "Navy HBT": /navy.*hbt|usn.*hbt/i,
     "Navy Catapult Jacket": /catapult/i,
     "Navy Sweat": /navy.*sweat/i,
     "Navy Other": /u\.s\.navy|u\.s\.n\b/i,
+    
+    // === U.S. COAST GUARD ===
+    "Coast Guard": /coast\s*guard/i,
+    
+    // === ROYAL NAVY (British) ===
+    "Royal Navy": /royal\s*navy/i,
     
     // === U.S. ARMY ===
     "Army M-65": /m-65/i,
@@ -2252,6 +2275,11 @@ const CATEGORIES = {
     "Army Tanker": /tanker\s*jacket/i,
     "Army Dungaree/Denim": /army.*dungaree|army.*denim/i,
     "Army Jungle Jacket": /jungle/i,
+    "Army Khaki/Chino": /army.*khaki|army.*chino/i,
+    "Army Mackinaw": /army.*mackinaw/i,
+    "Army HBT": /army.*hbt/i,
+    "Army Daisy Mae Hat": /daisy\s*mae/i,
+    "Army Snow Parka": /army.*snow|army.*parka/i,
     "Army Other": /u\.s\.army/i,
     
     // === USMC ===
@@ -2288,6 +2316,17 @@ const CATEGORIES = {
     "Can't Bust'Em": /can't\s*bust/i,
     "Boss of the Road": /boss\s*(of\s*the\s*)?road/i,
     "Stronghold": /stronghold/i,
+    "Crown": /\bcrown\b/i,
+    "N&W": /\bn\s*&\s*w\b/i,
+    "Black Bear": /black\s*bear/i,
+    "Carter's": /carter/i,
+    "Test": /\btest\b/i,
+    "Powell": /powell/i,
+    "W.P.A": /w\.?p\.?a\b/i,
+    "Freeland": /freeland/i,
+    "Burlington": /burlington/i,
+    "Dubbleware": /dubbleware/i,
+    "Winner": /\bwinner\b/i,
     "Montgomery Ward": /montgomery\s*ward/i,
     "Sears/Roebucks": /sears|roebucks/i,
     "JCPenney/Foremost": /j\.?c\.?\s*penney|jcp|penneys|foremost/i,
@@ -2306,8 +2345,10 @@ const CATEGORIES = {
     "Buckleback": /buckleback/i,
     "Railroad": /railroad/i,
     "Prison": /prison/i,
+    "Change Button": /change\s*button/i,
     
     // === PATTERNS/MATERIALS ===
+    "Star Stripe": /star\s*stripe/i,
     "Wabash Stripe": /wabash/i,
     "Hickory Stripe": /hickory/i,
     "Salt & Pepper": /salt.*pepper/i,
@@ -2346,11 +2387,18 @@ const CATEGORIES = {
     "Pharaoh Jacket": /pharaoh/i,
     "Drizzler Jacket": /drizzler/i,
     "Western Jacket": /western.*jacket|gabardine.*jacket/i,
+    "Kodiak": /kodiak/i,
     "Fake Fur Jacket": /fake\s*fur/i,
     "Logger Cruiser": /logger.*cruiser|cruiser.*jacket/i,
     
     // === SHIRTS ===
+    // === HAWAIIAN SHIRTS ===
+    "Kamehameha": /kamehameha/i,
+    "Kahanamoku": /kahanamoku/i,
+    "Del Mar": /del\s*mar/i,
     "Hawaiian/Aloha": /hawaiian|aloha/i,
+    
+    // === SHIRTS ===
     "Rayon Shirt": /rayon/i,
     "Flannel Shirt": /flannel/i,
     "Western Shirt": /western.*shirt/i,
