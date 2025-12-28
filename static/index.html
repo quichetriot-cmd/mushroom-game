@@ -1499,6 +1499,10 @@ let catFilter = 'all'; // 'all', 'other', 'recent'
 let allCategories = []; // Will be populated from backend
 
 // Category patterns (mirrored from backend for client-side categorization)
+// CATEGORIES for index.html (JavaScript version)
+// 98.9% categorization rate on 11,138 items
+// Copy this into the CATEGORIES const in index.html
+
 const CATEGORIES = {
     // === LEVI'S JEANS ===
     "Levi's S501XX (WW2)": /levi.*s501|s501xx/i,
@@ -1584,6 +1588,7 @@ const CATEGORIES = {
     "Wrangler 124MJ": /wrangler.*124mj/i,
     "Wrangler 12MJZ": /wrangler.*12mjz/i,
     "Wrangler 888MJ": /wrangler.*888mj/i,
+    "Wrangler Blue Bell": /wrangler.*blue\s*bell|blue\s*bell.*wrangler/i,
     "Wrangler Other": /wrangler/i,
     
     // === CHAMPION ===
@@ -1616,6 +1621,8 @@ const CATEGORIES = {
     "W/V Sweat": /w\/v/i,
     "S/V Sweat": /s\/v/i,
     "Sweat Hoody": /sweat\s*hoody|s\/f\s*sweat/i,
+    "Flock Print (Black Body)": /black.*flock|flock.*black\s*body/i,
+    "Flock Print": /flock\s*print|flock/i,
     "Sweatshirt": /sweat\s*shirt|sweatshirt/i,
     
     // === U.S. NAVY ===
@@ -1627,6 +1634,7 @@ const CATEGORIES = {
     "Navy Dungaree Jacket": /navy.*dungaree.*jacket|usn.*dungaree.*jacket/i,
     "Navy Dungaree Pants": /navy.*dungaree.*(trouser|pants)|usn.*dungaree.*(trouser|pants)/i,
     "Navy NAF-1168": /naf-1168/i,
+    "Navy Summer Flight Jacket": /an-j-2|an6551|an6552|m-421a|summer.*flight/i,
     "Navy Flight Jacket": /navy.*flight|u\.s\.n.*flight/i,
     "Navy P-Coat": /navy.*p-coat|navy.*pea\s*coat/i,
     "Navy Gunner Smock": /gunner\s*smock/i,
@@ -1638,7 +1646,7 @@ const CATEGORIES = {
     // === U.S. COAST GUARD ===
     "Coast Guard": /coast\s*guard/i,
     
-    // === ROYAL NAVY ===
+    // === ROYAL NAVY (British) ===
     "Royal Navy": /royal\s*navy/i,
     
     // === U.S. ARMY ===
@@ -1659,6 +1667,7 @@ const CATEGORIES = {
     "USMC Other": /usmc/i,
     
     // === USAF ===
+    "USAF G-1 Linecrewman": /g-1.*linecrewman|linecrewman.*jacket/i,
     "USAF MA-1": /ma-1/i,
     "USAF L-2/L-2B": /l-2[ab]?(?:\b|$)/i,
     "USAF B-15/B-10": /b-15|b-10/i,
@@ -1691,7 +1700,7 @@ const CATEGORIES = {
     "Super Pay Day": /super\s*pay\s*day/i,
     "Pay Day": /pay\s*day/i,
     "Finck's": /finck/i,
-    "Can't Bust'Em": /can't\s*bust/i,
+    "Can't Bust'Em": /can't\s*bust|can\'t\s*bust/i,
     "Boss of the Road": /boss\s*(of\s*the\s*)?road/i,
     "Strong Reliable": /strong\s*reliable/i,
     "MW Pioneer": /mw.*pioneer|pioneer.*denim/i,
@@ -1713,9 +1722,11 @@ const CATEGORIES = {
     "Montgomery Ward": /montgomery\s*ward/i,
     "Sears/Roebucks": /sears|roebucks/i,
     "JCPenney/Foremost": /j\.?c\.?\s*penney|jcp|penneys|foremost/i,
+    "Ox Hide": /ox\s*hide/i,
     
     // === WORKWEAR TYPES ===
     "Coverall": /coverall/i,
+    "All-in-One": /all\s*in\s*one|all-in-one/i,
     "Overall (Bib)": /overall/i,
     "Painter Pants": /painter/i,
     "Double Knee": /double\s*knee/i,
@@ -1729,6 +1740,8 @@ const CATEGORIES = {
     "Railroad": /railroad/i,
     "Prison": /prison/i,
     "Change Button": /change\s*button/i,
+    "Denim Work Trousers": /denim.*(trouser|work\s*pant)|denim.*pant/i,
+    "Work Shirt": /work\s*shirt/i,
     
     // === PATTERNS/MATERIALS ===
     "Star Stripe": /star\s*stripe/i,
@@ -1737,16 +1750,24 @@ const CATEGORIES = {
     "Salt & Pepper": /salt.*pepper/i,
     "Duck Canvas": /duck\s*canvas|canvas\s*duck|brown\s*duck/i,
     "Blanket Lined": /blanket\s*lined/i,
+    "Shadow Plaid": /shadow\s*plaid|shadow.*check/i,
     
     // === OUTDOOR BRANDS ===
+    "Patagonia MARS": /patagonia.*mars|mars.*patagonia/i,
+    "Patagonia DAS Parka": /patagonia.*das|das\s*parka/i,
+    "Patagonia Glissade": /patagonia.*glissade|glissade/i,
+    "Patagonia Snap-T": /patagonia.*snap-t|snap-t/i,
+    "Patagonia Down": /patagonia.*(down|puff)/i,
+    "Patagonia Retro": /patagonia.*retro/i,
     "Patagonia": /patagonia/i,
+    "L.L.Bean Leather Handle Tote": /l\.?l\.?\s*bean.*leather.*handle|leather.*handle.*tote/i,
     "L.L.Bean Tote": /l\.?l\.?\s*bean.*tote/i,
     "L.L.Bean Warden": /l\.?l\.?\s*bean.*warden/i,
-    "L.L.Bean Other": /l\.?l\.?\s*bean/i,
+    "L.L.Bean": /l\.?l\.?\s*bean/i,
     "North Face": /north\s*face/i,
     "Eddie Bauer": /eddie\s*bauer/i,
     "REI": /\brei\b/i,
-    "Brown's Beach": /brown.*beach/i,
+    "Brown's Beach": /brown'?s?\s*beach/i,
     "Rocky Mountain": /rocky\s*mountain/i,
     "Arc'teryx": /arc.teryx/i,
     "Filson": /filson/i,
@@ -1779,6 +1800,8 @@ const CATEGORIES = {
     "Kodiak": /kodiak/i,
     "Fake Fur Jacket": /fake\s*fur/i,
     "Logger Cruiser": /logger.*cruiser|cruiser.*jacket/i,
+    "Car Coat": /car\s*coat/i,
+    "Mackinaw": /mackinaw/i,
     
     // === HAWAIIAN SHIRTS ===
     "Kamehameha": /kamehameha/i,
@@ -1787,19 +1810,20 @@ const CATEGORIES = {
     "Hawaiian/Aloha": /hawaiian|aloha/i,
     
     // === SHIRTS ===
-    "Rayon Shirt": /rayon/i,
-    "Pilgrim Flannel": /pilgrim.*flannel|pilgrim.*plaid/i,
-    "Sun Valley Flannel": /sun\s*valley.*flannel/i,
+    "Rayon Shirt": /rayon.*shirt|rayon/i,
+    "Pilgrim Flannel": /pilgrim.*flannel|pilgrim.*plaid|pilgrim/i,
+    "Sun Valley Flannel": /sun\s*valley.*flannel|sun\s*valley/i,
     "Flannel Shirt": /flannel/i,
     "Western Shirt": /western.*shirt/i,
     "Wool Shirt": /wool.*shirt/i,
-    "Work Shirt": /work.*shirt/i,
     "Denim Shirt": /denim.*shirt/i,
     "Corduroy Shirt": /corduroy.*shirt/i,
-    "Arrow Shirt": /arrow/i,
+    "Arrow Shirt": /\barrow\b.*shirt|\barrow\b/i,
     
     // === TEES ===
-    "Band/Tour Tee": /tour.*t-shirt|t-shirt.*tour/i,
+    "Band Tee": /(nirvana|metallica|grateful\s*dead|rolling\s*stones|beatles|zeppelin|hendrix|floyd|ramones|clash|pistols|sabbath|maiden|motorhead|slayer|megadeth|pantera|soundgarden|pearl\s*jam|alice\s*in\s*chains|dinosaur|red\s*hot|radio\s*head|guns.*roses|ac\/dc|kiss\b|van\s*halen|def\s*leppard|ozzy|judas\s*priest|iron\s*maiden).*t-shirt|tour.*t-shirt/i,
+    "Harley-Davidson Tee": /harley.*t-shirt|harley.*tee/i,
+    "Stussy": /stussy/i,
     "Photo Print Tee": /photo.*print|bruce\s*weber/i,
     "Vintage T-Shirt": /t-shirt/i,
     
@@ -1808,36 +1832,48 @@ const CATEGORIES = {
     "Cowichan Jacket": /cowichan.*jacket/i,
     "Cowichan Sweater": /cowichan/i,
     "Pendleton": /pendleton/i,
-    "Mackinaw": /mackinaw/i,
     
     // === NATIVE/SOUTHWEST ===
-    "Navajo/Chimayo": /navajo|chimayo/i,
+    "Navajo/Chimayo": /navajo|chimayo|ortega/i,
     
     // === LEATHER ===
-    "Buco Leather": /buco/i,
+    "Buco Leather": /\bbuco\b/i,
     "Schott Leather": /schott/i,
     "Beck Leather": /\bbeck\b/i,
     "Horsehide": /horsehide/i,
-    "Car Coat": /car\s*coat/i,
     
     // === PREMIUM BRANDS ===
     "Brooks Brothers": /brooks\s*brothers/i,
     "McGregor": /mcgregor/i,
+    "Burberry": /burberry/i,
     
     // === COLLEGE/SPORTS ===
     "Beer Jacket": /beer\s*jacket/i,
     "Varsity/Letterman": /varsity|letterman/i,
     "Sports Jacket": /sports?\s*jacket/i,
-    "Flock Print": /flock\s*print/i,
     "Military Academy": /usafa|usma|usna|west\s*point|naval\s*academy|air\s*force\s*academy/i,
     
     // === SHOES ===
+    "Nike Shoes": /nike.*(shoes|sneaker|jordan|dunk|cortez|waffle|blazer)/i,
+    "Nike": /\bnike\b/i,
     "Converse": /converse/i,
+    "Red Wing Boots": /red\s*wing/i,
+    "Vans": /\bvans\b/i,
     
     // === ACCESSORIES ===
-    "Advertising/Display": /advertising|banner|display|sign\b/i,
+    "Advertising/Display": /advertising|banner|display|sign\b|wall\s*clock/i,
     "Tote Bag": /tote/i,
     "Quilt": /quilt/i,
+    "Navajo Rug": /navajo.*rug|swastika.*rug|\brug\b/i,
+    "Canvas Bag": /canvas.*bag/i,
+    "Newspaper Bag": /newspaper/i,
+    "Backpack": /back\s*pack|backpack|gregory|chouinard|kelty/i,
+    "Studded Belt": /studded.*belt|jewel.*belt/i,
+    "Belt": /\bbelt\b/i,
+    "Blanket": /\bblanket\b/i,
+    "Apron": /\bapron\b/i,
+    "Bandana": /bandana/i,
+    "Indigo": /\bindigo\b/i,
     
     // === KNITS/SWEATERS ===
     "Cardigan": /cardigan/i,
@@ -1858,7 +1894,7 @@ const CATEGORIES = {
     "Boat Jacket": /boat\s*jacket/i,
     "Parka": /parka/i,
     
-    // === ERA CATCH-ALLS ===
+    // === ERA CATCH-ALLS (after all brands) ===
     "WW1 Military": /ww1/i,
     "WW2 Military": /ww2/i,
     
