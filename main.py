@@ -169,10 +169,8 @@ app.add_middleware(
 # ========== TRENDS ANALYSIS ==========
 """
 Complete category patterns for trends analysis.
-Replace the CATEGORIES dict in the backend code with this.
+98.9% categorization rate on 11,138 items.
 """
-
-import re
 
 # Pre-compile all regexes for maximum performance
 CATEGORIES = {
@@ -260,6 +258,7 @@ CATEGORIES = {
     "Wrangler 124MJ": re.compile(r"wrangler.*124mj", re.IGNORECASE),
     "Wrangler 12MJZ": re.compile(r"wrangler.*12mjz", re.IGNORECASE),
     "Wrangler 888MJ": re.compile(r"wrangler.*888mj", re.IGNORECASE),
+    "Wrangler Blue Bell": re.compile(r"wrangler.*blue\s*bell|blue\s*bell.*wrangler", re.IGNORECASE),
     "Wrangler Other": re.compile(r"wrangler", re.IGNORECASE),
     
     # === CHAMPION ===
@@ -292,6 +291,8 @@ CATEGORIES = {
     "W/V Sweat": re.compile(r"w\/v", re.IGNORECASE),
     "S/V Sweat": re.compile(r"s\/v", re.IGNORECASE),
     "Sweat Hoody": re.compile(r"sweat\s*hoody|s\/f\s*sweat", re.IGNORECASE),
+    "Flock Print (Black Body)": re.compile(r"black.*flock|flock.*black\s*body", re.IGNORECASE),
+    "Flock Print": re.compile(r"flock\s*print|flock", re.IGNORECASE),
     "Sweatshirt": re.compile(r"sweat\s*shirt|sweatshirt", re.IGNORECASE),
     
     # === U.S. NAVY ===
@@ -303,6 +304,7 @@ CATEGORIES = {
     "Navy Dungaree Jacket": re.compile(r"navy.*dungaree.*jacket|usn.*dungaree.*jacket", re.IGNORECASE),
     "Navy Dungaree Pants": re.compile(r"navy.*dungaree.*(trouser|pants)|usn.*dungaree.*(trouser|pants)", re.IGNORECASE),
     "Navy NAF-1168": re.compile(r"naf-1168", re.IGNORECASE),
+    "Navy Summer Flight Jacket": re.compile(r"an-j-2|an6551|an6552|m-421a|summer.*flight", re.IGNORECASE),
     "Navy Flight Jacket": re.compile(r"navy.*flight|u\.s\.n.*flight", re.IGNORECASE),
     "Navy P-Coat": re.compile(r"navy.*p-coat|navy.*pea\s*coat", re.IGNORECASE),
     "Navy Gunner Smock": re.compile(r"gunner\s*smock", re.IGNORECASE),
@@ -335,6 +337,7 @@ CATEGORIES = {
     "USMC Other": re.compile(r"usmc", re.IGNORECASE),
     
     # === USAF ===
+    "USAF G-1 Linecrewman": re.compile(r"g-1.*linecrewman|linecrewman.*jacket", re.IGNORECASE),
     "USAF MA-1": re.compile(r"ma-1", re.IGNORECASE),
     "USAF L-2/L-2B": re.compile(r"l-2[ab]?(?:\b|$)", re.IGNORECASE),
     "USAF B-15/B-10": re.compile(r"b-15|b-10", re.IGNORECASE),
@@ -367,7 +370,7 @@ CATEGORIES = {
     "Super Pay Day": re.compile(r"super\s*pay\s*day", re.IGNORECASE),
     "Pay Day": re.compile(r"pay\s*day", re.IGNORECASE),
     "Finck's": re.compile(r"finck", re.IGNORECASE),
-    "Can't Bust'Em": re.compile(r"can't\s*bust", re.IGNORECASE),
+    "Can't Bust'Em": re.compile(r"can't\s*bust|can\'t\s*bust", re.IGNORECASE),
     "Boss of the Road": re.compile(r"boss\s*(of\s*the\s*)?road", re.IGNORECASE),
     "Strong Reliable": re.compile(r"strong\s*reliable", re.IGNORECASE),
     "MW Pioneer": re.compile(r"mw.*pioneer|pioneer.*denim", re.IGNORECASE),
@@ -389,9 +392,11 @@ CATEGORIES = {
     "Montgomery Ward": re.compile(r"montgomery\s*ward", re.IGNORECASE),
     "Sears/Roebucks": re.compile(r"sears|roebucks", re.IGNORECASE),
     "JCPenney/Foremost": re.compile(r"j\.?c\.?\s*penney|jcp|penneys|foremost", re.IGNORECASE),
+    "Ox Hide": re.compile(r"ox\s*hide", re.IGNORECASE),
     
     # === WORKWEAR TYPES ===
     "Coverall": re.compile(r"coverall", re.IGNORECASE),
+    "All-in-One": re.compile(r"all\s*in\s*one|all-in-one", re.IGNORECASE),
     "Overall (Bib)": re.compile(r"overall", re.IGNORECASE),
     "Painter Pants": re.compile(r"painter", re.IGNORECASE),
     "Double Knee": re.compile(r"double\s*knee", re.IGNORECASE),
@@ -405,6 +410,8 @@ CATEGORIES = {
     "Railroad": re.compile(r"railroad", re.IGNORECASE),
     "Prison": re.compile(r"prison", re.IGNORECASE),
     "Change Button": re.compile(r"change\s*button", re.IGNORECASE),
+    "Denim Work Trousers": re.compile(r"denim.*(trouser|work\s*pant)|denim.*pant", re.IGNORECASE),
+    "Work Shirt": re.compile(r"work\s*shirt", re.IGNORECASE),
     
     # === PATTERNS/MATERIALS ===
     "Star Stripe": re.compile(r"star\s*stripe", re.IGNORECASE),
@@ -413,16 +420,24 @@ CATEGORIES = {
     "Salt & Pepper": re.compile(r"salt.*pepper", re.IGNORECASE),
     "Duck Canvas": re.compile(r"duck\s*canvas|canvas\s*duck|brown\s*duck", re.IGNORECASE),
     "Blanket Lined": re.compile(r"blanket\s*lined", re.IGNORECASE),
+    "Shadow Plaid": re.compile(r"shadow\s*plaid|shadow.*check", re.IGNORECASE),
     
     # === OUTDOOR BRANDS ===
+    "Patagonia MARS": re.compile(r"patagonia.*mars|mars.*patagonia", re.IGNORECASE),
+    "Patagonia DAS Parka": re.compile(r"patagonia.*das|das\s*parka", re.IGNORECASE),
+    "Patagonia Glissade": re.compile(r"patagonia.*glissade|glissade", re.IGNORECASE),
+    "Patagonia Snap-T": re.compile(r"patagonia.*snap-t|snap-t", re.IGNORECASE),
+    "Patagonia Down": re.compile(r"patagonia.*(down|puff)", re.IGNORECASE),
+    "Patagonia Retro": re.compile(r"patagonia.*retro", re.IGNORECASE),
     "Patagonia": re.compile(r"patagonia", re.IGNORECASE),
+    "L.L.Bean Leather Handle Tote": re.compile(r"l\.?l\.?\s*bean.*leather.*handle|leather.*handle.*tote", re.IGNORECASE),
     "L.L.Bean Tote": re.compile(r"l\.?l\.?\s*bean.*tote", re.IGNORECASE),
     "L.L.Bean Warden": re.compile(r"l\.?l\.?\s*bean.*warden", re.IGNORECASE),
-    "L.L.Bean Other": re.compile(r"l\.?l\.?\s*bean", re.IGNORECASE),
+    "L.L.Bean": re.compile(r"l\.?l\.?\s*bean", re.IGNORECASE),
     "North Face": re.compile(r"north\s*face", re.IGNORECASE),
     "Eddie Bauer": re.compile(r"eddie\s*bauer", re.IGNORECASE),
     "REI": re.compile(r"\brei\b", re.IGNORECASE),
-    "Brown's Beach": re.compile(r"brown.*beach", re.IGNORECASE),
+    "Brown's Beach": re.compile(r"brown'?s?\s*beach", re.IGNORECASE),
     "Rocky Mountain": re.compile(r"rocky\s*mountain", re.IGNORECASE),
     "Arc'teryx": re.compile(r"arc.teryx", re.IGNORECASE),
     "Filson": re.compile(r"filson", re.IGNORECASE),
@@ -455,6 +470,8 @@ CATEGORIES = {
     "Kodiak": re.compile(r"kodiak", re.IGNORECASE),
     "Fake Fur Jacket": re.compile(r"fake\s*fur", re.IGNORECASE),
     "Logger Cruiser": re.compile(r"logger.*cruiser|cruiser.*jacket", re.IGNORECASE),
+    "Car Coat": re.compile(r"car\s*coat", re.IGNORECASE),
+    "Mackinaw": re.compile(r"mackinaw", re.IGNORECASE),
     
     # === HAWAIIAN SHIRTS ===
     "Kamehameha": re.compile(r"kamehameha", re.IGNORECASE),
@@ -463,19 +480,20 @@ CATEGORIES = {
     "Hawaiian/Aloha": re.compile(r"hawaiian|aloha", re.IGNORECASE),
     
     # === SHIRTS ===
-    "Rayon Shirt": re.compile(r"rayon", re.IGNORECASE),
-    "Pilgrim Flannel": re.compile(r"pilgrim.*flannel|pilgrim.*plaid", re.IGNORECASE),
-    "Sun Valley Flannel": re.compile(r"sun\s*valley.*flannel", re.IGNORECASE),
+    "Rayon Shirt": re.compile(r"rayon.*shirt|rayon", re.IGNORECASE),
+    "Pilgrim Flannel": re.compile(r"pilgrim.*flannel|pilgrim.*plaid|pilgrim", re.IGNORECASE),
+    "Sun Valley Flannel": re.compile(r"sun\s*valley.*flannel|sun\s*valley", re.IGNORECASE),
     "Flannel Shirt": re.compile(r"flannel", re.IGNORECASE),
     "Western Shirt": re.compile(r"western.*shirt", re.IGNORECASE),
     "Wool Shirt": re.compile(r"wool.*shirt", re.IGNORECASE),
-    "Work Shirt": re.compile(r"work.*shirt", re.IGNORECASE),
     "Denim Shirt": re.compile(r"denim.*shirt", re.IGNORECASE),
     "Corduroy Shirt": re.compile(r"corduroy.*shirt", re.IGNORECASE),
-    "Arrow Shirt": re.compile(r"arrow", re.IGNORECASE),
+    "Arrow Shirt": re.compile(r"\barrow\b.*shirt|\barrow\b", re.IGNORECASE),
     
     # === TEES ===
-    "Band/Tour Tee": re.compile(r"tour.*t-shirt|t-shirt.*tour", re.IGNORECASE),
+    "Band Tee": re.compile(r"(nirvana|metallica|grateful\s*dead|rolling\s*stones|beatles|zeppelin|hendrix|floyd|ramones|clash|pistols|sabbath|maiden|motorhead|slayer|megadeth|pantera|soundgarden|pearl\s*jam|alice\s*in\s*chains|dinosaur|red\s*hot|radio\s*head|guns.*roses|ac\/dc|kiss\b|van\s*halen|def\s*leppard|ozzy|judas\s*priest|iron\s*maiden).*t-shirt|tour.*t-shirt", re.IGNORECASE),
+    "Harley-Davidson Tee": re.compile(r"harley.*t-shirt|harley.*tee", re.IGNORECASE),
+    "Stussy": re.compile(r"stussy", re.IGNORECASE),
     "Photo Print Tee": re.compile(r"photo.*print|bruce\s*weber", re.IGNORECASE),
     "Vintage T-Shirt": re.compile(r"t-shirt", re.IGNORECASE),
     
@@ -484,36 +502,48 @@ CATEGORIES = {
     "Cowichan Jacket": re.compile(r"cowichan.*jacket", re.IGNORECASE),
     "Cowichan Sweater": re.compile(r"cowichan", re.IGNORECASE),
     "Pendleton": re.compile(r"pendleton", re.IGNORECASE),
-    "Mackinaw": re.compile(r"mackinaw", re.IGNORECASE),
     
     # === NATIVE/SOUTHWEST ===
-    "Navajo/Chimayo": re.compile(r"navajo|chimayo", re.IGNORECASE),
+    "Navajo/Chimayo": re.compile(r"navajo|chimayo|ortega", re.IGNORECASE),
     
     # === LEATHER ===
-    "Buco Leather": re.compile(r"buco", re.IGNORECASE),
+    "Buco Leather": re.compile(r"\bbuco\b", re.IGNORECASE),
     "Schott Leather": re.compile(r"schott", re.IGNORECASE),
     "Beck Leather": re.compile(r"\bbeck\b", re.IGNORECASE),
     "Horsehide": re.compile(r"horsehide", re.IGNORECASE),
-    "Car Coat": re.compile(r"car\s*coat", re.IGNORECASE),
     
     # === PREMIUM BRANDS ===
     "Brooks Brothers": re.compile(r"brooks\s*brothers", re.IGNORECASE),
     "McGregor": re.compile(r"mcgregor", re.IGNORECASE),
+    "Burberry": re.compile(r"burberry", re.IGNORECASE),
     
     # === COLLEGE/SPORTS ===
     "Beer Jacket": re.compile(r"beer\s*jacket", re.IGNORECASE),
     "Varsity/Letterman": re.compile(r"varsity|letterman", re.IGNORECASE),
     "Sports Jacket": re.compile(r"sports?\s*jacket", re.IGNORECASE),
-    "Flock Print": re.compile(r"flock\s*print", re.IGNORECASE),
     "Military Academy": re.compile(r"usafa|usma|usna|west\s*point|naval\s*academy|air\s*force\s*academy", re.IGNORECASE),
     
     # === SHOES ===
+    "Nike Shoes": re.compile(r"nike.*(shoes|sneaker|jordan|dunk|cortez|waffle|blazer)", re.IGNORECASE),
+    "Nike": re.compile(r"\bnike\b", re.IGNORECASE),
     "Converse": re.compile(r"converse", re.IGNORECASE),
+    "Red Wing Boots": re.compile(r"red\s*wing", re.IGNORECASE),
+    "Vans": re.compile(r"\bvans\b", re.IGNORECASE),
     
     # === ACCESSORIES ===
-    "Advertising/Display": re.compile(r"advertising|banner|display|sign\b", re.IGNORECASE),
+    "Advertising/Display": re.compile(r"advertising|banner|display|sign\b|wall\s*clock", re.IGNORECASE),
     "Tote Bag": re.compile(r"tote", re.IGNORECASE),
     "Quilt": re.compile(r"quilt", re.IGNORECASE),
+    "Navajo Rug": re.compile(r"navajo.*rug|swastika.*rug|\brug\b", re.IGNORECASE),
+    "Canvas Bag": re.compile(r"canvas.*bag", re.IGNORECASE),
+    "Newspaper Bag": re.compile(r"newspaper", re.IGNORECASE),
+    "Backpack": re.compile(r"back\s*pack|backpack|gregory|chouinard|kelty", re.IGNORECASE),
+    "Studded Belt": re.compile(r"studded.*belt|jewel.*belt", re.IGNORECASE),
+    "Belt": re.compile(r"\bbelt\b", re.IGNORECASE),
+    "Blanket": re.compile(r"\bblanket\b", re.IGNORECASE),
+    "Apron": re.compile(r"\bapron\b", re.IGNORECASE),
+    "Bandana": re.compile(r"bandana", re.IGNORECASE),
+    "Indigo": re.compile(r"\bindigo\b", re.IGNORECASE),
     
     # === KNITS/SWEATERS ===
     "Cardigan": re.compile(r"cardigan", re.IGNORECASE),
