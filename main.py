@@ -167,7 +167,14 @@ app.add_middleware(
 
 
 # ========== TRENDS ANALYSIS ==========
-# Compile all regexes once at startup
+"""
+Complete category patterns for trends analysis.
+Replace the CATEGORIES dict in the backend code with this.
+"""
+
+import re
+
+# Pre-compile all regexes for maximum performance
 CATEGORIES = {
     # === LEVI'S JEANS ===
     "Levi's S501XX (WW2)": re.compile(r"levi.*s501|s501xx", re.IGNORECASE),
@@ -258,7 +265,7 @@ CATEGORIES = {
     # === CHAMPION ===
     "Champion Rock Hood": re.compile(r"rock\s*hood", re.IGNORECASE),
     "Champion Afterhoody": re.compile(r"afterhoody|after\s*hoody", re.IGNORECASE),
-    "Champion W/F Double Face": re.compile(r"champion.*w/f|double\s*face", re.IGNORECASE),
+    "Champion W/F Double Face": re.compile(r"champion.*w\/f|double\s*face", re.IGNORECASE),
     "Champion USMA": re.compile(r"usma|west\s*point", re.IGNORECASE),
     "Champion USAFA": re.compile(r"usafa|air\s*force\s*academy", re.IGNORECASE),
     "Champion USNA": re.compile(r"usna|naval\s*academy", re.IGNORECASE),
@@ -282,9 +289,9 @@ CATEGORIES = {
     "Water Print Sweat": re.compile(r"water\s*print", re.IGNORECASE),
     "Composer Print": re.compile(r"beethoven|bach|brahms|nietzsche", re.IGNORECASE),
     "Peanuts/Snoopy": re.compile(r"peanuts|snoopy|charlie\s*brown|schroeder|pig\s*pen", re.IGNORECASE),
-    "W/V Sweat": re.compile(r"w/v", re.IGNORECASE),
-    "S/V Sweat": re.compile(r"s/v", re.IGNORECASE),
-    "Sweat Hoody": re.compile(r"sweat\s*hoody|s/f\s*sweat", re.IGNORECASE),
+    "W/V Sweat": re.compile(r"w\/v", re.IGNORECASE),
+    "S/V Sweat": re.compile(r"s\/v", re.IGNORECASE),
+    "Sweat Hoody": re.compile(r"sweat\s*hoody|s\/f\s*sweat", re.IGNORECASE),
     "Sweatshirt": re.compile(r"sweat\s*shirt|sweatshirt", re.IGNORECASE),
     
     # === U.S. NAVY ===
@@ -449,7 +456,6 @@ CATEGORIES = {
     "Fake Fur Jacket": re.compile(r"fake\s*fur", re.IGNORECASE),
     "Logger Cruiser": re.compile(r"logger.*cruiser|cruiser.*jacket", re.IGNORECASE),
     
-    # === SHIRTS ===
     # === HAWAIIAN SHIRTS ===
     "Kamehameha": re.compile(r"kamehameha", re.IGNORECASE),
     "Kahanamoku": re.compile(r"kahanamoku", re.IGNORECASE),
@@ -472,6 +478,8 @@ CATEGORIES = {
     "Band/Tour Tee": re.compile(r"tour.*t-shirt|t-shirt.*tour", re.IGNORECASE),
     "Photo Print Tee": re.compile(r"photo.*print|bruce\s*weber", re.IGNORECASE),
     "Vintage T-Shirt": re.compile(r"t-shirt", re.IGNORECASE),
+    
+    # === SWEATERS ===
     "Mohair Cardigan": re.compile(r"mohair", re.IGNORECASE),
     "Cowichan Jacket": re.compile(r"cowichan.*jacket", re.IGNORECASE),
     "Cowichan Sweater": re.compile(r"cowichan", re.IGNORECASE),
