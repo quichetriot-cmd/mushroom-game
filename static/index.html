@@ -2226,13 +2226,39 @@ function renderTrendItem(cat, mode) {
         return `
             <div class="trend-item">
                 <div>
-                    <div class="trend-name">${cat.category}</div>
+                    <div class="trend-name">${cat.name}</div>
                     <div class="trend-details">${details}</div>
                 </div>
                 <span class="trend-change neutral">0 listed</span>
             </div>
         `;
     }
+    
+    if (mode === 'price' || mode === 'both') {
+        details += `$${cat.recent_avg_price.toLocaleString()} avg (was $${cat.trailing_avg_price.toLocaleString()})${smallSample}`;
+    }
+    if (mode === 'volume' || mode === 'both') {
+        if (details) details += ' · ';
+        details += `${cat.recent_count} this month (avg ${cat.trailing_monthly_avg}/mo)`;
+    }
+    
+    let changeDisplay = '';
+    if (mode === 'volume') {
+        changeDisplay = `<span class="trend-change ${cat.volume_change > 0 ? 'up' : 'down'}">${volArrow} ${Math.abs(cat.volume_change)}%</span>`;
+    } else {
+        changeDisplay = `<span class="trend-change ${priceClass}">${priceArrow} ${Math.abs(cat.price_change)}%</span>`;
+    }
+    
+    return `
+        <div class="trend-item">
+            <div>
+                <div class="trend-name">${cat.name}</div>
+                <div class="trend-details">${details}</div>
+            </div>
+            ${changeDisplay}
+        </div>
+    `;
+}
     
     if (mode === 'price' || mode === 'both') {
         details += `$${cat.recent_avg_price.toLocaleString()} avg (was $${cat.trailing_avg_price.toLocaleString()})${smallSample}`;
