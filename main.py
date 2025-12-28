@@ -10,8 +10,11 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from contextlib import asynccontextmanager
 import os
 import secrets
-from datetime import datetime, date
-from typing import Optional, List
+import re
+import json
+from datetime import datetime, date, timedelta
+from typing import Optional, List, Dict
+from collections import defaultdict
 from pydantic import BaseModel
 
 from scraper import run_incremental_scrape
@@ -144,166 +147,7 @@ app.add_middleware(
 )
 
 
-# API Routes
-@app.get("/api/items", response_model=List[ItemResponse])
-def get_items(
-    skip: int = 0,
-    limit: int = 100,
-    min_year: Optional[int] = None,
-    max_year: Optional[int] = None,
-    search: Optional[str] = None,
-    sort: str = "price_desc",
-    db: Session = Depends(get_db)
-):
-    import json
-    
-    query = db.query(Item)
-    
-    # Year filter
-    if min_year:
-        query = query.filter(Item.sold_date >= date(min_year, 1, 1))
-    if max_year:
-        query = query.filter(Item.sold_date <= date(max_year, 12, 31))
-    
-    # Search
-    if search:
-        query = query.filter(Item.title.ilike(f"%{search}%"))
-    
-    # Sort
-    if sort == "price_desc":
-        query = query.order_by(Item.price_usd.desc())
-    elif sort == "price_asc":
-        query = query.order_by(Item.price_usd.asc())
-    elif sort == "date_desc":
-        query = query.order_by(Item.sold_date.desc())
-    elif sort == "date_asc":
-        query = query.order_by(Item.sold_date.asc())
-    
-    items = query.offset(skip).limit(limit).all()
-    
-    # Convert to response format
-    result = []
-    for item in items:
-        result.append(ItemResponse(
-            id=item.id,
-            title=item.title,
-            price_yen=item.price_yen,
-            price_usd=item.price_usd,
-            description=item.description or "",
-            images=json.loads(item.images) if item.images else [],
-            sold_date=item.sold_date.isoformat() if item.sold_date else ""
-        ))
-    
-    return result
-
-
-@app.get("/api/items/random", response_model=List[ItemResponse])
-def get_random_items(
-    count: int = 20,
-    min_year: Optional[int] = None,
-    exclude: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """
-    Get random items for the game.
-    
-    Args:
-        count: Number of items to return (default 20, max 100)
-        min_year: Only include items sold after this year
-        exclude: Comma-separated list of item IDs to exclude (for endless mode)
-    """
-    import json
-    from sqlalchemy.sql.expression import func
-    
-    count = min(count, 100)  # Cap at 100
-    
-    query = db.query(Item)
-    
-    if min_year:
-        query = query.filter(Item.sold_date >= date(min_year, 1, 1))
-    
-    # Exclude already-seen items (for endless mode / spaced repetition)
-    if exclude:
-        try:
-            exclude_ids = [int(x.strip()) for x in exclude.split(",") if x.strip()]
-            if exclude_ids:
-                query = query.filter(~Item.id.in_(exclude_ids))
-        except ValueError:
-            pass  # Ignore malformed exclude param
-    
-    items = query.order_by(func.random()).limit(count).all()
-    
-    result = []
-    for item in items:
-        result.append(ItemResponse(
-            id=item.id,
-            title=item.title,
-            price_yen=item.price_yen,
-            price_usd=item.price_usd,
-            description=item.description or "",
-            images=json.loads(item.images) if item.images else [],
-            sold_date=item.sold_date.isoformat() if item.sold_date else ""
-        ))
-    
-    return result
-
-
-@app.get("/api/stats", response_model=StatsResponse)
-def get_stats(db: Session = Depends(get_db)):
-    from sqlalchemy import func
-    
-    total = db.query(Item).count()
-    newest = db.query(func.max(Item.sold_date)).scalar()
-    oldest = db.query(func.min(Item.sold_date)).scalar()
-    
-    last_scrape_str = ""
-    if last_scrape_info["time"]:
-        last_scrape_str = f"{last_scrape_info['time']} - {last_scrape_info['new_items']} new"
-    
-    return StatsResponse(
-        total_items=total,
-        newest_date=newest.isoformat() if newest else "",
-        oldest_date=oldest.isoformat() if oldest else "",
-        last_scrape=last_scrape_str
-    )
-
-
-@app.post("/api/scrape")
-def trigger_scrape(
-    username: str = Depends(verify_credentials),
-    db: Session = Depends(get_db)
-):
-    """Manually trigger a scrape (requires auth)"""
-    global last_scrape_info, scrape_lock
-    
-    if scrape_lock:
-        raise HTTPException(status_code=409, detail="Scrape already in progress")
-    
-    scrape_lock = True
-    try:
-        new_count = run_incremental_scrape(db)
-        last_scrape_info = {"time": datetime.now().isoformat(), "new_items": new_count}
-        return {"message": f"Scrape complete. Added {new_count} new items."}
-    finally:
-        scrape_lock = False
-
-
-@app.get("/api/health")
-def health_check():
-    return {"status": "ok", "time": datetime.now().isoformat()}
-"""
-Optimized trends analysis backend.
-Add this to main.py to replace frontend calculation.
-"""
-
-from functools import lru_cache
-from datetime import datetime, timedelta
-import re
-import json
-from typing import Dict, List, Tuple
-from sqlalchemy import func
-from collections import defaultdict
-
+# ========== TRENDS ANALYSIS ==========
 # Compile all regexes once at startup
 CATEGORIES = {
     # === LEVI'S JEANS ===
@@ -326,6 +170,7 @@ CATEGORIES = {
     "Levi's 70505 (3rd)": re.compile(r"levi.*70505", re.IGNORECASE),
     "Levi's 70506": re.compile(r"levi.*70506", re.IGNORECASE),
     "Levi's Shorthorn": re.compile(r"levi.*shorthorn", re.IGNORECASE),
+    "Levi's Other": re.compile(r"levi", re.IGNORECASE),
     
     # === LEE ===
     "Lee 101-J Jacket": re.compile(r"lee.*101-?j\b", re.IGNORECASE),
@@ -333,12 +178,14 @@ CATEGORIES = {
     "Lee 101Z": re.compile(r"lee.*101z", re.IGNORECASE),
     "Lee Storm Rider": re.compile(r"lee.*storm\s*rider", re.IGNORECASE),
     "Lee Westerner": re.compile(r"lee.*westerner", re.IGNORECASE),
+    "Lee Other": re.compile(r"\blee\b", re.IGNORECASE),
     
     # === CHAMPION ===
     "Champion Reverse Weave": re.compile(r"reverse\s*weave", re.IGNORECASE),
     "Champion W/F Double Face": re.compile(r"champion.*w\/f|double\s*face", re.IGNORECASE),
     "Champion USMA": re.compile(r"usma|west\s*point", re.IGNORECASE),
     "Champion Football Tee": re.compile(r"champion.*football", re.IGNORECASE),
+    "Champion Other": re.compile(r"champion", re.IGNORECASE),
     
     # === MILITARY ===
     "Navy N-1 Deck": re.compile(r"n-1.*deck|n-1\b", re.IGNORECASE),
@@ -361,8 +208,6 @@ CATEGORIES = {
     # === SOUVENIR ===
     "Vietnam Souvenir": re.compile(r"viet-?nam.*souvenir", re.IGNORECASE),
     "Japan Souvenir": re.compile(r"japan.*souvenir|sukajan", re.IGNORECASE),
-    
-    # Add more categories as needed...
 }
 
 # Cache results for 1 hour
@@ -379,10 +224,7 @@ def categorize_item(title: str) -> str:
 
 
 def calculate_trends(db: Session) -> Dict:
-    """
-    Calculate market trends with optimized queries.
-    Returns category stats comparing this month vs trailing 6 months.
-    """
+    """Calculate market trends with optimized queries."""
     global _trends_cache
     
     # Check cache
@@ -392,18 +234,14 @@ def calculate_trends(db: Session) -> Dict:
         if age < CACHE_DURATION:
             return _trends_cache["data"]
     
-    from main import Item
-    
     # Date ranges
     this_month_start = datetime(now.year, now.month, 1).date()
     six_months_ago = (now - timedelta(days=180)).date()
     
-    # Fetch items in one query (much faster than multiple queries)
-    items = db.query(Item).filter(
-        Item.sold_date >= six_months_ago
-    ).all()
+    # Fetch items in one query
+    items = db.query(Item).filter(Item.sold_date >= six_months_ago).all()
     
-    # Categorize all items at once
+    # Categorize all items
     this_month = []
     trailing = []
     
@@ -445,7 +283,6 @@ def calculate_trends(db: Session) -> Dict:
         trailing_count = stats["trailing_count"]
         trailing_monthly_avg = trailing_count / 6
         
-        # Skip categories with insufficient data
         if trailing_count < 3:
             continue
         
@@ -473,7 +310,6 @@ def calculate_trends(db: Session) -> Dict:
             "volume_change": round(volume_change)
         })
     
-    # Sort by price change
     results.sort(key=lambda x: x["price_change"], reverse=True)
     
     # Generate summary
@@ -482,7 +318,27 @@ def calculate_trends(db: Session) -> Dict:
     volume_up = [r for r in results if r["volume_change"] > 50 and r["recent_count"] >= 2]
     volume_down = [r for r in results if r["recent_count"] == 0 and r["trailing_monthly_avg"] >= 1]
     
-    summary = generate_summary(hot, cold, volume_up, volume_down, len(this_month), len(trailing))
+    summary_parts = []
+    if hot:
+        top_hot = ", ".join([f"{r['category']} (+{r['price_change']}%)" for r in hot[:2]])
+        summary_parts.append(f"<strong>Prices up:</strong> {top_hot}")
+    if cold:
+        top_cold = ", ".join([f"{r['category']} ({r['price_change']}%)" for r in cold[:2]])
+        summary_parts.append(f"<strong>Prices down:</strong> {top_cold}")
+    if volume_down:
+        not_listed = ", ".join([r["category"] for r in volume_down[:3]])
+        summary_parts.append(f"<strong>Not listing this month:</strong> {not_listed}")
+    if volume_up:
+        pushing = ", ".join([r["category"] for r in volume_up[:2]])
+        summary_parts.append(f"<strong>Pushing more:</strong> {pushing}")
+    
+    trailing_monthly = round(len(trailing) / 6)
+    summary_parts.append(f"<br><br><strong>This month:</strong> {len(this_month)} items (avg {trailing_monthly}/mo)")
+    
+    if not any([hot, cold, volume_down, volume_up]):
+        summary_parts.insert(0, "Market appears stable this month. No major shifts detected.")
+    
+    summary = ". ".join(summary_parts) + "."
     
     response = {
         "all_categories": results,
@@ -501,49 +357,125 @@ def calculate_trends(db: Session) -> Dict:
     return response
 
 
-def generate_summary(hot, cold, volume_up, volume_down, recent_total, trailing_total):
-    """Generate human-readable summary"""
-    summary = []
+# ========== API ROUTES ==========
+
+@app.get("/api/items", response_model=List[ItemResponse])
+def get_items(
+    skip: int = 0,
+    limit: int = 100,
+    min_year: Optional[int] = None,
+    max_year: Optional[int] = None,
+    search: Optional[str] = None,
+    sort: str = "price_desc",
+    db: Session = Depends(get_db)
+):
+    query = db.query(Item)
     
-    if hot:
-        top_hot = ", ".join([f"{r['category']} (+{r['price_change']}%)" for r in hot[:2]])
-        summary.append(f"<strong>Prices up:</strong> {top_hot}")
+    if min_year:
+        query = query.filter(Item.sold_date >= date(min_year, 1, 1))
+    if max_year:
+        query = query.filter(Item.sold_date <= date(max_year, 12, 31))
     
-    if cold:
-        top_cold = ", ".join([f"{r['category']} ({r['price_change']}%)" for r in cold[:2]])
-        summary.append(f"<strong>Prices down:</strong> {top_cold}")
+    if search:
+        query = query.filter(Item.title.ilike(f"%{search}%"))
     
-    if volume_down:
-        not_listed = ", ".join([r["category"] for r in volume_down[:3]])
-        summary.append(f"<strong>Not listing this month:</strong> {not_listed}")
+    if sort == "price_desc":
+        query = query.order_by(Item.price_usd.desc())
+    elif sort == "price_asc":
+        query = query.order_by(Item.price_usd.asc())
+    elif sort == "date_desc":
+        query = query.order_by(Item.sold_date.desc())
+    elif sort == "date_asc":
+        query = query.order_by(Item.sold_date.asc())
     
-    if volume_up:
-        pushing = ", ".join([r["category"] for r in volume_up[:2]])
-        summary.append(f"<strong>Pushing more:</strong> {pushing}")
+    items = query.offset(skip).limit(limit).all()
     
-    trailing_monthly = round(trailing_total / 6)
-    summary.append(f"<br><br><strong>This month:</strong> {recent_total} items (avg {trailing_monthly}/mo)")
+    result = []
+    for item in items:
+        result.append(ItemResponse(
+            id=item.id,
+            title=item.title,
+            price_yen=item.price_yen,
+            price_usd=item.price_usd,
+            description=item.description or "",
+            images=json.loads(item.images) if item.images else [],
+            sold_date=item.sold_date.isoformat() if item.sold_date else ""
+        ))
     
-    if not any([hot, cold, volume_down, volume_up]):
-        summary.insert(0, "Market appears stable this month. No major shifts detected.")
-    
-    return ". ".join(summary) + "."
+    return result
 
 
-# Add this endpoint to main.py
+@app.get("/api/items/random", response_model=List[ItemResponse])
+def get_random_items(
+    count: int = 20,
+    min_year: Optional[int] = None,
+    exclude: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    from sqlalchemy.sql.expression import func
+    
+    count = min(count, 100)
+    query = db.query(Item)
+    
+    if min_year:
+        query = query.filter(Item.sold_date >= date(min_year, 1, 1))
+    
+    if exclude:
+        try:
+            exclude_ids = [int(x.strip()) for x in exclude.split(",") if x.strip()]
+            if exclude_ids:
+                query = query.filter(~Item.id.in_(exclude_ids))
+        except ValueError:
+            pass
+    
+    items = query.order_by(func.random()).limit(count).all()
+    
+    result = []
+    for item in items:
+        result.append(ItemResponse(
+            id=item.id,
+            title=item.title,
+            price_yen=item.price_yen,
+            price_usd=item.price_usd,
+            description=item.description or "",
+            images=json.loads(item.images) if item.images else [],
+            sold_date=item.sold_date.isoformat() if item.sold_date else ""
+        ))
+    
+    return result
+
+
+@app.get("/api/stats", response_model=StatsResponse)
+def get_stats(db: Session = Depends(get_db)):
+    from sqlalchemy import func
+    
+    total = db.query(Item).count()
+    newest = db.query(func.max(Item.sold_date)).scalar()
+    oldest = db.query(func.min(Item.sold_date)).scalar()
+    
+    last_scrape_str = ""
+    if last_scrape_info["time"]:
+        last_scrape_str = f"{last_scrape_info['time']} - {last_scrape_info['new_items']} new"
+    
+    return StatsResponse(
+        total_items=total,
+        newest_date=newest.isoformat() if newest else "",
+        oldest_date=oldest.isoformat() if oldest else "",
+        last_scrape=last_scrape_str
+    )
+
+
 @app.get("/api/trends")
 def get_trends(db: Session = Depends(get_db)):
     """Get market trends analysis (cached for 1 hour)"""
     return calculate_trends(db)
 
 
-# Optional: Add endpoint to test single category
 @app.get("/api/trends/test")
 def test_category(title: str):
     """Test what category a title matches"""
     category = categorize_item(title)
     
-    # Find which regex matched
     matched_pattern = None
     for cat, pattern in CATEGORIES.items():
         if cat == category:
@@ -557,7 +489,6 @@ def test_category(title: str):
     }
 
 
-# Optional: Clear cache manually
 @app.post("/api/trends/clear-cache")
 def clear_trends_cache(username: str = Depends(verify_credentials)):
     """Clear trends cache (requires auth)"""
@@ -565,9 +496,34 @@ def clear_trends_cache(username: str = Depends(verify_credentials)):
     _trends_cache = {"data": None, "timestamp": None}
     return {"message": "Cache cleared"}
 
+
+@app.post("/api/scrape")
+def trigger_scrape(
+    username: str = Depends(verify_credentials),
+    db: Session = Depends(get_db)
+):
+    """Manually trigger a scrape (requires auth)"""
+    global last_scrape_info, scrape_lock
+    
+    if scrape_lock:
+        raise HTTPException(status_code=409, detail="Scrape already in progress")
+    
+    scrape_lock = True
+    try:
+        new_count = run_incremental_scrape(db)
+        last_scrape_info = {"time": datetime.now().isoformat(), "new_items": new_count}
+        return {"message": f"Scrape complete. Added {new_count} new items."}
+    finally:
+        scrape_lock = False
+
+
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "time": datetime.now().isoformat()}
+
+
 # Serve frontend
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
 
 @app.get("/")
 def serve_frontend():
