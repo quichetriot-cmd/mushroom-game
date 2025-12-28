@@ -2140,377 +2140,8 @@ document.addEventListener('keydown', e => {
     }
 });
 
-// ========== START ==========
-init();
 
-// ========== TRENDS ANALYSIS ==========
-const CATEGORIES = {
-    // === LEVI'S JEANS ===
-    "Levi's S501XX (WW2)": /levi.*s501|s501xx/i,
-    "Levi's 501XX Buckleback": /levi.*501.*buckleback/i,
-    "Levi's 501XX": /levi.*501.*xx|levi.*501zxx/i,
-    "Levi's 501 Big E": /levi.*501.*big\s*e|levi.*501e\b/i,
-    "Levi's 501 66 Single": /levi.*501.*66/i,
-    "Levi's 501 (Other)": /levi.*501/i,
-    "Levi's 502 Big E": /levi.*502.*big\s*e|levi.*502e\b/i,
-    "Levi's 505 Big E": /levi.*505.*big\s*e|levi.*505e\b/i,
-    "Levi's 505 66 Single": /levi.*505.*66|levi.*505ss/i,
-    "Levi's 606 Big E": /levi.*606/i,
-    "Levi's 517 Jeans": /levi.*\b517\b(?!xx)/i,
-    "Levi's 518": /levi.*\b518\b/i,
-    "Levi's 701 (Women's)": /levi.*\b701\b/i,
-    "Levi's 551ZXX": /levi.*551/i,
-    "Levi's 503ZXX/BXX": /levi.*503/i,
-    "Levi's 550ZXX": /levi.*550/i,
-    
-    // === LEVI'S JACKETS ===
-    "Levi's 213 (Pre-Type1)": /levi.*\b213\b/i,
-    "Levi's S506XX (WW2)": /s506xx/i,
-    "Levi's 506XXE (Big E)": /506xxe/i,
-    "Levi's 506XX (1st)": /506xx/i,
-    "Levi's 507XX (2nd)": /levi.*507.*xx|levi.*507bxx/i,
-    "Levi's 517XX": /levi.*517xx/i,
-    "Levi's 519XX (Blanket)": /levi.*519/i,
-    "Levi's 557XX": /levi.*557.*xx|levi.*557e\b/i,
-    "Levi's 557 (3rd)": /levi.*\b557\b/i,
-    "Levi's 558XX": /levi.*558.*xx|levi.*558e\b/i,
-    "Levi's 559XX": /levi.*559.*xx|levi.*559e\b/i,
-    "Levi's 70505-0117": /70505-0117/i,
-    "Levi's 70505 (3rd)": /levi.*70505/i,
-    "Levi's 70506": /levi.*70506/i,
-    "Levi's 70507": /levi.*70507/i,
-    "Levi's 71205 Boa": /levi.*71205|levi.*boa/i,
-    "Levi's 71506": /levi.*71506/i,
-    "Levi's Shorthorn": /levi.*shorthorn/i,
-    "Levi's Saddleman": /levi.*saddleman/i,
-    "Levi's Advertising": /levi.*advertising|levi.*banner/i,
-    "Levi's Other": /levi/i,
-    
-    // === LEE ===
-    "Lee 191-J": /lee.*191-?j/i,
-    "Lee S91-J (WW2)": /lee.*s91-?j/i,
-    "Lee 91-LJ": /lee.*91-?lj/i,
-    "Lee 91-J Chore": /lee.*91-j|lee.*91j/i,
-    "Lee 101-J Jacket": /lee.*101-?j\b/i,
-    "Lee 98-J": /lee.*98-?j/i,
-    "Lee 91-B": /lee.*91-b/i,
-    "Lee 91-SB": /lee.*91-sb/i,
-    "Lee 81-LJ": /lee.*81-?lj/i,
-    "Lee 44-J": /lee.*44-?j/i,
-    "Lee 101Z": /lee.*101z/i,
-    "Lee 101B Cowboy": /lee.*101b|lee.*cowboy/i,
-    "Lee 191": /lee.*\b191\b/i,
-    "Lee 220": /lee.*220/i,
-    "Lee Westerner": /lee.*westerner/i,
-    "Lee Riders": /lee.*riders/i,
-    "Lee Storm Rider": /lee.*storm\s*rider/i,
-    "Lee White Canvas": /lee.*white.*canvas/i,
-    "Lee Coverall": /lee.*coverall/i,
-    "Lee HBT": /lee.*hbt/i,
-    "Lee Princeton": /lee.*princeton/i,
-    "Lee Jelt": /lee.*jelt/i,
-    "Lee Frisco": /lee.*frisco/i,
-    "Lee Leens": /lee.*leens/i,
-    "Lee Painter": /lee.*painter/i,
-    "Lee Boss/Logger": /lee.*boss|lee.*logger/i,
-    "Lee Advertising": /lee.*advertising|lee.*sign/i,
-    "Buddy Lee Doll": /buddy\s*lee/i,
-    "Lee Other": /\blee\b/i,
-    
-    // === WRANGLER ===
-    "Wrangler 111MJ Proto": /111mj.*proto|proto.*111mj/i,
-    "Wrangler 111MJ": /wrangler.*111mj|111mj/i,
-    "Wrangler 11MJZ": /wrangler.*11mjz/i,
-    "Wrangler 11MWZ": /wrangler.*11mwz|11mwz/i,
-    "Wrangler 11MW": /wrangler.*11mw\b/i,
-    "Wrangler 24MJ": /wrangler.*24mj/i,
-    "Wrangler 27MW": /wrangler.*27mw/i,
-    "Wrangler 77MJZ": /wrangler.*77mjz/i,
-    "Wrangler 124MJ": /wrangler.*124mj/i,
-    "Wrangler 12MJZ": /wrangler.*12mjz/i,
-    "Wrangler 888MJ": /wrangler.*888mj/i,
-    "Wrangler Other": /wrangler/i,
-    
-    // === CHAMPION ===
-    "Champion Rock Hood": /rock\s*hood/i,
-    "Champion Afterhoody": /afterhoody|after\s*hoody/i,
-    "Champion W/F Double Face": /champion.*w\/f|double\s*face/i,
-    "Champion USMA": /usma|west\s*point/i,
-    "Champion USAFA": /usafa|air\s*force\s*academy/i,
-    "Champion USNA": /usna|naval\s*academy/i,
-    "Champion Kings Point": /kings\s*point/i,
-    "Champion Coast Guard": /champion.*coast\s*guard|coast\s*guard.*reverse/i,
-    "Champion Reverse Weave": /reverse\s*weave/i,
-    "Champion Football Tee": /champion.*football/i,
-    "Champion Flock Print": /champion.*flock/i,
-    "Champion Water Print": /champion.*water/i,
-    "Champion Two-Tone": /champion.*two-tone/i,
-    "Champion Other": /champion/i,
-    
-    // === VINTAGE SWEATSHIRTS ===
-    "Spalding Sweat": /spalding/i,
-    "Duxbak Sweat": /duxbak/i,
-    "Spruce Sweat": /spruce/i,
-    "Bodygard Sweat": /bodygard/i,
-    "Akom Sweat": /akom/i,
-    "Russell Sweat": /russell/i,
-    "Two-Tone Sweat": /two-?\s*tone.*sweat|sweat.*two-?\s*tone/i,
-    "Water Print Sweat": /water\s*print/i,
-    "Composer Print": /beethoven|bach|brahms|nietzsche/i,
-    "Peanuts/Snoopy": /peanuts|snoopy|charlie\s*brown|schroeder|pig\s*pen/i,
-    "W/V Sweat": /w\/v/i,
-    "S/V Sweat": /s\/v/i,
-    "Sweat Hoody": /sweat\s*hoody|s\/f\s*sweat/i,
-    "Sweatshirt": /sweat\s*shirt|sweatshirt/i,
-    
-    // === U.S. NAVY ===
-    "Navy Blue N-1 Deck": /blue.*n-1|n-1.*blue|blue.*deck/i,
-    "Navy N-1 Pique": /n-1.*pique|pique.*n-1/i,
-    "Navy A-2 Deck": /a-2.*deck/i,
-    "Navy N-1 Deck": /n-1.*deck|n-1\b/i,
-    "Navy Dangaree (Shawl)": /dangaree/i,
-    "Navy Dungaree Jacket": /navy.*dungaree.*jacket|usn.*dungaree.*jacket/i,
-    "Navy Dungaree Pants": /navy.*dungaree.*(trouser|pants)|usn.*dungaree.*(trouser|pants)/i,
-    "Navy NAF-1168": /naf-1168/i,
-    "Navy Flight Jacket": /navy.*flight|u\.s\.n.*flight/i,
-    "Navy P-Coat": /navy.*p-coat|navy.*pea\s*coat/i,
-    "Navy Gunner Smock": /gunner\s*smock/i,
-    "Navy HBT": /navy.*hbt|usn.*hbt/i,
-    "Navy Catapult Jacket": /catapult/i,
-    "Navy Sweat": /navy.*sweat/i,
-    "Navy Other": /u\.s\.navy|u\.s\.n\b/i,
-    
-    // === U.S. COAST GUARD ===
-    "Coast Guard": /coast\s*guard/i,
-    
-    // === ROYAL NAVY (British) ===
-    "Royal Navy": /royal\s*navy/i,
-    
-    // === U.S. ARMY ===
-    "Army M-65": /m-65/i,
-    "Army M-43/M-48/M-51": /m-43|m-48|m-51/i,
-    "Army Tanker": /tanker\s*jacket/i,
-    "Army Dungaree/Denim": /army.*dungaree|army.*denim/i,
-    "Army Jungle Jacket": /jungle/i,
-    "Army Khaki/Chino": /army.*khaki|army.*chino/i,
-    "Army Mackinaw": /army.*mackinaw/i,
-    "Army HBT": /army.*hbt/i,
-    "Army Daisy Mae Hat": /daisy\s*mae/i,
-    "Army Snow Parka": /army.*snow|army.*parka/i,
-    "Army Other": /u\.s\.army/i,
-    
-    // === USMC ===
-    "USMC P-41/P-42/P-44": /p-4[124]/i,
-    "USMC Other": /usmc/i,
-    
-    // === USAF ===
-    "USAF MA-1": /ma-1/i,
-    "USAF L-2/L-2B": /l-2[ab]?(?:\b|$)/i,
-    "USAF B-15/B-10": /b-15|b-10/i,
-    "USAF A-2": /usaa?f.*a-2|a-2.*flight/i,
-    "USAF CWU": /cwu/i,
-    "USAF Other": /usaf|u\.s\.air\s*force/i,
-    
-    // === OTHER MILITARY ===
-    "G-1 Flight Jacket": /g-1/i,
-    "Tiger Stripe Camo": /tiger\s*stripe/i,
-    "PCU/ECWCS": /pcu|ecwcs|level\s*\d.*jacket/i,
-    "Military Surplus": /military|bdu/i,
-    
-    // === WORKWEAR BRANDS ===
-    "Carhartt Brown Duck": /carhartt.*brown\s*duck/i,
-    "Carhartt Salt & Pepper": /carhartt.*salt.*pepper/i,
-    "Carhartt Denim": /carhartt.*denim/i,
-    "Carhartt Detroit": /carhartt.*detroit/i,
-    "Carhartt": /carhartt/i,
-    "Hercules": /hercules/i,
-    "Head Light": /head\s*light/i,
-    "Big Yank Mountain Pocket": /big\s*yank.*mountain\s*pocket/i,
-    "Big Yank Chambray": /big\s*yank.*chambray/i,
-    "Big Yank Flannel": /big\s*yank.*flannel/i,
-    "Big Yank": /big\s*yank/i,
-    "Big Mac": /big\s*mac/i,
-    "Big Smith": /big\s*smith/i,
-    "Osh Kosh": /osh\s*kosh|oshkosh/i,
-    "Sweet-Orr": /sweet-orr/i,
-    "Super Pay Day": /super\s*pay\s*day/i,
-    "Pay Day": /pay\s*day/i,
-    "Finck's": /finck/i,
-    "Can't Bust'Em": /can't\s*bust/i,
-    "Boss of the Road": /boss\s*(of\s*the\s*)?road/i,
-    "Strong Reliable": /strong\s*reliable/i,
-    "MW Pioneer": /mw.*pioneer|pioneer.*denim/i,
-    "Blue Bell": /blue\s*bell/i,
-    "Stronghold": /stronghold/i,
-    "Crown": /\bcrown\b/i,
-    "N&W": /\bn\s*&\s*w\b/i,
-    "Black Bear": /black\s*bear/i,
-    "Carter's": /carter/i,
-    "Test": /\btest\b/i,
-    "Powell": /powell/i,
-    "W.P.A": /w\.?p\.?a\b/i,
-    "Freeland": /freeland/i,
-    "Burlington": /burlington/i,
-    "Dubbleware": /dubbleware/i,
-    "Winner": /\bwinner\b/i,
-    "Round House": /round\s*house/i,
-    "Pointer": /pointer/i,
-    "Montgomery Ward": /montgomery\s*ward/i,
-    "Sears/Roebucks": /sears|roebucks/i,
-    "JCPenney/Foremost": /j\.?c\.?\s*penney|jcp|penneys|foremost/i,
-    
-    // === WORKWEAR TYPES ===
-    "Coverall": /coverall/i,
-    "Overall (Bib)": /overall/i,
-    "Painter Pants": /painter/i,
-    "Double Knee": /double\s*knee/i,
-    "Engineer Pants": /engineer/i,
-    "Logger Pants": /logger/i,
-    "Shop Coat": /shop\s*coat/i,
-    "Chore Coat": /chore/i,
-    "Chambray Shirt": /chambray/i,
-    "Chinstrap": /chinstrap/i,
-    "Buckleback": /buckleback/i,
-    "Railroad": /railroad/i,
-    "Prison": /prison/i,
-    "Change Button": /change\s*button/i,
-    
-    // === PATTERNS/MATERIALS ===
-    "Star Stripe": /star\s*stripe/i,
-    "Wabash Stripe": /wabash/i,
-    "Hickory Stripe": /hickory/i,
-    "Salt & Pepper": /salt.*pepper/i,
-    "Duck Canvas": /duck\s*canvas|canvas\s*duck|brown\s*duck/i,
-    "Blanket Lined": /blanket\s*lined/i,
-    
-    // === OUTDOOR BRANDS ===
-    "Patagonia": /patagonia/i,
-    "L.L.Bean Tote": /l\.?l\.?\s*bean.*tote/i,
-    "L.L.Bean Warden": /l\.?l\.?\s*bean.*warden/i,
-    "L.L.Bean Other": /l\.?l\.?\s*bean/i,
-    "North Face": /north\s*face/i,
-    "Eddie Bauer": /eddie\s*bauer/i,
-    "REI": /\brei\b/i,
-    "Brown's Beach": /brown.*beach/i,
-    "Rocky Mountain": /rocky\s*mountain/i,
-    "Arc'teryx": /arc.teryx/i,
-    "Filson": /filson/i,
-    "Sierra Designs": /sierra\s*designs/i,
-    "Alpine Designs": /alpine\s*designs/i,
-    "Gerry": /\bgerry\b/i,
-    "Barbour": /barbour/i,
-    "Willis & Geiger": /willis.*geiger/i,
-    "Down Jacket": /down\s*(jacket|parka|vest|hoody)|expedition.*down/i,
-    "Hunting Jacket": /hunting.*jacket|shooting/i,
-    "Ski Jacket": /ski\s*jacket/i,
-    
-    // === SOUVENIR/TOUR JACKETS ===
-    "Vietnam Souvenir": /viet-?nam.*souvenir/i,
-    "Vietnam Tour": /viet-?nam.*tour/i,
-    "Japan Tiger Souvenir": /japan.*tiger|tiger.*souvenir/i,
-    "Japan Corduroy Souvenir": /japan.*corduroy.*souvenir|corduroy.*souvenir/i,
-    "Misawa Souvenir": /misawa/i,
-    "Japan Souvenir": /japan.*souvenir|sukajan/i,
-    "Okinawa Souvenir": /okinawa.*souvenir/i,
-    "Korea Souvenir": /korea.*souvenir/i,
-    "Alaska Souvenir": /alaska.*souvenir/i,
-    "Souvenir Jacket Other": /souvenir/i,
-    
-    // === JACKET TYPES ===
-    "Award/Car Club": /award\s*jacket|car\s*club/i,
-    "Pharaoh Jacket": /pharaoh/i,
-    "Drizzler Jacket": /drizzler/i,
-    "Western Jacket": /western.*jacket|gabardine.*jacket/i,
-    "Kodiak": /kodiak/i,
-    "Fake Fur Jacket": /fake\s*fur/i,
-    "Logger Cruiser": /logger.*cruiser|cruiser.*jacket/i,
-    
-    // === SHIRTS ===
-    // === HAWAIIAN SHIRTS ===
-    "Kamehameha": /kamehameha/i,
-    "Kahanamoku": /kahanamoku/i,
-    "Del Mar": /del\s*mar/i,
-    "Hawaiian/Aloha": /hawaiian|aloha/i,
-    
-    // === SHIRTS ===
-    "Rayon Shirt": /rayon/i,
-    "Pilgrim Flannel": /pilgrim.*flannel|pilgrim.*plaid/i,
-    "Sun Valley Flannel": /sun\s*valley.*flannel/i,
-    "Flannel Shirt": /flannel/i,
-    "Western Shirt": /western.*shirt/i,
-    "Wool Shirt": /wool.*shirt/i,
-    "Work Shirt": /work.*shirt/i,
-    "Denim Shirt": /denim.*shirt/i,
-    "Corduroy Shirt": /corduroy.*shirt/i,
-    "Arrow Shirt": /arrow/i,
-    
-    // === TEES ===
-    "Band/Tour Tee": /tour.*t-shirt|t-shirt.*tour/i,
-    "Photo Print Tee": /photo.*print|bruce\s*weber/i,
-    "Vintage T-Shirt": /t-shirt/i,
-    "Mohair Cardigan": /mohair/i,
-    "Cowichan Jacket": /cowichan.*jacket/i,
-    "Cowichan Sweater": /cowichan/i,
-    "Pendleton": /pendleton/i,
-    "Mackinaw": /mackinaw/i,
-    
-    // === NATIVE/SOUTHWEST ===
-    "Navajo/Chimayo": /navajo|chimayo/i,
-    
-    // === LEATHER ===
-    "Buco Leather": /buco/i,
-    "Schott Leather": /schott/i,
-    "Beck Leather": /\bbeck\b/i,
-    "Horsehide": /horsehide/i,
-    "Car Coat": /car\s*coat/i,
-    
-    // === PREMIUM BRANDS ===
-    "Brooks Brothers": /brooks\s*brothers/i,
-    "McGregor": /mcgregor/i,
-    
-    // === COLLEGE/SPORTS ===
-    "Beer Jacket": /beer\s*jacket/i,
-    "Varsity/Letterman": /varsity|letterman/i,
-    "Sports Jacket": /sports?\s*jacket/i,
-    "Flock Print": /flock\s*print/i,
-    "Military Academy": /usafa|usma|usna|west\s*point|naval\s*academy|air\s*force\s*academy/i,
-    
-    // === SHOES ===
-    "Converse": /converse/i,
-    
-    // === ACCESSORIES ===
-    "Advertising/Display": /advertising|banner|display|sign\b/i,
-    "Tote Bag": /tote/i,
-    "Quilt": /quilt/i,
-    
-    // === KNITS/SWEATERS ===
-    "Cardigan": /cardigan/i,
-    "Vest": /\bvest\b/i,
-    "Pullover Sweater": /pullover/i,
-    
-    // === CATCH-ALLS ===
-    "Cafe Racer": /cafe\s*racer/i,
-    "Motorcycle Jacket": /motorcycle/i,
-    "Denim Jacket": /denim\s*jacket/i,
-    "Denim Jeans": /jeans/i,
-    "Gore-Tex": /gore-tex/i,
-    "Corduroy": /corduroy/i,
-    "Polo/Ralph Lauren": /polo|ralph\s*lauren/i,
-    "Anorak": /anorak/i,
-    "Leather Jacket": /leather.*jacket/i,
-    "Work Jacket": /work\s*jacket/i,
-    "Boat Jacket": /boat\s*jacket/i,
-    "Parka": /parka/i,
-    
-    // === ERA CATCH-ALLS (after all brands) ===
-    "WW1 Military": /ww1/i,
-    "WW2 Military": /ww2/i,
-    
-    // === FINAL CATCH-ALLS ===
-    "Jacket (Other)": /jacket/i,
-    "Shirt (Other)": /shirt/i,
-    "Trousers": /trouser|pants/i,
-};
+// ========== OPTIMIZED TRENDS ANALYSIS ==========
 
 let trendsData = null;
 
@@ -2523,156 +2154,79 @@ async function loadTrends() {
     document.getElementById('trendsLoading').style.display = 'block';
     document.getElementById('trendsContent').style.display = 'none';
     
-    // Fetch all items
-    let allItems = [];
-    let skip = 0;
-    const batchSize = 100;
-    
-    while (true) {
-        const res = await fetch(API_BASE + `/api/items?limit=${batchSize}&skip=${skip}&sort=date_desc`);
-        const items = await res.json();
-        if (items.length === 0) break;
-        allItems = allItems.concat(items);
-        skip += batchSize;
-        if (skip >= 10000) break; // Safety limit
+    try {
+        const res = await fetch(API_BASE + '/api/trends');
+        if (!res.ok) throw new Error('Failed to load trends');
+        
+        trendsData = await res.json();
+        
+        document.getElementById('trendsLoading').style.display = 'none';
+        document.getElementById('trendsContent').style.display = 'block';
+        
+        renderTrends();
+    } catch (error) {
+        document.getElementById('trendsLoading').innerHTML = `
+            <div style="color: #f87171; text-align: center; padding: 40px;">
+                Failed to load trends: ${error.message}
+            </div>
+        `;
     }
-    
-    // Analyze trends
-    trendsData = analyzeTrends(allItems);
-    
-    document.getElementById('trendsLoading').style.display = 'none';
-    document.getElementById('trendsContent').style.display = 'block';
-    
-    renderTrends();
-}
-
-function analyzeTrends(items) {
-    const now = new Date();
-    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
-    
-    // Categorize each item
-    const categorized = items.map(item => {
-        const soldDate = new Date(item.sold_date);
-        let category = 'Other';
-        
-        for (const [cat, regex] of Object.entries(CATEGORIES)) {
-            if (regex.test(item.title)) {
-                category = cat;
-                break;
-            }
-        }
-        
-        return { ...item, category, soldDate };
-    });
-    
-    // Split into this month vs trailing 6 months
-    const thisMonthItems = categorized.filter(i => i.soldDate >= thisMonth);
-    const trailingItems = categorized.filter(i => i.soldDate >= sixMonthsAgo && i.soldDate < thisMonth);
-    
-    // Calculate stats per category
-    const stats = {};
-    
-    for (const cat of Object.keys(CATEGORIES)) {
-        const recent = thisMonthItems.filter(i => i.category === cat);
-        const trailing = trailingItems.filter(i => i.category === cat);
-        
-        const recentAvgPrice = recent.length > 0 
-            ? recent.reduce((sum, i) => sum + i.price_usd, 0) / recent.length 
-            : 0;
-        const trailingAvgPrice = trailing.length > 0 
-            ? trailing.reduce((sum, i) => sum + i.price_usd, 0) / trailing.length 
-            : 0;
-        
-        // Monthly average volume over 6 months
-        const trailingMonthlyVol = trailing.length / 6;
-        
-        const priceChange = trailingAvgPrice > 0 
-            ? ((recentAvgPrice - trailingAvgPrice) / trailingAvgPrice) * 100 
-            : 0;
-        const volumeChange = trailingMonthlyVol > 0 
-            ? ((recent.length - trailingMonthlyVol) / trailingMonthlyVol) * 100 
-            : (recent.length > 0 ? 100 : 0);
-        
-        stats[cat] = {
-            recentCount: recent.length,
-            trailingCount: trailing.length,
-            trailingMonthlyAvg: trailingMonthlyVol,
-            recentAvgPrice: Math.round(recentAvgPrice),
-            trailingAvgPrice: Math.round(trailingAvgPrice),
-            priceChange: Math.round(priceChange),
-            volumeChange: Math.round(volumeChange),
-            recentItems: recent.slice(0, 5),
-        };
-    }
-    
-    return { stats, thisMonthItems, trailingItems };
 }
 
 function renderTrends() {
-    const { stats } = trendsData;
+    const { all_categories, hot, cold, volume_up, volume_down, summary, cached_at } = trendsData;
     
-    // Filter: need baseline data AND at least 1 item this month for price comparison
-    // Also exclude -100% (no items this month) from price analysis
-    const validForPrice = Object.entries(stats)
-        .filter(([_, s]) => s.trailingCount >= 3 && s.recentCount >= 1)
-        .sort((a, b) => b[1].priceChange - a[1].priceChange);
+    // Summary
+    document.getElementById('trendsSummaryText').innerHTML = summary;
     
-    // Hot categories (price up > 20% with at least 1 recent sale)
-    const hot = validForPrice.filter(([_, s]) => s.priceChange > 20);
+    // Hot categories
     document.getElementById('trendsHot').innerHTML = hot.length > 0 
-        ? hot.slice(0, 5).map(([cat, s]) => renderTrendItem(cat, s, 'price')).join('')
+        ? hot.map(cat => renderTrendItem(cat, 'price')).join('')
         : '<div style="color: #666; padding: 12px;">No significant price increases this month</div>';
     
-    // Cold categories (price down < -20% with at least 1 recent sale)
-    const cold = validForPrice.filter(([_, s]) => s.priceChange < -20).reverse();
+    // Cold categories
     document.getElementById('trendsCold').innerHTML = cold.length > 0 
-        ? cold.slice(0, 5).map(([cat, s]) => renderTrendItem(cat, s, 'price')).join('')
+        ? cold.map(cat => renderTrendItem(cat, 'price')).join('')
         : '<div style="color: #666; padding: 12px;">No significant price drops this month</div>';
     
-    // Volume changes - include categories with 0 this month as "not listing"
-    const byVolume = Object.entries(stats)
-        .filter(([_, s]) => s.trailingCount >= 3)
-        .sort((a, b) => b[1].volumeChange - a[1].volumeChange);
+    // Volume changes
+    let volumeHtml = '';
+    if (volume_up.length > 0) {
+        volumeHtml += '<div style="margin-bottom: 8px; color: #4ade80; font-weight: 600;">📈 Listing more than usual:</div>';
+        volumeHtml += volume_up.map(cat => renderTrendItem(cat, 'volume')).join('');
+    }
+    if (volume_down.length > 0) {
+        volumeHtml += '<div style="margin-top: 16px; margin-bottom: 8px; color: #f87171; font-weight: 600;">📉 Not listing this month:</div>';
+        volumeHtml += volume_down.map(cat => renderTrendItem(cat, 'none')).join('');
+    }
+    if (volumeHtml === '') {
+        volumeHtml = '<div style="color: #666; padding: 12px;">Volume relatively stable</div>';
+    }
+    document.getElementById('trendsVolume').innerHTML = volumeHtml;
     
-    const volumeUp = byVolume.filter(([_, s]) => s.volumeChange > 50 && s.recentCount >= 2).slice(0, 3);
-    const volumeDown = byVolume.filter(([_, s]) => s.recentCount === 0 && s.trailingMonthlyAvg >= 1).slice(0, 5);
-    
-    document.getElementById('trendsVolume').innerHTML = 
-        (volumeUp.length > 0 ? '<div style="margin-bottom: 8px; color: #4ade80; font-weight: 600;">📈 Listing more than usual:</div>' + 
-            volumeUp.map(([cat, s]) => renderTrendItem(cat, s, 'volume')).join('') : '') +
-        (volumeDown.length > 0 ? '<div style="margin-top: 16px; margin-bottom: 8px; color: #f87171; font-weight: 600;">📉 Not listing this month:</div>' + 
-            volumeDown.map(([cat, s]) => renderTrendItem(cat, s, 'none')).join('') : '') +
-        (volumeUp.length === 0 && volumeDown.length === 0 ? '<div style="color: #666; padding: 12px;">Volume relatively stable</div>' : '');
-    
-    // All categories - only show ones with activity
-    const activeCategories = Object.entries(stats)
-        .filter(([_, s]) => s.trailingCount >= 3 && s.recentCount >= 1)
-        .sort((a, b) => b[1].priceChange - a[1].priceChange);
-    
+    // All categories
+    const activeCategories = all_categories.filter(c => c.recent_count >= 1);
     document.getElementById('trendsAll').innerHTML = activeCategories
-        .map(([cat, s]) => renderTrendItem(cat, s, 'both')).join('');
+        .map(cat => renderTrendItem(cat, 'both')).join('');
     
-    // Generate AI summary
-    generateSummary(hot, cold, volumeUp, volumeDown, stats);
+    // Debug stats
+    renderTrendsDebug();
 }
 
-function renderTrendItem(cat, s, mode) {
-    const priceClass = s.priceChange > 0 ? 'up' : s.priceChange < 0 ? 'down' : 'neutral';
-    const priceArrow = s.priceChange > 0 ? '↑' : s.priceChange < 0 ? '↓' : '→';
-    const volArrow = s.volumeChange > 0 ? '↑' : s.volumeChange < 0 ? '↓' : '→';
+function renderTrendItem(cat, mode) {
+    const priceClass = cat.price_change > 0 ? 'up' : cat.price_change < 0 ? 'down' : 'neutral';
+    const priceArrow = cat.price_change > 0 ? '↑' : cat.price_change < 0 ? '↓' : '→';
+    const volArrow = cat.volume_change > 0 ? '↑' : cat.volume_change < 0 ? '↓' : '→';
     
-    // Warning for small sample sizes
-    const smallSample = s.recentCount <= 2 ? ' <span style="color:#888;font-size:11px;">(n=' + s.recentCount + ')</span>' : '';
+    const smallSample = cat.recent_count <= 2 ? ` <span style="color:#888;font-size:11px;">(n=${cat.recent_count})</span>` : '';
     
     let details = '';
     if (mode === 'none') {
-        // Category not listed this month
-        details = `Usually ${s.trailingMonthlyAvg.toFixed(1)}/mo · avg $${s.trailingAvgPrice.toLocaleString()}`;
+        details = `Usually ${cat.trailing_monthly_avg}/mo · avg $${cat.trailing_avg_price.toLocaleString()}`;
         return `
             <div class="trend-item">
                 <div>
-                    <div class="trend-name">${cat}</div>
+                    <div class="trend-name">${cat.category}</div>
                     <div class="trend-details">${details}</div>
                 </div>
                 <span class="trend-change neutral">0 listed</span>
@@ -2681,24 +2235,24 @@ function renderTrendItem(cat, s, mode) {
     }
     
     if (mode === 'price' || mode === 'both') {
-        details += `$${s.recentAvgPrice.toLocaleString()} avg (was $${s.trailingAvgPrice.toLocaleString()})${smallSample}`;
+        details += `$${cat.recent_avg_price.toLocaleString()} avg (was $${cat.trailing_avg_price.toLocaleString()})${smallSample}`;
     }
     if (mode === 'volume' || mode === 'both') {
         if (details) details += ' · ';
-        details += `${s.recentCount} this month (avg ${s.trailingMonthlyAvg.toFixed(1)}/mo)`;
+        details += `${cat.recent_count} this month (avg ${cat.trailing_monthly_avg}/mo)`;
     }
     
     let changeDisplay = '';
     if (mode === 'volume') {
-        changeDisplay = `<span class="trend-change ${s.volumeChange > 0 ? 'up' : 'down'}">${volArrow} ${Math.abs(s.volumeChange)}%</span>`;
+        changeDisplay = `<span class="trend-change ${cat.volume_change > 0 ? 'up' : 'down'}">${volArrow} ${Math.abs(cat.volume_change)}%</span>`;
     } else {
-        changeDisplay = `<span class="trend-change ${priceClass}">${priceArrow} ${Math.abs(s.priceChange)}%</span>`;
+        changeDisplay = `<span class="trend-change ${priceClass}">${priceArrow} ${Math.abs(cat.price_change)}%</span>`;
     }
     
     return `
         <div class="trend-item">
             <div>
-                <div class="trend-name">${cat}</div>
+                <div class="trend-name">${cat.category}</div>
                 <div class="trend-details">${details}</div>
             </div>
             ${changeDisplay}
@@ -2706,199 +2260,61 @@ function renderTrendItem(cat, s, mode) {
     `;
 }
 
-function generateSummary(hot, cold, volumeUp, volumeDown, stats) {
-    let summary = '';
-    
-    // What's hot - only mention if sample size is reasonable
-    const meaningfulHot = hot.filter(([_, s]) => s.recentCount >= 2);
-    if (meaningfulHot.length > 0) {
-        const topHot = meaningfulHot.slice(0, 2).map(([cat, s]) => `${cat} (+${s.priceChange}%)`);
-        summary += `<strong>Prices up on:</strong> ${topHot.join(', ')}. `;
-    } else if (hot.length > 0) {
-        summary += `<strong>Some price increases</strong> but sample sizes are small (1-2 items). `;
-    }
-    
-    // What's cooling
-    const meaningfulCold = cold.filter(([_, s]) => s.recentCount >= 2);
-    if (meaningfulCold.length > 0) {
-        const topCold = meaningfulCold.slice(0, 2).map(([cat, s]) => `${cat} (${s.priceChange}%)`);
-        summary += `<strong>Prices down on:</strong> ${topCold.join(', ')}. `;
-    }
-    
-    // Not listing this month
-    if (volumeDown.length > 0) {
-        const notListed = volumeDown.slice(0, 3).map(([cat]) => cat);
-        summary += `<strong>Not listing this month:</strong> ${notListed.join(', ')}. `;
-    }
-    
-    // Volume up
-    if (volumeUp.length > 0) {
-        const topVol = volumeUp.slice(0, 2).map(([cat]) => cat);
-        summary += `<strong>Pushing more:</strong> ${topVol.join(', ')}. `;
-    }
-    
-    // Total activity
-    const totalRecent = Object.values(stats).reduce((sum, s) => sum + s.recentCount, 0);
-    const totalTrailingAvg = Object.values(stats).reduce((sum, s) => sum + s.trailingMonthlyAvg, 0);
-    const activityChange = totalTrailingAvg > 0 ? ((totalRecent - totalTrailingAvg) / totalTrailingAvg) * 100 : 0;
-    
-    summary += `<br><br><strong>This month:</strong> ${totalRecent} items sold (avg ${Math.round(totalTrailingAvg)}/mo).`;
-    
-    if (!summary.includes('Prices') && !summary.includes('listing')) {
-        summary = 'Market appears stable this month. No major shifts detected. ' + summary;
-    }
-    
-    document.getElementById('trendsSummaryText').innerHTML = summary;
-    
-    // Populate debug section
-    renderTrendsDebug();
-}
-
-function testCategory(title) {
-    for (const [cat, regex] of Object.entries(CATEGORIES)) {
-        if (regex.test(title)) {
-            return { category: cat, regex: regex.toString() };
-        }
-    }
-    return { category: 'UNCATEGORIZED', regex: null };
-}
-
 function renderTrendsDebug() {
-    if (!trendsData) return;
+    const { all_categories, cached_at } = trendsData;
     
-    const { stats, thisMonthItems, trailingItems } = trendsData;
+    const totalCategories = all_categories.length;
+    const withData = all_categories.filter(c => c.recent_count > 0 || c.trailing_count >= 3).length;
+    const recentTotal = all_categories.reduce((sum, c) => sum + c.recent_count, 0);
+    const trailingTotal = all_categories.reduce((sum, c) => sum + c.trailing_count, 0);
     
-    // Stats
-    const totalCategories = Object.keys(CATEGORIES).length;
-    const usedCategories = Object.values(stats).filter(s => s.recentCount > 0 || s.trailingCount > 0).length;
-    const uncategorized = thisMonthItems.filter(i => i.category === 'UNCATEGORIZED' || !i.category).length;
+    const cachedDate = new Date(cached_at);
+    const cacheAge = Math.round((Date.now() - cachedDate.getTime()) / 1000 / 60); // minutes
     
     document.getElementById('trendsDebugStats').innerHTML = `
-        <div>Total categories defined: <strong>${totalCategories}</strong></div>
-        <div>Categories with data: <strong>${usedCategories}</strong></div>
-        <div>This month items: <strong>${thisMonthItems.length}</strong></div>
-        <div>Trailing 6mo items: <strong>${trailingItems.length}</strong></div>
-        <div style="color: ${uncategorized > 0 ? '#f87171' : '#4ade80'}">Uncategorized this month: <strong>${uncategorized}</strong></div>
+        <div>Categories tracked: <strong>${totalCategories}</strong></div>
+        <div>Categories with data: <strong>${withData}</strong></div>
+        <div>This month items: <strong>${recentTotal}</strong></div>
+        <div>Trailing 6mo items: <strong>${trailingTotal}</strong></div>
+        <div style="color: #4ade80">Cache age: <strong>${cacheAge} minutes</strong></div>
     `;
-    
-    // Build exportable data table
-    const activeCategories = Object.entries(stats)
-        .filter(([_, s]) => s.recentCount > 0 || s.trailingCount >= 3)
-        .sort((a, b) => b[1].trailingCount - a[1].trailingCount);
-    
-    let tableHtml = `
-        <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 16px;">
-            <div style="color: #888; font-size: 13px; margin-bottom: 8px;">All Category Data (copy for debugging):</div>
-            <textarea id="trendsExportData" style="width: 100%; height: 300px; background: #0a0a0f; color: #ccc; border: 1px solid #333; border-radius: 6px; padding: 10px; font-family: monospace; font-size: 11px;" readonly>Category\tThis Mo\tThis Mo Avg\t6mo Total\t6mo/mo\t6mo Avg\tPrice Chg\n`;
-    
-    activeCategories.forEach(([cat, s]) => {
-        tableHtml += `${cat}\t${s.recentCount}\t$${s.recentAvgPrice}\t${s.trailingCount}\t${s.trailingMonthlyAvg.toFixed(1)}\t$${s.trailingAvgPrice}\t${s.priceChange}%\n`;
-    });
-    
-    tableHtml += `</textarea>
-            <button onclick="document.getElementById('trendsExportData').select(); document.execCommand('copy'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy to Clipboard', 2000);" 
-                style="margin-top: 8px; padding: 8px 16px; background: #333; border: none; border-radius: 6px; color: #fff; cursor: pointer;">Copy to Clipboard</button>
-        </div>
-    `;
-    
-    document.getElementById('trendsDebugStats').innerHTML += tableHtml;
-    
-    // This month's items
-    const thisMonthHtml = thisMonthItems.map(item => {
-        const cat = item.category || 'UNCATEGORIZED';
-        const isUncategorized = cat === 'UNCATEGORIZED' || cat.includes('Other') || cat.includes('(Other)');
-        return `
-            <div style="padding: 8px; margin: 4px 0; background: ${isUncategorized ? '#2a1a1a' : '#1a1a2e'}; border-radius: 4px; cursor: pointer;" 
-                 onclick="document.getElementById('trendsDebugInput').value = this.dataset.title; testCategoryClick();"
-                 data-title="${item.title.replace(/"/g, '&quot;')}">
-                <div style="color: ${isUncategorized ? '#f87171' : '#4ade80'}; font-size: 11px; margin-bottom: 4px;">${cat}</div>
-                <div style="color: #ccc;">${item.title.substring(0, 70)}${item.title.length > 70 ? '...' : ''}</div>
-                <div style="color: #888; font-size: 11px; margin-top: 4px;">$${item.price_usd.toLocaleString()} · ${item.sold_date}</div>
-            </div>
-        `;
-    }).join('');
-    
-    document.getElementById('trendsDebugThisMonth').innerHTML = thisMonthHtml || '<div style="color: #666;">No items this month</div>';
-    
-    // Debug button
-    document.getElementById('trendsDebugBtn').onclick = testCategoryClick;
-    document.getElementById('trendsDebugInput').onkeyup = (e) => {
-        if (e.key === 'Enter') testCategoryClick();
-    };
 }
 
-function testCategoryClick() {
+// Test category functionality
+document.getElementById('trendsDebugBtn').onclick = async () => {
     const input = document.getElementById('trendsDebugInput').value;
     if (!input) return;
     
-    const result = testCategory(input);
-    const allMatches = [];
-    
-    // Find all matching categories (not just first)
-    for (const [cat, regex] of Object.entries(CATEGORIES)) {
-        if (regex.test(input)) {
-            allMatches.push({ cat, regex: regex.toString() });
-        }
-    }
-    
-    // Get stats for this category
-    const { stats } = trendsData;
-    const catStats = stats[result.category];
-    
-    let html = `
-        <div style="margin-bottom: 12px;">
-            <strong>Assigned to:</strong> <span style="color: ${result.category.includes('Other') ? '#f87171' : '#4ade80'}">${result.category}</span>
-        </div>
-    `;
-    
-    // Show category stats
-    if (catStats) {
-        const priceChange = catStats.priceChange;
-        const priceColor = priceChange > 15 ? '#4ade80' : priceChange < -15 ? '#f87171' : '#888';
-        html += `
-            <div style="background: #0f0f1a; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
-                <div style="font-size: 12px; color: #888; margin-bottom: 8px;">Category Stats:</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
-                    <div>
-                        <div style="color: #666;">This Month</div>
-                        <div style="color: #fff; font-weight: 600;">${catStats.recentCount} items</div>
-                        <div style="color: #ccc;">$${catStats.recentAvgPrice.toLocaleString()} avg</div>
-                    </div>
-                    <div>
-                        <div style="color: #666;">Trailing 6mo</div>
-                        <div style="color: #fff; font-weight: 600;">${catStats.trailingCount} items (${catStats.trailingMonthlyAvg.toFixed(1)}/mo)</div>
-                        <div style="color: #ccc;">$${catStats.trailingAvgPrice.toLocaleString()} avg</div>
-                    </div>
-                </div>
-                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #333;">
-                    <span style="color: ${priceColor}; font-weight: 600;">
-                        ${priceChange > 0 ? '↑' : priceChange < 0 ? '↓' : '→'} ${Math.abs(priceChange)}% price change
-                    </span>
-                    <span style="color: #888; margin-left: 12px;">
-                        ${catStats.volumeChange > 0 ? '↑' : catStats.volumeChange < 0 ? '↓' : '→'} ${Math.abs(catStats.volumeChange)}% volume
-                    </span>
-                </div>
+    try {
+        const res = await fetch(API_BASE + `/api/trends/test?title=${encodeURIComponent(input)}`);
+        const result = await res.json();
+        
+        const isOther = result.category.includes('Other');
+        
+        let html = `
+            <div style="margin-bottom: 12px;">
+                <strong>Category:</strong> 
+                <span style="color: ${isOther ? '#f87171' : '#4ade80'}">${result.category}</span>
             </div>
         `;
-    } else {
-        html += `<div style="color: #888; margin-bottom: 12px;">No historical data for this category</div>`;
+        
+        if (result.pattern) {
+            html += `<div style="color: #666; font-family: monospace; font-size: 11px; word-break: break-all;">Pattern: ${result.pattern}</div>`;
+        }
+        
+        document.getElementById('trendsDebugResult').style.display = 'block';
+        document.getElementById('trendsDebugResult').innerHTML = html;
+    } catch (error) {
+        document.getElementById('trendsDebugResult').innerHTML = `<div style="color: #f87171;">Error: ${error.message}</div>`;
+        document.getElementById('trendsDebugResult').style.display = 'block';
     }
-    
-    if (allMatches.length > 1) {
-        html += `<div style="color: #fbbf24; margin-bottom: 12px;">⚠️ Multiple matches (first one wins):</div>`;
-        allMatches.forEach((m, i) => {
-            html += `<div style="padding: 6px; background: ${i === 0 ? '#1a2e1a' : '#1a1a2e'}; border-radius: 4px; margin: 4px 0; font-size: 12px;">
-                <div style="color: ${i === 0 ? '#4ade80' : '#888'}">${m.cat}</div>
-                <div style="color: #666; font-family: monospace; font-size: 10px; word-break: break-all;">${m.regex}</div>
-            </div>`;
-        });
-    } else if (result.regex) {
-        html += `<div style="color: #666; font-family: monospace; font-size: 11px; word-break: break-all;">Matched: ${result.regex}</div>`;
-    }
-    
-    document.getElementById('trendsDebugResult').style.display = 'block';
-    document.getElementById('trendsDebugResult').innerHTML = html;
-}
+};
+
+document.getElementById('trendsDebugInput').onkeyup = (e) => {
+    if (e.key === 'Enter') document.getElementById('trendsDebugBtn').click();
+};
+// ========== START ==========
+init();
 </script>
 </body>
 </html>
