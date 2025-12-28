@@ -3,19 +3,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from sqlalchemy import create_engine, Column, Integer, String, Float, Text, Date
+from sqlalchemy import create_engine, Column, Integer, String, Float, Text, Date, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from apscheduler.schedulers.background import BackgroundScheduler
 from contextlib import asynccontextmanager
+from datetime import datetime, date, timedelta
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel
+from collections import defaultdict
 import os
 import secrets
 import re
 import json
-from datetime import datetime, date, timedelta
-from typing import Optional, List, Dict
-from collections import defaultdict
-from pydantic import BaseModel
+import time
 
 from scraper import run_incremental_scrape
 
@@ -65,6 +66,22 @@ class StatsResponse(BaseModel):
     last_scrape: str
 
 
+class TrendsResponse(BaseModel):
+    summary: str
+    hot_categories: List[Dict[str, Any]]
+    cold_categories: List[Dict[str, Any]]
+    volume_changes: List[Dict[str, Any]]
+    all_categories: List[Dict[str, Any]]
+    stats: Dict[str, Any]
+    generated_at: str
+
+
+class CategoryTestResponse(BaseModel):
+    title: str
+    category: str
+    matches: List[Dict[str, str]]
+
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -111,6 +128,8 @@ def scheduled_scrape():
         new_count = run_incremental_scrape(db)
         last_scrape_info = {"time": datetime.now().isoformat(), "new_items": new_count}
         print(f"[{datetime.now()}] Scrape complete. Added {new_count} new items.")
+        # Clear trends cache after scrape
+        clear_trends_cache()
     except Exception as e:
         print(f"[{datetime.now()}] Scrape failed: {e}")
     finally:
@@ -525,155 +544,36 @@ CATEGORIES = {
     "Trousers": re.compile(r"trouser|pants", re.IGNORECASE),
 }
 
-# Cache results for 1 hour
-_trends_cache = {"data": None, "timestamp": None}
+# Trends caching
+trends_cache = {}
 CACHE_DURATION = 3600  # 1 hour in seconds
 
+def clear_trends_cache():
+    """Clear the trends cache (call after new data is scraped)"""
+    global trends_cache
+    trends_cache = {}
+    print(f"[{datetime.now()}] Trends cache cleared")
 
-def categorize_item(title: str) -> str:
-    """Fast category matching with compiled regexes"""
-    for category, pattern in CATEGORIES.items():
-        if pattern.search(title):
-            return category
-    return "Other"
+def get_cached_trends():
+    """Get cached trends if available and not expired"""
+    if not trends_cache:
+        return None
+    
+    now = time.time()
+    if now - trends_cache.get('timestamp', 0) > CACHE_DURATION:
+        return None
+    
+    return trends_cache.get('data')
 
-
-def calculate_trends(db: Session) -> Dict:
-    """Calculate market trends with optimized queries."""
-    global _trends_cache
-    
-    # Check cache
-    now = datetime.now()
-    if _trends_cache["data"] and _trends_cache["timestamp"]:
-        age = (now - _trends_cache["timestamp"]).total_seconds()
-        if age < CACHE_DURATION:
-            return _trends_cache["data"]
-    
-    # Date ranges
-    this_month_start = datetime(now.year, now.month, 1).date()
-    six_months_ago = (now - timedelta(days=180)).date()
-    
-    # Fetch items in one query
-    items = db.query(Item).filter(Item.sold_date >= six_months_ago).all()
-    
-    # Categorize all items
-    this_month = []
-    trailing = []
-    
-    for item in items:
-        category = categorize_item(item.title)
-        item_dict = {
-            "category": category,
-            "price_usd": item.price_usd,
-            "sold_date": item.sold_date
-        }
-        
-        if item.sold_date >= this_month_start:
-            this_month.append(item_dict)
-        else:
-            trailing.append(item_dict)
-    
-    # Calculate stats per category
-    category_stats = defaultdict(lambda: {
-        "recent_count": 0,
-        "recent_total": 0,
-        "trailing_count": 0,
-        "trailing_total": 0
-    })
-    
-    for item in this_month:
-        cat = item["category"]
-        category_stats[cat]["recent_count"] += 1
-        category_stats[cat]["recent_total"] += item["price_usd"]
-    
-    for item in trailing:
-        cat = item["category"]
-        category_stats[cat]["trailing_count"] += 1
-        category_stats[cat]["trailing_total"] += item["price_usd"]
-    
-    # Calculate changes
-    results = []
-    for category, stats in category_stats.items():
-        recent_count = stats["recent_count"]
-        trailing_count = stats["trailing_count"]
-        trailing_monthly_avg = trailing_count / 6
-        
-        if trailing_count < 3:
-            continue
-        
-        recent_avg_price = stats["recent_total"] / recent_count if recent_count > 0 else 0
-        trailing_avg_price = stats["trailing_total"] / trailing_count if trailing_count > 0 else 0
-        
-        price_change = 0
-        if trailing_avg_price > 0 and recent_count > 0:
-            price_change = ((recent_avg_price - trailing_avg_price) / trailing_avg_price) * 100
-        
-        volume_change = 0
-        if trailing_monthly_avg > 0:
-            volume_change = ((recent_count - trailing_monthly_avg) / trailing_monthly_avg) * 100
-        elif recent_count > 0:
-            volume_change = 100
-        
-        results.append({
-            "category": category,
-            "recent_count": recent_count,
-            "recent_avg_price": round(recent_avg_price),
-            "trailing_count": trailing_count,
-            "trailing_monthly_avg": round(trailing_monthly_avg, 1),
-            "trailing_avg_price": round(trailing_avg_price),
-            "price_change": round(price_change),
-            "volume_change": round(volume_change)
-        })
-    
-    results.sort(key=lambda x: x["price_change"], reverse=True)
-    
-    # Generate summary
-    hot = [r for r in results if r["price_change"] > 20 and r["recent_count"] >= 2]
-    cold = [r for r in results if r["price_change"] < -20 and r["recent_count"] >= 2]
-    volume_up = [r for r in results if r["volume_change"] > 50 and r["recent_count"] >= 2]
-    volume_down = [r for r in results if r["recent_count"] == 0 and r["trailing_monthly_avg"] >= 1]
-    
-    summary_parts = []
-    if hot:
-        top_hot = ", ".join([f"{r['category']} (+{r['price_change']}%)" for r in hot[:2]])
-        summary_parts.append(f"<strong>Prices up:</strong> {top_hot}")
-    if cold:
-        top_cold = ", ".join([f"{r['category']} ({r['price_change']}%)" for r in cold[:2]])
-        summary_parts.append(f"<strong>Prices down:</strong> {top_cold}")
-    if volume_down:
-        not_listed = ", ".join([r["category"] for r in volume_down[:3]])
-        summary_parts.append(f"<strong>Not listing this month:</strong> {not_listed}")
-    if volume_up:
-        pushing = ", ".join([r["category"] for r in volume_up[:2]])
-        summary_parts.append(f"<strong>Pushing more:</strong> {pushing}")
-    
-    trailing_monthly = round(len(trailing) / 6)
-    summary_parts.append(f"<br><br><strong>This month:</strong> {len(this_month)} items (avg {trailing_monthly}/mo)")
-    
-    if not any([hot, cold, volume_down, volume_up]):
-        summary_parts.insert(0, "Market appears stable this month. No major shifts detected.")
-    
-    summary = ". ".join(summary_parts) + "."
-    
-    response = {
-        "all_categories": results,
-        "hot": hot[:5],
-        "cold": cold[:5],
-        "volume_up": volume_up[:3],
-        "volume_down": volume_down[:5],
-        "summary": summary,
-        "cached_at": now.isoformat()
+def set_cached_trends(data):
+    """Cache trends data with timestamp"""
+    global trends_cache
+    trends_cache = {
+        'data': data,
+        'timestamp': time.time()
     }
-    
-    # Cache result
-    _trends_cache["data"] = response
-    _trends_cache["timestamp"] = now
-    
-    return response
 
-
-# ========== API ROUTES ==========
-
+# API Routes
 @app.get("/api/items", response_model=List[ItemResponse])
 def get_items(
     skip: int = 0,
@@ -686,14 +586,17 @@ def get_items(
 ):
     query = db.query(Item)
     
+    # Year filter
     if min_year:
         query = query.filter(Item.sold_date >= date(min_year, 1, 1))
     if max_year:
         query = query.filter(Item.sold_date <= date(max_year, 12, 31))
     
+    # Search
     if search:
         query = query.filter(Item.title.ilike(f"%{search}%"))
     
+    # Sort
     if sort == "price_desc":
         query = query.order_by(Item.price_usd.desc())
     elif sort == "price_asc":
@@ -705,6 +608,7 @@ def get_items(
     
     items = query.offset(skip).limit(limit).all()
     
+    # Convert to response format
     result = []
     for item in items:
         result.append(ItemResponse(
@@ -727,21 +631,31 @@ def get_random_items(
     exclude: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
+    """
+    Get random items for the game.
+    
+    Args:
+        count: Number of items to return (default 20, max 100)
+        min_year: Only include items sold after this year
+        exclude: Comma-separated list of item IDs to exclude (for endless mode)
+    """
     from sqlalchemy.sql.expression import func
     
-    count = min(count, 100)
+    count = min(count, 100)  # Cap at 100
+    
     query = db.query(Item)
     
     if min_year:
         query = query.filter(Item.sold_date >= date(min_year, 1, 1))
     
+    # Exclude already-seen items (for endless mode / spaced repetition)
     if exclude:
         try:
             exclude_ids = [int(x.strip()) for x in exclude.split(",") if x.strip()]
             if exclude_ids:
                 query = query.filter(~Item.id.in_(exclude_ids))
         except ValueError:
-            pass
+            pass  # Ignore malformed exclude param
     
     items = query.order_by(func.random()).limit(count).all()
     
@@ -762,8 +676,6 @@ def get_random_items(
 
 @app.get("/api/stats", response_model=StatsResponse)
 def get_stats(db: Session = Depends(get_db)):
-    from sqlalchemy import func
-    
     total = db.query(Item).count()
     newest = db.query(func.max(Item.sold_date)).scalar()
     oldest = db.query(func.min(Item.sold_date)).scalar()
@@ -780,36 +692,156 @@ def get_stats(db: Session = Depends(get_db)):
     )
 
 
-@app.get("/api/trends")
+# ========== TRENDS ENDPOINTS ==========
+
+@app.get("/api/trends", response_model=TrendsResponse)
 def get_trends(db: Session = Depends(get_db)):
-    """Get market trends analysis (cached for 1 hour)"""
-    return calculate_trends(db)
-
-
-@app.get("/api/trends/test")
-def test_category(title: str):
-    """Test what category a title matches"""
-    category = categorize_item(title)
+    """Get market trends analysis with caching"""
+    # Check cache first
+    cached = get_cached_trends()
+    if cached:
+        return cached
     
-    matched_pattern = None
-    for cat, pattern in CATEGORIES.items():
-        if cat == category:
-            matched_pattern = pattern.pattern
-            break
+    # Calculate trends
+    trends_data = calculate_trends(db)
     
-    return {
-        "title": title,
-        "category": category,
-        "pattern": matched_pattern
-    }
+    # Cache the result
+    set_cached_trends(trends_data)
+    
+    return trends_data
 
 
-@app.post("/api/trends/clear-cache")
-def clear_trends_cache(username: str = Depends(verify_credentials)):
-    """Clear trends cache (requires auth)"""
-    global _trends_cache
-    _trends_cache = {"data": None, "timestamp": None}
-    return {"message": "Cache cleared"}
+def calculate_trends(db: Session) -> TrendsResponse:
+    """Calculate market trends by comparing this month vs trailing 6 months"""
+    now = datetime.now()
+    this_month = date(now.year, now.month, 1)
+    six_months_ago = date(now.year, now.month - 6, 1) if now.month > 6 else date(now.year - 1, now.month + 6, 1)
+    
+    # Get all items
+    all_items = db.query(Item).all()
+    
+    # Categorize each item
+    categorized = []
+    for item in all_items:
+        sold_date = item.sold_date
+        category = 'Other'
+        
+        for cat, regex in CATEGORIES.items():
+            if regex.search(item.title):
+                category = cat
+                break
+        
+        categorized.append({
+            'item': item,
+            'category': category,
+            'sold_date': sold_date
+        })
+    
+    # Split into this month vs trailing 6 months
+    this_month_items = [c for c in categorized if c['sold_date'] >= this_month]
+    trailing_items = [c for c in categorized if c['sold_date'] >= six_months_ago and c['sold_date'] < this_month]
+    
+    # Calculate stats per category
+    stats = {}
+    for cat in CATEGORIES.keys():
+        recent = [c for c in this_month_items if c['category'] == cat]
+        trailing = [c for c in trailing_items if c['category'] == cat]
+        
+        recent_avg_price = sum(c['item'].price_usd for c in recent) / len(recent) if recent else 0
+        trailing_avg_price = sum(c['item'].price_usd for c in trailing) / len(trailing) if trailing else 0
+        
+        # Monthly average volume over 6 months
+        trailing_monthly_vol = len(trailing) / 6
+        
+        price_change = ((recent_avg_price - trailing_avg_price) / trailing_avg_price * 100) if trailing_avg_price > 0 else 0
+        volume_change = ((len(recent) - trailing_monthly_vol) / trailing_monthly_vol * 100) if trailing_monthly_vol > 0 else (100 if recent else 0)
+        
+        stats[cat] = {
+            'recent_count': len(recent),
+            'trailing_count': len(trailing),
+            'trailing_monthly_avg': trailing_monthly_vol,
+            'recent_avg_price': round(recent_avg_price),
+            'trailing_avg_price': round(trailing_avg_price),
+            'price_change': round(price_change),
+            'volume_change': round(volume_change)
+        }
+    
+    # Filter for meaningful categories (need baseline data AND at least 1 item this month for price comparison)
+    valid_for_price = [(cat, s) for cat, s in stats.items() if s['trailing_count'] >= 3 and s['recent_count'] >= 1]
+    valid_for_price.sort(key=lambda x: x[1]['price_change'], reverse=True)
+    
+    # Hot categories (price up > 20%)
+    hot_categories = [{'name': cat, **s} for cat, s in valid_for_price if s['price_change'] > 20][:5]
+    
+    # Cold categories (price down < -20%)
+    cold_categories = [{'name': cat, **s} for cat, s in valid_for_price if s['price_change'] < -20][:5]
+    
+    # Volume changes
+    by_volume = [(cat, s) for cat, s in stats.items() if s['trailing_count'] >= 3]
+    by_volume.sort(key=lambda x: x[1]['volume_change'], reverse=True)
+    
+    volume_up = [{'name': cat, **s} for cat, s in by_volume if s['volume_change'] > 50 and s['recent_count'] >= 2][:3]
+    volume_down = [{'name': cat, **s} for cat, s in by_volume if s['recent_count'] == 0 and s['trailing_monthly_avg'] >= 1][:5]
+    
+    # All active categories
+    active_categories = [{'name': cat, **s} for cat, s in valid_for_price][:20]
+    
+    # Generate summary
+    summary_parts = []
+    if hot_categories:
+        top_hot = [f"{cat['name']} (+{cat['price_change']}%)" for cat in hot_categories[:2]]
+        summary_parts.append(f"Prices up on: {', '.join(top_hot)}.")
+    
+    if cold_categories:
+        top_cold = [f"{cat['name']} ({cat['price_change']}%)" for cat in cold_categories[:2]]
+        summary_parts.append(f"Prices down on: {', '.join(top_cold)}.")
+    
+    if volume_down:
+        not_listed = [cat['name'] for cat in volume_down[:3]]
+        summary_parts.append(f"Not listing this month: {', '.join(not_listed)}.")
+    
+    total_recent = sum(s['recent_count'] for s in stats.values())
+    total_trailing_avg = sum(s['trailing_monthly_avg'] for s in stats.values())
+    summary_parts.append(f"This month: {total_recent} items sold (avg {round(total_trailing_avg)}/mo).")
+    
+    summary = " ".join(summary_parts) if summary_parts else "Market appears stable this month."
+    
+    return TrendsResponse(
+        summary=summary,
+        hot_categories=hot_categories,
+        cold_categories=cold_categories,
+        volume_changes=volume_up + volume_down,
+        all_categories=active_categories,
+        stats={
+            'total_categories': len(CATEGORIES),
+            'active_categories': len(valid_for_price),
+            'this_month_items': len(this_month_items),
+            'trailing_items': len(trailing_items)
+        },
+        generated_at=datetime.now().isoformat()
+    )
+
+
+@app.get("/api/trends/test", response_model=CategoryTestResponse)
+def test_category(title: str = Query(..., description="Item title to test categorization")):
+    """Test which category an item title matches"""
+    matches = []
+    assigned_category = 'Other'
+    
+    for cat, regex in CATEGORIES.items():
+        if regex.search(title):
+            matches.append({
+                'category': cat,
+                'pattern': regex.pattern
+            })
+            if assigned_category == 'Other':
+                assigned_category = cat
+    
+    return CategoryTestResponse(
+        title=title,
+        category=assigned_category,
+        matches=matches
+    )
 
 
 @app.post("/api/scrape")
@@ -827,6 +859,8 @@ def trigger_scrape(
     try:
         new_count = run_incremental_scrape(db)
         last_scrape_info = {"time": datetime.now().isoformat(), "new_items": new_count}
+        # Clear cache after manual scrape too
+        clear_trends_cache()
         return {"message": f"Scrape complete. Added {new_count} new items."}
     finally:
         scrape_lock = False
@@ -840,6 +874,12 @@ def health_check():
 # Serve frontend
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 @app.get("/")
 def serve_frontend():
     return FileResponse("static/index.html")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
