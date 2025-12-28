@@ -76,12 +76,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
         }
         .logo { font-size: 18px; font-weight: 700; }
         .stats-badge { font-size: 12px; color: #666; }
-        .mode-tabs { display: flex; gap: 4px; }
+        .mode-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
         .mode-tab {
-            padding: 10px 20px;
+            padding: 10px 16px;
             border: none;
             background: #222;
             color: #888;
@@ -89,6 +91,7 @@
             cursor: pointer;
             font-weight: 600;
             transition: all 0.2s ease;
+            font-size: 14px;
         }
         .mode-tab:hover { background: #2a2a2a; color: #aaa; }
         .mode-tab.active { background: #333; color: #fff; }
@@ -761,6 +764,339 @@
         .trend-badge.hot { background: rgba(239, 68, 68, 0.2); color: #f87171; }
         .trend-badge.cold { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
         .trend-badge.new { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+        
+        /* ========== CATEGORIZATION GAME ========== */
+        .cat-game-section {
+            display: none;
+            padding: 24px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .cat-game-section.active { display: block; }
+        
+        .cat-game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .cat-game-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .cat-game-stats {
+            display: flex;
+            gap: 16px;
+        }
+        .cat-stat {
+            text-align: center;
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-radius: 12px;
+        }
+        .cat-stat-val {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .cat-stat-val.reviewed { color: #4ade80; }
+        .cat-stat-val.flagged { color: #f87171; }
+        .cat-stat-val.correct { color: #fbbf24; }
+        .cat-stat-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        
+        /* Current item card */
+        .cat-item-card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            animation: scaleIn 0.2s ease;
+        }
+        .cat-item-card.hidden { display: none; }
+        
+        .cat-item-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 16px;
+            line-height: 1.5;
+            padding: 16px;
+            background: #0a0a0a;
+            border-radius: 10px;
+            word-break: break-word;
+        }
+        
+        .cat-assigned {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .cat-assigned-label {
+            font-size: 13px;
+            color: #666;
+        }
+        .cat-assigned-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #4ade80;
+            padding: 8px 16px;
+            background: rgba(74, 222, 128, 0.1);
+            border-radius: 8px;
+        }
+        .cat-assigned-value.is-other {
+            color: #f87171;
+            background: rgba(248, 113, 113, 0.1);
+        }
+        
+        .cat-vote-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .cat-vote-btn {
+            flex: 1;
+            padding: 20px;
+            border: 2px solid #333;
+            border-radius: 12px;
+            background: #1a1a1a;
+            color: #888;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .cat-vote-btn:hover {
+            transform: translateY(-2px);
+        }
+        .cat-vote-btn.correct:hover {
+            border-color: #4ade80;
+            color: #4ade80;
+            background: rgba(74, 222, 128, 0.1);
+        }
+        .cat-vote-btn.wrong:hover {
+            border-color: #f87171;
+            color: #f87171;
+            background: rgba(248, 113, 113, 0.1);
+        }
+        .cat-vote-btn:active {
+            transform: scale(0.98);
+        }
+        
+        /* Correction form */
+        .cat-correction {
+            display: none;
+            background: #0a0a0a;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            animation: slideUp 0.2s ease;
+        }
+        .cat-correction.active { display: block; }
+        
+        .cat-correction-title {
+            font-size: 14px;
+            color: #f87171;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .cat-correction-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .cat-correction-input {
+            flex: 1;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+        .cat-correction-input:focus {
+            border-color: #4ade80;
+            outline: none;
+        }
+        .cat-correction-select {
+            flex: 2;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .cat-submit-correction {
+            width: 100%;
+            padding: 14px;
+            background: #f87171;
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .cat-submit-correction:hover {
+            background: #ef4444;
+        }
+        
+        /* Flagged items list */
+        .cat-flagged-section {
+            margin-top: 24px;
+        }
+        .cat-flagged-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .cat-flagged-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f87171;
+        }
+        .cat-copy-btn {
+            padding: 10px 20px;
+            background: #333;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .cat-copy-btn:hover {
+            background: #4ade80;
+            color: #000;
+        }
+        .cat-copy-btn.copied {
+            background: #4ade80;
+            color: #000;
+        }
+        
+        .cat-flagged-list {
+            background: #1a1a1a;
+            border-radius: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .cat-flagged-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #222;
+            font-size: 13px;
+        }
+        .cat-flagged-item:last-child { border-bottom: none; }
+        .cat-flagged-item-title {
+            color: #aaa;
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+        .cat-flagged-item-cats {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .cat-flagged-was {
+            color: #f87171;
+            font-size: 12px;
+        }
+        .cat-flagged-should {
+            color: #4ade80;
+            font-size: 12px;
+        }
+        .cat-flagged-delete {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+        }
+        .cat-flagged-delete:hover { color: #f87171; }
+        
+        /* Progress bar */
+        .cat-progress {
+            margin-top: 16px;
+        }
+        .cat-progress-bar {
+            height: 8px;
+            background: #222;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .cat-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #22d3ee);
+            transition: width 0.3s ease;
+        }
+        .cat-progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+        
+        /* Empty state */
+        .cat-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        .cat-empty-emoji {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        /* Controls */
+        .cat-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .cat-control-btn {
+            padding: 12px 20px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #888;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .cat-control-btn:hover {
+            background: #333;
+            color: #fff;
+        }
+        .cat-control-btn.active {
+            background: #4ade80;
+            color: #000;
+            border-color: #4ade80;
+        }
+        
+        /* Keyboard hints */
+        .cat-keyboard-hint {
+            text-align: center;
+            font-size: 12px;
+            color: #444;
+            margin-top: 12px;
+        }
+        .cat-keyboard-hint kbd {
+            background: #222;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: inherit;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -782,9 +1118,9 @@
             <div class="mode-tabs">
                 <button class="mode-tab active" id="galleryTab">Gallery</button>
                 <button class="mode-tab" id="gameTab">🎮 Play</button>
-                <button class="mode-tab" id="infoTab">ℹ️ Info</button>
                 <button class="mode-tab" id="trendsTab">📈 Trends</button>
-                <button class="mode-tab" id="debugTab">🔧 Debug</button>
+                <button class="mode-tab" id="catGameTab">🎯 Categorize</button>
+                <button class="mode-tab" id="infoTab">ℹ️</button>
             </div>
         </div>
         
@@ -841,80 +1177,14 @@
             <div class="info-card">
                 <div class="info-card-title">About Mushroom Vintage</div>
                 <p>Mushroom Vintage has been operating out of Niigata, Japan since 2002. Owner Akira travels frequently to the USA to source inventory, and the shop is famous in Japan for providing the highest grade American vintage money can buy.</p>
-                <p>His pricing reflects what serious collectors actually pay for top-tier pieces — making this data invaluable for understanding the high-end market.</p>
             </div>
             
             <div class="info-card">
                 <div class="info-card-title">Features</div>
                 <p><strong>📸 Gallery:</strong> Browse all sold items with search, sort by price or date.</p>
                 <p><strong>🎮 Price Game:</strong> Test your pricing intuition. 20-round arcade mode or endless spaced-repetition study.</p>
-                <p><strong>📈 Market Trends:</strong> Track what Akira is pushing — price movements and volume shifts by category, comparing this month vs trailing 6-month average.</p>
-                <p><strong>💴 Currency Toggle:</strong> Train in USD or Yen to match your market.</p>
-            </div>
-            
-            <div class="info-card">
-                <div class="info-card-title">Game Modes</div>
-                <p><strong>20 Rounds:</strong> Quick arcade-style session. Guess prices, earn points, track your high score. Good for a fast warmup.</p>
-                <p><strong>Endless Mode:</strong> Spaced repetition study. Items you miss come back more often. Tracks your accuracy per year range. This is where real learning happens.</p>
-            </div>
-            
-            <div class="info-card">
-                <div class="info-card-title">Scoring (20-Round Mode)</div>
-                <ul>
-                    <li><strong>Perfect (≤5% off):</strong> +500 pts</li>
-                    <li><strong>Great (≤15% off):</strong> +300 pts</li>
-                    <li><strong>Good (≤30% off):</strong> +150 pts</li>
-                    <li><strong>Close (≤50% off):</strong> +50 pts</li>
-                    <li><strong>Way off (≤100% off):</strong> -50 pts</li>
-                    <li><strong>Ouch (>100% off):</strong> -100 pts</li>
-                </ul>
-                <p><strong>Streak bonus:</strong> After 3 correct in a row, earn <code>(streak - 2) × 25</code> bonus points.</p>
-            </div>
-            
-            <div class="info-card">
-                <div class="info-card-title">Measurements</div>
-                <p>Key measurements are extracted from descriptions and displayed during the game:</p>
-                <ul>
-                    <li><strong>Tops:</strong> Chest (body width) + Length</li>
-                    <li><strong>Bottoms:</strong> Waist + Inseam</li>
-                    <li><strong>Vests:</strong> Chest only</li>
-                </ul>
-                <p>All measurements converted from cm to inches. Size matters for pricing — "golden size" (W32-34) and "big size" (44+) command premiums.</p>
-            </div>
-            
-            <div class="info-card">
-                <div class="info-card-title">Market Trends: Why We Track Categories</div>
-                <p>The Trends dashboard uses 300+ regex patterns to categorize every sold item. By tracking specific categories (not just brands), we can detect market shifts that generic searches would miss.</p>
-                <p style="margin-top: 12px;"><strong>Why granular categories matter:</strong></p>
-                <ul style="margin: 8px 0 8px 20px; line-height: 1.8;">
-                    <li>"Levi's jacket" is too broad — a 506XX (1st type) and 70506 are completely different markets</li>
-                    <li>Separating 501XX from 501 Big E from 501 66 Single lets us see which era is heating up</li>
-                    <li>Lee 101-J jacket vs Lee 91-J chore coat have different collector bases</li>
-                </ul>
-                <p style="margin-top: 12px;"><strong>What we track:</strong></p>
-                <p><strong>Levi's (30+ categories):</strong> 501XX, 501 Big E, 501 66 Single, 505/606 Big E, 506XX, 507XX, 517XX, 557XX, 70505, 70506, Shorthorn, and more</p>
-                <p><strong>Lee:</strong> 101-J Jacket, 91-J Chore, 101Z, 101B Cowboy, Westerner, Storm Rider, Coverall</p>
-                <p><strong>Champion:</strong> Reverse Weave, W/F Double Face, Football Tee, Flock Print, Water Print</p>
-                <p><strong>Military:</strong> Navy N-1 Deck, Dungaree Jacket/Pants, Flight Jackets (A-2, G-1, MA-1, L-2B, B-15), USMC P-44 HBT, Army M-65, Tiger Stripe</p>
-                <p><strong>Workwear:</strong> Carhartt, Hercules, Head Light, Big Yank, Sweet-Orr, Pay Day, Finck's, Can't Bust'Em — plus types like Coverall, Painter, Chore Coat, Chinstrap, Buckleback</p>
-                <p><strong>Outdoor:</strong> Patagonia, L.L.Bean, North Face, Brown's Beach, Eddie Bauer, Filson, Down Jackets</p>
-                <p><strong>Patterns:</strong> Wabash, Hickory, Salt &amp; Pepper, Duck Canvas</p>
-                <p><strong>Other:</strong> Souvenir Jackets (Vietnam/Japan), Hawaiian, Mohair, Cowichan, Navajo/Chimayo, Peanuts/Snoopy</p>
-            </div>
-            
-            <div class="info-card">
-                <div class="info-card-title">Data Source</div>
-                <p>All items scraped from Mushroom Vintage's sold archive (<code>vintage-mushroom.net</code>). Only items ¥65,000+ (~$430 USD) included — this filters for the high-end pieces serious collectors buy.</p>
-                <p style="margin-top: 12px;">Prices converted at ¥150 = $1 USD. Japanese descriptions auto-translated. Date range: 2015 - Present.</p>
-            </div>
-            
-            <div class="info-card">
-                <div class="info-card-title">Tech Stack</div>
-                <ul style="margin: 0 0 0 20px;">
-                    <li><strong>Frontend:</strong> Vanilla HTML/CSS/JS</li>
-                    <li><strong>Backend:</strong> Python FastAPI</li>
-                    <li><strong>Database:</strong> PostgreSQL on Railway</li>
-                </ul>
+                <p><strong>📈 Market Trends:</strong> Track what Akira is pushing — price movements and volume shifts by category.</p>
+                <p><strong>🎯 Categorize:</strong> Help improve the categorization AI by reviewing item classifications.</p>
             </div>
             
             <div class="info-card">
@@ -951,76 +1221,117 @@
             </div>
             
             <div id="trendsContent" style="display: none;">
-                <!-- AI Summary -->
                 <div class="info-card" id="trendsSummary">
                     <div class="info-card-title">🤖 Market Summary</div>
                     <p id="trendsSummaryText" style="line-height: 1.7; color: #ccc;"></p>
                 </div>
                 
-                <!-- Hot Categories -->
                 <div class="info-card">
                     <div class="info-card-title">🔥 Heating Up</div>
                     <div id="trendsHot"></div>
                 </div>
                 
-                <!-- Cooling Categories -->
                 <div class="info-card">
                     <div class="info-card-title">❄️ Cooling Down</div>
                     <div id="trendsCold"></div>
                 </div>
                 
-                <!-- Volume Changes -->
                 <div class="info-card">
                     <div class="info-card-title">📦 Volume Shifts</div>
                     <div id="trendsVolume"></div>
                 </div>
                 
-                <!-- Category Details -->
                 <div class="info-card">
-                    <div class="info-card-title">📊 All Categories</div>
+                    <div class="info-card-title">📊 All Active Categories</div>
                     <div id="trendsAll"></div>
-                </div>
-                
-                <!-- Debug Section -->
-                <div class="info-card" style="background: #1a1a2e; border: 1px solid #f87171;">
-                    <div class="info-card-title" style="color: #f87171;">🔧 Debug: Test Categories</div>
-                    <div style="margin-bottom: 12px;">
-                        <input type="text" id="trendsDebugInput" placeholder="Paste an item title to test categorization..." 
-                            style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #333; background: #0a0a0f; color: #fff; font-size: 14px;">
-                    </div>
-                    <button id="trendsDebugBtn" style="padding: 8px 16px; background: #f87171; border: none; border-radius: 6px; color: #000; cursor: pointer; font-weight: 600;">Test Category</button>
-                    <div id="trendsDebugResult" style="margin-top: 12px; padding: 12px; background: #0a0a0f; border-radius: 6px; display: none;"></div>
-                    
-                    <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 16px;">
-                        <div style="color: #888; font-size: 13px; margin-bottom: 8px;">Quick Stats:</div>
-                        <div id="trendsDebugStats" style="color: #ccc; font-size: 13px; line-height: 1.8;"></div>
-                    </div>
-                    
-                    <div style="margin-top: 16px;">
-                        <div style="color: #888; font-size: 13px; margin-bottom: 8px;">This Month's Items (click to test):</div>
-                        <div id="trendsDebugThisMonth" style="max-height: 300px; overflow-y: auto; font-size: 12px;"></div>
-                    </div>
                 </div>
             </div>
         </div>
         
-        <!-- Debug Section -->
-        <div class="info-section" id="debugSection">
-            <div class="info-title">🔧 Measurement Debug</div>
-            
-            <div class="info-card">
-                <div class="info-card-title">Filter</div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="sort-btn active" id="debugFilter0">0 Measurements</button>
-                    <button class="sort-btn" id="debugFilter1">1 Measurement</button>
-                    <button class="sort-btn" id="debugFilterAll">All Missing</button>
-                </div>
-                <div style="margin-top: 12px; color: #888; font-size: 13px;">
-                    Found: <span id="debugCount">0</span> items
+        <!-- CATEGORIZATION GAME -->
+        <div class="cat-game-section" id="catGameSection">
+            <div class="cat-game-header">
+                <div class="cat-game-title">🎯 Category Trainer</div>
+                <div class="cat-game-stats">
+                    <div class="cat-stat">
+                        <div class="cat-stat-val reviewed" id="catReviewed">0</div>
+                        <div class="cat-stat-label">Reviewed</div>
+                    </div>
+                    <div class="cat-stat">
+                        <div class="cat-stat-val correct" id="catCorrect">0</div>
+                        <div class="cat-stat-label">Correct</div>
+                    </div>
+                    <div class="cat-stat">
+                        <div class="cat-stat-val flagged" id="catFlagged">0</div>
+                        <div class="cat-stat-label">Flagged</div>
+                    </div>
                 </div>
             </div>
             
-            <div id="debugList"></div>
+            <div class="cat-controls">
+                <button class="cat-control-btn active" id="catFilterAll">All Items</button>
+                <button class="cat-control-btn" id="catFilterOther">Only "Other"</button>
+                <button class="cat-control-btn" id="catFilterRecent">This Month</button>
+            </div>
+            
+            <!-- Current Item -->
+            <div class="cat-item-card" id="catItemCard">
+                <div class="cat-item-title" id="catItemTitle">Loading...</div>
+                
+                <div class="cat-assigned">
+                    <span class="cat-assigned-label">Auto-assigned:</span>
+                    <span class="cat-assigned-value" id="catAssignedValue">-</span>
+                </div>
+                
+                <div class="cat-vote-buttons">
+                    <button class="cat-vote-btn correct" id="catBtnCorrect">✓ Correct</button>
+                    <button class="cat-vote-btn wrong" id="catBtnWrong">✗ Wrong</button>
+                </div>
+                
+                <div class="cat-correction" id="catCorrection">
+                    <div class="cat-correction-title">What should it be?</div>
+                    <div class="cat-correction-row">
+                        <select class="cat-correction-select" id="catCorrectionSelect">
+                            <option value="">-- Select existing category --</option>
+                        </select>
+                    </div>
+                    <div class="cat-correction-row">
+                        <input type="text" class="cat-correction-input" id="catNewCategory" placeholder="Or suggest new category...">
+                    </div>
+                    <button class="cat-submit-correction" id="catSubmitCorrection">Submit & Next →</button>
+                </div>
+                
+                <div class="cat-keyboard-hint">
+                    <kbd>1</kbd> Correct · <kbd>2</kbd> Wrong · <kbd>Enter</kbd> Submit · <kbd>S</kbd> Skip
+                </div>
+            </div>
+            
+            <div class="cat-progress" id="catProgress">
+                <div class="cat-progress-bar">
+                    <div class="cat-progress-fill" id="catProgressFill" style="width: 0%"></div>
+                </div>
+                <div class="cat-progress-text">
+                    <span id="catProgressText">0 / 0</span>
+                    <span id="catAccuracy">--% accuracy</span>
+                </div>
+            </div>
+            
+            <!-- Flagged Items -->
+            <div class="cat-flagged-section" id="catFlaggedSection">
+                <div class="cat-flagged-header">
+                    <div class="cat-flagged-title">🚩 Flagged for Review (<span id="catFlaggedCount">0</span>)</div>
+                    <button class="cat-copy-btn" id="catCopyBtn">📋 Copy for Claude</button>
+                </div>
+                <div class="cat-flagged-list" id="catFlaggedList">
+                    <div style="padding: 20px; color: #666; text-align: center;">No items flagged yet</div>
+                </div>
+            </div>
+            
+            <!-- Empty state -->
+            <div class="cat-empty" id="catEmpty" style="display: none;">
+                <div class="cat-empty-emoji">🎉</div>
+                <div>All items reviewed! Load more or switch filters.</div>
+            </div>
         </div>
         
         <!-- Game -->
@@ -1051,14 +1362,12 @@
                         <div class="quick-btns">
                             <button class="quick-btn" data-val="500">$500</button>
                             <button class="quick-btn" data-val="1000">$1K</button>
-                            <button class="quick-btn" data-val="500">$500</button>
-                            <button class="quick-btn" data-val="1000">$1,000</button>
-                            <button class="quick-btn" data-val="1500">$1,500</button>
-                            <button class="quick-btn" data-val="2500">$2,500</button>
-                            <button class="quick-btn" data-val="5000">$5,000</button>
-                            <button class="quick-btn" data-val="10000">$10,000</button>
-                            <button class="quick-btn" data-val="25000">$25,000</button>
-                            <button class="quick-btn" data-val="50000">$50,000</button>
+                            <button class="quick-btn" data-val="1500">$1.5K</button>
+                            <button class="quick-btn" data-val="2500">$2.5K</button>
+                            <button class="quick-btn" data-val="5000">$5K</button>
+                            <button class="quick-btn" data-val="10000">$10K</button>
+                            <button class="quick-btn" data-val="25000">$25K</button>
+                            <button class="quick-btn" data-val="50000">$50K</button>
                         </div>
                         <div class="guess-row">
                             <span class="dollar-sign">$</span>
@@ -1170,128 +1479,394 @@ let total = 0;
 let perfects = 0;
 let highScore = parseInt(localStorage.getItem('vHighScore') || '0');
 let selectedYear = null;
-let gameMode = '20'; // '20' or 'endless'
-let gameCurrency = 'usd'; // 'usd' or 'yen'
-let sessionItemIds = new Set(); // Track items shown this session
+let gameMode = '20';
+let gameCurrency = 'usd';
+let sessionItemIds = new Set();
 
-// Spaced repetition history: { itemId: { lastSeen, timesShown, lastError, avgError, soldDate } }
+// Spaced repetition
 let studyHistory = JSON.parse(localStorage.getItem('vStudyHistory2') || '{}');
 
-// Stats for info page
+// Stats
 let statsData = null;
 
-// ========== SPACED REPETITION ==========
-function saveStudyHistory() {
-    localStorage.setItem('vStudyHistory2', JSON.stringify(studyHistory));
-}
+// ========== CATEGORIZATION GAME STATE ==========
+let catItems = [];
+let catIndex = 0;
+let catReviewed = 0;
+let catCorrectCount = 0;
+let catFlaggedItems = JSON.parse(localStorage.getItem('vCatFlagged') || '[]');
+let catFilter = 'all'; // 'all', 'other', 'recent'
+let allCategories = []; // Will be populated from backend
 
-function recordGuess(itemId, pctError, soldDate) {
-    const now = Date.now();
+// Category patterns (mirrored from backend for client-side categorization)
+const CATEGORIES = {
+    // === LEVI'S JEANS ===
+    "Levi's S501XX (WW2)": /levi.*s501|s501xx/i,
+    "Levi's 501XX Buckleback": /levi.*501.*buckleback/i,
+    "Levi's 501XX": /levi.*501.*xx|levi.*501zxx/i,
+    "Levi's 501 Big E": /levi.*501.*big\s*e|levi.*501e\b/i,
+    "Levi's 501 66 Single": /levi.*501.*66/i,
+    "Levi's 501 (Other)": /levi.*501/i,
+    "Levi's 502 Big E": /levi.*502.*big\s*e|levi.*502e\b/i,
+    "Levi's 505 Big E": /levi.*505.*big\s*e|levi.*505e\b/i,
+    "Levi's 505 66 Single": /levi.*505.*66|levi.*505ss/i,
+    "Levi's 606 Big E": /levi.*606/i,
+    "Levi's 517 Jeans": /levi.*\b517\b(?!xx)/i,
+    "Levi's 518": /levi.*\b518\b/i,
+    "Levi's 701 (Women's)": /levi.*\b701\b/i,
+    "Levi's 551ZXX": /levi.*551/i,
+    "Levi's 503ZXX/BXX": /levi.*503/i,
+    "Levi's 550ZXX": /levi.*550/i,
     
-    if (!studyHistory[itemId]) {
-        studyHistory[itemId] = { 
-            lastSeen: now, 
-            timesShown: 1, 
-            lastError: pctError, 
-            avgError: pctError,
-            soldDate: soldDate || null,
-            correct: pctError <= 30 ? 1 : 0,
-            total: 1
-        };
-    } else {
-        const h = studyHistory[itemId];
-        h.avgError = (h.avgError * h.timesShown + pctError) / (h.timesShown + 1);
-        h.timesShown++;
-        h.lastError = pctError;
-        h.lastSeen = now;
-        h.total++;
-        if (pctError <= 30) h.correct++;
-        if (soldDate) h.soldDate = soldDate;
-    }
+    // === LEVI'S JACKETS ===
+    "Levi's 213 (Pre-Type1)": /levi.*\b213\b/i,
+    "Levi's S506XX (WW2)": /s506xx/i,
+    "Levi's 506XXE (Big E)": /506xxe/i,
+    "Levi's 506XX (1st)": /506xx/i,
+    "Levi's 507XX (2nd)": /levi.*507.*xx|levi.*507bxx/i,
+    "Levi's 517XX": /levi.*517xx/i,
+    "Levi's 519XX (Blanket)": /levi.*519/i,
+    "Levi's 557XX": /levi.*557.*xx|levi.*557e\b/i,
+    "Levi's 557 (3rd)": /levi.*\b557\b/i,
+    "Levi's 558XX": /levi.*558.*xx|levi.*558e\b/i,
+    "Levi's 559XX": /levi.*559.*xx|levi.*559e\b/i,
+    "Levi's 70505-0117": /70505-0117/i,
+    "Levi's 70505 (3rd)": /levi.*70505/i,
+    "Levi's 70506": /levi.*70506/i,
+    "Levi's 70507": /levi.*70507/i,
+    "Levi's 71205 Boa": /levi.*71205|levi.*boa/i,
+    "Levi's 71506": /levi.*71506/i,
+    "Levi's Shorthorn": /levi.*shorthorn/i,
+    "Levi's Saddleman": /levi.*saddleman/i,
+    "Levi's Advertising": /levi.*advertising|levi.*banner/i,
+    "Levi's Other": /levi/i,
     
-    saveStudyHistory();
-}
-
-function getPriority(item) {
-    const id = item.id;
-    const h = studyHistory[id];
+    // === LEE ===
+    "Lee 191-J": /lee.*191-?j/i,
+    "Lee S91-J (WW2)": /lee.*s91-?j/i,
+    "Lee 91-LJ": /lee.*91-?lj/i,
+    "Lee 91-J Chore": /lee.*91-j|lee.*91j/i,
+    "Lee 101-J Jacket": /lee.*101-?j\b/i,
+    "Lee 98-J": /lee.*98-?j/i,
+    "Lee 91-B": /lee.*91-b/i,
+    "Lee 91-SB": /lee.*91-sb/i,
+    "Lee 81-LJ": /lee.*81-?lj/i,
+    "Lee 44-J": /lee.*44-?j/i,
+    "Lee 101Z": /lee.*101z/i,
+    "Lee 101B Cowboy": /lee.*101b|lee.*cowboy/i,
+    "Lee 191": /lee.*\b191\b/i,
+    "Lee 220": /lee.*220/i,
+    "Lee Westerner": /lee.*westerner/i,
+    "Lee Riders": /lee.*riders/i,
+    "Lee Storm Rider": /lee.*storm\s*rider/i,
+    "Lee White Canvas": /lee.*white.*canvas/i,
+    "Lee Coverall": /lee.*coverall/i,
+    "Lee HBT": /lee.*hbt/i,
+    "Lee Princeton": /lee.*princeton/i,
+    "Lee Jelt": /lee.*jelt/i,
+    "Lee Frisco": /lee.*frisco/i,
+    "Lee Leens": /lee.*leens/i,
+    "Lee Painter": /lee.*painter/i,
+    "Lee Boss/Logger": /lee.*boss|lee.*logger/i,
+    "Lee Advertising": /lee.*advertising|lee.*sign/i,
+    "Buddy Lee Doll": /buddy\s*lee/i,
+    "Lee Other": /\blee\b/i,
     
-    if (!h) return 100; // Never seen = high priority
+    // === WRANGLER ===
+    "Wrangler 111MJ Proto": /111mj.*proto|proto.*111mj/i,
+    "Wrangler 111MJ": /wrangler.*111mj|111mj/i,
+    "Wrangler 11MJZ": /wrangler.*11mjz/i,
+    "Wrangler 11MWZ": /wrangler.*11mwz|11mwz/i,
+    "Wrangler 11MW": /wrangler.*11mw\b/i,
+    "Wrangler 24MJ": /wrangler.*24mj/i,
+    "Wrangler 27MW": /wrangler.*27mw/i,
+    "Wrangler 77MJZ": /wrangler.*77mjz/i,
+    "Wrangler 124MJ": /wrangler.*124mj/i,
+    "Wrangler 12MJZ": /wrangler.*12mjz/i,
+    "Wrangler 888MJ": /wrangler.*888mj/i,
+    "Wrangler Other": /wrangler/i,
     
-    const daysSince = (Date.now() - h.lastSeen) / (1000 * 60 * 60 * 24);
-    const recencyBoost = Math.min(daysSince, 30);
+    // === CHAMPION ===
+    "Champion Rock Hood": /rock\s*hood/i,
+    "Champion Afterhoody": /afterhoody|after\s*hoody/i,
+    "Champion W/F Double Face": /champion.*w\/f|double\s*face/i,
+    "Champion USMA": /usma|west\s*point/i,
+    "Champion USAFA": /usafa|air\s*force\s*academy/i,
+    "Champion USNA": /usna|naval\s*academy/i,
+    "Champion Kings Point": /kings\s*point/i,
+    "Champion Coast Guard": /champion.*coast\s*guard|coast\s*guard.*reverse/i,
+    "Champion Reverse Weave": /reverse\s*weave/i,
+    "Champion Football Tee": /champion.*football/i,
+    "Champion Flock Print": /champion.*flock/i,
+    "Champion Water Print": /champion.*water/i,
+    "Champion Two-Tone": /champion.*two-tone/i,
+    "Champion Other": /champion/i,
     
-    const priority = (h.avgError / 100) * 50 + recencyBoost * 2;
+    // === VINTAGE SWEATSHIRTS ===
+    "Spalding Sweat": /spalding/i,
+    "Duxbak Sweat": /duxbak/i,
+    "Spruce Sweat": /spruce/i,
+    "Bodygard Sweat": /bodygard/i,
+    "Akom Sweat": /akom/i,
+    "Russell Sweat": /russell/i,
+    "Two-Tone Sweat": /two-?\s*tone.*sweat|sweat.*two-?\s*tone/i,
+    "Water Print Sweat": /water\s*print/i,
+    "Composer Print": /beethoven|bach|brahms|nietzsche/i,
+    "Peanuts/Snoopy": /peanuts|snoopy|charlie\s*brown|schroeder|pig\s*pen/i,
+    "W/V Sweat": /w\/v/i,
+    "S/V Sweat": /s\/v/i,
+    "Sweat Hoody": /sweat\s*hoody|s\/f\s*sweat/i,
+    "Sweatshirt": /sweat\s*shirt|sweatshirt/i,
     
-    if (h.lastError <= 30 && daysSince < 3) {
-        return priority * 0.3;
-    }
+    // === U.S. NAVY ===
+    "Navy Blue N-1 Deck": /blue.*n-1|n-1.*blue|blue.*deck/i,
+    "Navy N-1 Pique": /n-1.*pique|pique.*n-1/i,
+    "Navy A-2 Deck": /a-2.*deck/i,
+    "Navy N-1 Deck": /n-1.*deck|n-1\b/i,
+    "Navy Dangaree (Shawl)": /dangaree/i,
+    "Navy Dungaree Jacket": /navy.*dungaree.*jacket|usn.*dungaree.*jacket/i,
+    "Navy Dungaree Pants": /navy.*dungaree.*(trouser|pants)|usn.*dungaree.*(trouser|pants)/i,
+    "Navy NAF-1168": /naf-1168/i,
+    "Navy Flight Jacket": /navy.*flight|u\.s\.n.*flight/i,
+    "Navy P-Coat": /navy.*p-coat|navy.*pea\s*coat/i,
+    "Navy Gunner Smock": /gunner\s*smock/i,
+    "Navy HBT": /navy.*hbt|usn.*hbt/i,
+    "Navy Catapult Jacket": /catapult/i,
+    "Navy Sweat": /navy.*sweat/i,
+    "Navy Other": /u\.s\.navy|u\.s\.n\b/i,
     
-    return priority;
-}
-
-function sortByPriority(items) {
-    return items.sort((a, b) => getPriority(b) - getPriority(a));
-}
-
-function getStatsForYear(minYear) {
-    let totalGuesses = 0;
-    let totalCorrect = 0;
-    let itemCount = 0;
-    let weakCount = 0;
+    // === U.S. COAST GUARD ===
+    "Coast Guard": /coast\s*guard/i,
     
-    for (const [id, h] of Object.entries(studyHistory)) {
-        // Check if item's sold date is >= minYear
-        if (h.soldDate) {
-            const itemYear = new Date(h.soldDate).getFullYear();
-            if (itemYear < minYear) continue;
-        }
-        
-        itemCount++;
-        totalGuesses += h.total || h.timesShown || 1;
-        totalCorrect += h.correct || (h.avgError <= 30 ? h.timesShown : 0);
-        if (h.avgError > 40) weakCount++;
-    }
+    // === ROYAL NAVY ===
+    "Royal Navy": /royal\s*navy/i,
     
-    return { totalGuesses, totalCorrect, itemCount, weakCount };
-}
-
-function getStudyStatsHtml() {
-    const totalItems = Object.keys(studyHistory).length;
+    // === U.S. ARMY ===
+    "Army M-65": /m-65/i,
+    "Army M-43/M-48/M-51": /m-43|m-48|m-51/i,
+    "Army Tanker": /tanker\s*jacket/i,
+    "Army Dungaree/Denim": /army.*dungaree|army.*denim/i,
+    "Army Jungle Jacket": /jungle/i,
+    "Army Khaki/Chino": /army.*khaki|army.*chino/i,
+    "Army Mackinaw": /army.*mackinaw/i,
+    "Army HBT": /army.*hbt/i,
+    "Army Daisy Mae Hat": /daisy\s*mae/i,
+    "Army Snow Parka": /army.*snow|army.*parka/i,
+    "Army Other": /u\.s\.army/i,
     
-    if (totalItems === 0) {
-        return `<div class="study-stats-row">No study history yet. Start an endless session!</div>`;
-    }
+    // === USMC ===
+    "USMC P-41/P-42/P-44": /p-4[124]/i,
+    "USMC Other": /usmc/i,
     
-    if (!selectedYear) {
-        // Show overall stats
-        const stats = getStatsForYear(0);
-        const acc = stats.totalGuesses > 0 ? Math.round(stats.totalCorrect / stats.totalGuesses * 100) : 0;
-        
-        return `
-            <div class="study-stats-row">Total guesses: <span class="study-stats-val">${stats.totalGuesses}</span></div>
-            <div class="study-stats-row">Items studied: <span class="study-stats-val">${stats.itemCount}</span></div>
-            <div class="study-stats-row">Accuracy: <span class="study-stats-val">${acc}%</span></div>
-            ${stats.weakCount > 0 ? `<div class="study-stats-row">Need review: <span class="study-stats-val">${stats.weakCount}</span></div>` : ''}
-        `;
-    }
+    // === USAF ===
+    "USAF MA-1": /ma-1/i,
+    "USAF L-2/L-2B": /l-2[ab]?(?:\b|$)/i,
+    "USAF B-15/B-10": /b-15|b-10/i,
+    "USAF A-2": /usaa?f.*a-2|a-2.*flight/i,
+    "USAF CWU": /cwu/i,
+    "USAF Other": /usaf|u\.s\.air\s*force/i,
     
-    // Show stats for selected year filter
-    const stats = getStatsForYear(selectedYear);
+    // === OTHER MILITARY ===
+    "G-1 Flight Jacket": /g-1/i,
+    "Tiger Stripe Camo": /tiger\s*stripe/i,
+    "PCU/ECWCS": /pcu|ecwcs|level\s*\d.*jacket/i,
+    "Military Surplus": /military|bdu/i,
     
-    if (stats.itemCount === 0) {
-        return `<div class="study-stats-row">No items from ${selectedYear}+ studied yet</div>`;
-    }
+    // === WORKWEAR BRANDS ===
+    "Carhartt Brown Duck": /carhartt.*brown\s*duck/i,
+    "Carhartt Salt & Pepper": /carhartt.*salt.*pepper/i,
+    "Carhartt Denim": /carhartt.*denim/i,
+    "Carhartt Detroit": /carhartt.*detroit/i,
+    "Carhartt": /carhartt/i,
+    "Hercules": /hercules/i,
+    "Head Light": /head\s*light/i,
+    "Big Yank Mountain Pocket": /big\s*yank.*mountain\s*pocket/i,
+    "Big Yank Chambray": /big\s*yank.*chambray/i,
+    "Big Yank Flannel": /big\s*yank.*flannel/i,
+    "Big Yank": /big\s*yank/i,
+    "Big Mac": /big\s*mac/i,
+    "Big Smith": /big\s*smith/i,
+    "Osh Kosh": /osh\s*kosh|oshkosh/i,
+    "Sweet-Orr": /sweet-orr/i,
+    "Super Pay Day": /super\s*pay\s*day/i,
+    "Pay Day": /pay\s*day/i,
+    "Finck's": /finck/i,
+    "Can't Bust'Em": /can't\s*bust/i,
+    "Boss of the Road": /boss\s*(of\s*the\s*)?road/i,
+    "Strong Reliable": /strong\s*reliable/i,
+    "MW Pioneer": /mw.*pioneer|pioneer.*denim/i,
+    "Blue Bell": /blue\s*bell/i,
+    "Stronghold": /stronghold/i,
+    "Crown": /\bcrown\b/i,
+    "N&W": /\bn\s*&\s*w\b/i,
+    "Black Bear": /black\s*bear/i,
+    "Carter's": /carter/i,
+    "Test": /\btest\b/i,
+    "Powell": /powell/i,
+    "W.P.A": /w\.?p\.?a\b/i,
+    "Freeland": /freeland/i,
+    "Burlington": /burlington/i,
+    "Dubbleware": /dubbleware/i,
+    "Winner": /\bwinner\b/i,
+    "Round House": /round\s*house/i,
+    "Pointer": /pointer/i,
+    "Montgomery Ward": /montgomery\s*ward/i,
+    "Sears/Roebucks": /sears|roebucks/i,
+    "JCPenney/Foremost": /j\.?c\.?\s*penney|jcp|penneys|foremost/i,
     
-    const acc = stats.totalGuesses > 0 ? Math.round(stats.totalCorrect / stats.totalGuesses * 100) : 0;
+    // === WORKWEAR TYPES ===
+    "Coverall": /coverall/i,
+    "Overall (Bib)": /overall/i,
+    "Painter Pants": /painter/i,
+    "Double Knee": /double\s*knee/i,
+    "Engineer Pants": /engineer/i,
+    "Logger Pants": /logger/i,
+    "Shop Coat": /shop\s*coat/i,
+    "Chore Coat": /chore/i,
+    "Chambray Shirt": /chambray/i,
+    "Chinstrap": /chinstrap/i,
+    "Buckleback": /buckleback/i,
+    "Railroad": /railroad/i,
+    "Prison": /prison/i,
+    "Change Button": /change\s*button/i,
     
-    return `
-        <div class="study-stats-row">${selectedYear}+ guesses: <span class="study-stats-val">${stats.totalGuesses}</span></div>
-        <div class="study-stats-row">Items studied: <span class="study-stats-val">${stats.itemCount}</span></div>
-        <div class="study-stats-row">Accuracy: <span class="study-stats-val">${acc}%</span></div>
-        ${stats.weakCount > 0 ? `<div class="study-stats-row">Need review: <span class="study-stats-val">${stats.weakCount}</span></div>` : ''}
-    `;
-}
+    // === PATTERNS/MATERIALS ===
+    "Star Stripe": /star\s*stripe/i,
+    "Wabash Stripe": /wabash/i,
+    "Hickory Stripe": /hickory/i,
+    "Salt & Pepper": /salt.*pepper/i,
+    "Duck Canvas": /duck\s*canvas|canvas\s*duck|brown\s*duck/i,
+    "Blanket Lined": /blanket\s*lined/i,
+    
+    // === OUTDOOR BRANDS ===
+    "Patagonia": /patagonia/i,
+    "L.L.Bean Tote": /l\.?l\.?\s*bean.*tote/i,
+    "L.L.Bean Warden": /l\.?l\.?\s*bean.*warden/i,
+    "L.L.Bean Other": /l\.?l\.?\s*bean/i,
+    "North Face": /north\s*face/i,
+    "Eddie Bauer": /eddie\s*bauer/i,
+    "REI": /\brei\b/i,
+    "Brown's Beach": /brown.*beach/i,
+    "Rocky Mountain": /rocky\s*mountain/i,
+    "Arc'teryx": /arc.teryx/i,
+    "Filson": /filson/i,
+    "Sierra Designs": /sierra\s*designs/i,
+    "Alpine Designs": /alpine\s*designs/i,
+    "Gerry": /\bgerry\b/i,
+    "Barbour": /barbour/i,
+    "Willis & Geiger": /willis.*geiger/i,
+    "Down Jacket": /down\s*(jacket|parka|vest|hoody)|expedition.*down/i,
+    "Hunting Jacket": /hunting.*jacket|shooting/i,
+    "Ski Jacket": /ski\s*jacket/i,
+    
+    // === SOUVENIR/TOUR JACKETS ===
+    "Vietnam Souvenir": /viet-?nam.*souvenir/i,
+    "Vietnam Tour": /viet-?nam.*tour/i,
+    "Japan Tiger Souvenir": /japan.*tiger|tiger.*souvenir/i,
+    "Japan Corduroy Souvenir": /japan.*corduroy.*souvenir|corduroy.*souvenir/i,
+    "Misawa Souvenir": /misawa/i,
+    "Japan Souvenir": /japan.*souvenir|sukajan/i,
+    "Okinawa Souvenir": /okinawa.*souvenir/i,
+    "Korea Souvenir": /korea.*souvenir/i,
+    "Alaska Souvenir": /alaska.*souvenir/i,
+    "Souvenir Jacket Other": /souvenir/i,
+    
+    // === JACKET TYPES ===
+    "Award/Car Club": /award\s*jacket|car\s*club/i,
+    "Pharaoh Jacket": /pharaoh/i,
+    "Drizzler Jacket": /drizzler/i,
+    "Western Jacket": /western.*jacket|gabardine.*jacket/i,
+    "Kodiak": /kodiak/i,
+    "Fake Fur Jacket": /fake\s*fur/i,
+    "Logger Cruiser": /logger.*cruiser|cruiser.*jacket/i,
+    
+    // === HAWAIIAN SHIRTS ===
+    "Kamehameha": /kamehameha/i,
+    "Kahanamoku": /kahanamoku/i,
+    "Del Mar": /del\s*mar/i,
+    "Hawaiian/Aloha": /hawaiian|aloha/i,
+    
+    // === SHIRTS ===
+    "Rayon Shirt": /rayon/i,
+    "Pilgrim Flannel": /pilgrim.*flannel|pilgrim.*plaid/i,
+    "Sun Valley Flannel": /sun\s*valley.*flannel/i,
+    "Flannel Shirt": /flannel/i,
+    "Western Shirt": /western.*shirt/i,
+    "Wool Shirt": /wool.*shirt/i,
+    "Work Shirt": /work.*shirt/i,
+    "Denim Shirt": /denim.*shirt/i,
+    "Corduroy Shirt": /corduroy.*shirt/i,
+    "Arrow Shirt": /arrow/i,
+    
+    // === TEES ===
+    "Band/Tour Tee": /tour.*t-shirt|t-shirt.*tour/i,
+    "Photo Print Tee": /photo.*print|bruce\s*weber/i,
+    "Vintage T-Shirt": /t-shirt/i,
+    
+    // === SWEATERS ===
+    "Mohair Cardigan": /mohair/i,
+    "Cowichan Jacket": /cowichan.*jacket/i,
+    "Cowichan Sweater": /cowichan/i,
+    "Pendleton": /pendleton/i,
+    "Mackinaw": /mackinaw/i,
+    
+    // === NATIVE/SOUTHWEST ===
+    "Navajo/Chimayo": /navajo|chimayo/i,
+    
+    // === LEATHER ===
+    "Buco Leather": /buco/i,
+    "Schott Leather": /schott/i,
+    "Beck Leather": /\bbeck\b/i,
+    "Horsehide": /horsehide/i,
+    "Car Coat": /car\s*coat/i,
+    
+    // === PREMIUM BRANDS ===
+    "Brooks Brothers": /brooks\s*brothers/i,
+    "McGregor": /mcgregor/i,
+    
+    // === COLLEGE/SPORTS ===
+    "Beer Jacket": /beer\s*jacket/i,
+    "Varsity/Letterman": /varsity|letterman/i,
+    "Sports Jacket": /sports?\s*jacket/i,
+    "Flock Print": /flock\s*print/i,
+    "Military Academy": /usafa|usma|usna|west\s*point|naval\s*academy|air\s*force\s*academy/i,
+    
+    // === SHOES ===
+    "Converse": /converse/i,
+    
+    // === ACCESSORIES ===
+    "Advertising/Display": /advertising|banner|display|sign\b/i,
+    "Tote Bag": /tote/i,
+    "Quilt": /quilt/i,
+    
+    // === KNITS/SWEATERS ===
+    "Cardigan": /cardigan/i,
+    "Vest": /\bvest\b/i,
+    "Pullover Sweater": /pullover/i,
+    
+    // === CATCH-ALLS ===
+    "Cafe Racer": /cafe\s*racer/i,
+    "Motorcycle Jacket": /motorcycle/i,
+    "Denim Jacket": /denim\s*jacket/i,
+    "Denim Jeans": /jeans/i,
+    "Gore-Tex": /gore-tex/i,
+    "Corduroy": /corduroy/i,
+    "Polo/Ralph Lauren": /polo|ralph\s*lauren/i,
+    "Anorak": /anorak/i,
+    "Leather Jacket": /leather.*jacket/i,
+    "Work Jacket": /work\s*jacket/i,
+    "Boat Jacket": /boat\s*jacket/i,
+    "Parka": /parka/i,
+    
+    // === ERA CATCH-ALLS ===
+    "WW1 Military": /ww1/i,
+    "WW2 Military": /ww2/i,
+    
+    // === FINAL CATCH-ALLS ===
+    "Jacket (Other)": /jacket/i,
+    "Shirt (Other)": /shirt/i,
+    "Trousers": /trouser|pants/i,
+};
 
 // ========== HELPERS ==========
 function cmToInches(cm) {
@@ -1300,58 +1875,32 @@ function cmToInches(cm) {
 
 function detectGarmentCategory(title) {
     const t = title.toLowerCase();
-    
-    // Accessories FIRST - before any garment checks
-    // Signs, banners, statues are ALWAYS accessories regardless of other words
     if (/\b(sign|banner|statue|poster|display)\b/.test(t)) return 'accessory';
-    
-    // Other accessories - only if no garment word present
-    const accessoryPattern = /\b(bag|tote|backpack|back pack|rucksack|wallet|belt|hat|cap|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|lamp|showcase|umbrella|fixture|neon|key holder|thermometer|clip|bracelet|trash can|fabric|scrap|watch fob|fob|ashtray|pin|medal|coin|token|lighter|glasses|apron|flasher|paper sleeve|stool|stools|table|bench|furniture|mittens|gloves|globe|rack|hanger)\b/;
+    const accessoryPattern = /\b(bag|tote|backpack|wallet|belt|hat|cap|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|lamp)\b/;
     if (accessoryPattern.test(t) && !/\b(jacket|coat|shirt|vest|jeans|pants|trousers?)\b/.test(t)) return 'accessory';
-    
-    // Shoes
     if (/\b(shoes|boots|sneaker|loafer|oxford|moccasin|converse|slip-on)\b/.test(t)) return 'shoes';
-    
-    // All-in-ones (jumpsuits, playsuits)
     if (/all in one|all-in-one|allinone|union.?alls|jumperalls|playsuit/.test(t)) return 'allinone';
-    
-    // TOPS first - jacket/coat/shirt/jumper before checking bottoms keywords
-    // This ensures "DUNGAREE DENIM JUMPER" -> tops (jumper), not bottoms (dungaree)
     if (/\b(jacket|coat|shirt|parka|cardigan|sweater|sweatshirt|hoodie|hoody|blazer|pullover|anorak|windbreaker|bomber|blouson|smock|jkt|snap-t|fleece|weave|jumper)\b/.test(t)) return 'tops';
-    
-    // Vests - after tops check
     if (/\bvest\b/.test(t)) return 'vest';
-    
-    // Coveralls = chore coats (Akira's naming) - measured like tops
     if (/\bcoverall\b/.test(t)) return 'tops';
-    
-    // Overalls = bib overalls - measured like pants
     if (/\boveralls?\b/.test(t)) return 'bottoms';
-    
-    // Bottoms (pants/jeans) - AFTER tops check
     if (/\b(jeans|jeens|pants|trousers?|dungaree|shorts|chino)\b/.test(t)) return 'bottoms';
-    
     return 'tops';
 }
 
 function extractMeasurements(desc, title = '') {
     if (!desc) return {};
-    
     const category = detectGarmentCategory(title);
     if (category === 'accessory') return {};
     
-    // Extract the "Actual size:" section - must start with a measurement word to avoid prose
-    // (Some items have "Actual size: SZ40 inches. I bought..." then later "Actual size: Shoulder width...")
     let actualSizeMatch = desc.match(/Actual (?:size|measurements):\s*((?:Shoulder|Width|Body|W\s*\d).+?cm.+?)(?=\s+Approximately\s*:|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
     if (!actualSizeMatch) {
-        // Fallback for jeans that only have "Notation: W 93 cm / L 93.5 cm..."
         actualSizeMatch = desc.match(/Notation:\s*(W\s*\d+.*?cm.+?)(?=\s+Approximately\s*:|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
     }
     const sizeSection = actualSizeMatch ? actualSizeMatch[1] : '';
     
     const m = {};
     
-    // SHOES
     if (category === 'shoes') {
         const usMatch = sizeSection.match(/US\s*(\d{1,2})\s*(1\/2)?/i);
         if (usMatch) {
@@ -1360,67 +1909,21 @@ function extractMeasurements(desc, title = '') {
             m['US Size'] = size;
             return m;
         }
-        const outsoleMatch = sizeSection.match(/[Oo]utsole\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
-        if (outsoleMatch) {
-            m['Outsole'] = cmToInches(parseFloat(outsoleMatch[1])) + '"';
-        }
         return m;
     }
     
-    // BOTTOMS (jeans/pants/overalls)
     if (category === 'bottoms') {
-        // Waist: "W 93 cm" or "W93cm" or "W:93cm"
         const waistMatch = sizeSection.match(/W\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
-        if (waistMatch) {
-            m['Waist'] = cmToInches(parseFloat(waistMatch[1])) + '"';
-        }
-        // Inseam: "/L30cm" or "/69.5cm" or "/ L left 69.5 cm" or "/ (Left) L 71 cm"
+        if (waistMatch) m['Waist'] = cmToInches(parseFloat(waistMatch[1])) + '"';
         const inseamMatch = sizeSection.match(/\/\s*(?:\(?\s*left\s*\)?\s*)?(?:L\s*)?(?:\(?\s*left\s*\)?\s*)?(\d+(?:\.\d+)?)\s*cm/i);
         if (inseamMatch) {
             const inches = parseFloat(cmToInches(parseFloat(inseamMatch[1])));
-            if (inches >= 5 && inches <= 50) {  // Lowered min for cut-offs
-                m['Inseam'] = inches.toFixed(1) + '"';
-            }
+            if (inches >= 5 && inches <= 50) m['Inseam'] = inches.toFixed(1) + '"';
         }
         return m;
     }
     
-    // ALL-IN-ONE (jumpsuits) - need both chest AND waist
-    if (category === 'allinone') {
-        // Chest: same patterns as tops
-        let chestCm = null;
-        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
-        if (bodyMatch) chestCm = parseFloat(bodyMatch[1]);
-        if (!chestCm) {
-            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
-            if (slashWidthMatch) chestCm = parseFloat(slashWidthMatch[1]);
-        }
-        if (!chestCm) {
-            const startWidthMatch = sizeSection.match(/^Width\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
-            if (startWidthMatch) chestCm = parseFloat(startWidthMatch[1]);
-        }
-        if (chestCm && chestCm >= 25 && chestCm <= 90) {
-            m['Chest'] = cmToInches(chestCm) + '"';
-        }
-        
-        // Waist: "W 109 cm" or "/ W 89 cm"
-        const waistMatch = sizeSection.match(/W\s*(\d+(?:\.\d+)?)\s*cm/);
-        if (waistMatch) {
-            m['Waist'] = cmToInches(parseFloat(waistMatch[1])) + '"';
-        }
-        // Inseam: "/ L 69.5 cm"
-        const inseamMatch = sizeSection.match(/\/\s*L\s*(\d+(?:\.\d+)?)\s*cm/);
-        if (inseamMatch) {
-            const inches = parseFloat(cmToInches(parseFloat(inseamMatch[1])));
-            if (inches >= 20 && inches <= 50) {
-                m['Inseam'] = inches.toFixed(1) + '"';
-            }
-        }
-        return m;
-    }
-    
-    // VESTS - just chest, no length needed
-    if (category === 'vest') {
+    if (category === 'vest' || category === 'tops' || category === 'allinone') {
         let chestCm = null;
         const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*(?:\([^)]+\)\s*)?:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
         if (bodyMatch) chestCm = parseFloat(bodyMatch[1]);
@@ -1432,44 +1935,14 @@ function extractMeasurements(desc, title = '') {
             const startWidthMatch = sizeSection.match(/^Width\s*(?:\([^)]+\)\s*)?:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
             if (startWidthMatch) chestCm = parseFloat(startWidthMatch[1]);
         }
-        if (chestCm && chestCm >= 25 && chestCm <= 90) {
-            m['Chest'] = cmToInches(chestCm) + '"';
-        }
-        return m;
-    }
-    
-    // TOPS (jackets, shirts, sweats, coveralls/chore coats)
-    if (category === 'tops') {
-        // Chest: Try patterns in order of specificity
-        let chestCm = null;
+        if (chestCm && chestCm >= 25 && chestCm <= 90) m['Chest'] = cmToInches(chestCm) + '"';
         
-        // 1. "Body width 52 cm" or "Body width 61-65 cm" (take first number of range)
-        const bodyMatch = sizeSection.match(/Body\s*[Ww]idth\s*(?:\([^)]+\)\s*)?:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
-        if (bodyMatch) chestCm = parseFloat(bodyMatch[1]);
-        
-        // 2. "/ Width 62 cm" or "/ Width (measured at...) 58 cm"
-        if (!chestCm) {
-            const slashWidthMatch = sizeSection.match(/\/\s*(?:Width\s*)?[Ww]idth\s*(?:\([^)]+\)\s*)?:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
-            if (slashWidthMatch) chestCm = parseFloat(slashWidthMatch[1]);
-        }
-        
-        // 3. "Width 56.5 cm" or "Width approximately 53 cm" at START
-        if (!chestCm) {
-            const startWidthMatch = sizeSection.match(/^Width\s*(?:\([^)]+\)\s*)?:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)(?:-\d+)?\s*cm/i);
-            if (startWidthMatch) chestCm = parseFloat(startWidthMatch[1]);
-        }
-        
-        if (chestCm && chestCm >= 25 && chestCm <= 90) {
-            m['Chest'] = cmToInches(chestCm) + '"';
-        }
-        
-        // Length: "/ Length 55 cm" or "/ Length (from collar) 64 cm" or "/ Length about 75 cm"
-        const lengthMatch = sizeSection.match(/\/\s*Length\s*(?:\([^)]+\)\s*)?(?:about|approx(?:imately)?\.?)?\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
-        if (lengthMatch) {
-            const cm = parseFloat(lengthMatch[1]);
-            const inches = parseFloat(cmToInches(cm));
-            if (inches >= 10 && inches <= 50) {  // Up to 50" for long coats
-                m['Length'] = inches.toFixed(1) + '"';
+        if (category !== 'vest') {
+            const lengthMatch = sizeSection.match(/\/\s*Length\s*(?:\([^)]+\)\s*)?(?:about|approx(?:imately)?\.?)?\s*:?\s*(\d+(?:\.\d+)?)\s*cm/i);
+            if (lengthMatch) {
+                const cm = parseFloat(lengthMatch[1]);
+                const inches = parseFloat(cmToInches(cm));
+                if (inches >= 10 && inches <= 50) m['Length'] = inches.toFixed(1) + '"';
             }
         }
         return m;
@@ -1490,13 +1963,26 @@ function formatDateShort(dateStr) {
     return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 }
 
+// ========== CATEGORIZATION FUNCTIONS ==========
+function categorizeItem(title) {
+    for (const [cat, regex] of Object.entries(CATEGORIES)) {
+        if (regex.test(title)) {
+            return cat;
+        }
+    }
+    return 'Other';
+}
+
+function isOtherCategory(cat) {
+    return cat === 'Other' || cat.includes('Other');
+}
+
 // ========== API ==========
 async function fetchItems(params = {}) {
     const url = new URL(API_BASE + '/api/items', window.location.origin);
     Object.entries(params).forEach(([k, v]) => {
         if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
     });
-    
     const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch items');
     return res.json();
@@ -1506,10 +1992,7 @@ async function fetchRandomItems(minYear, count = 20, excludeIds = []) {
     const url = new URL(API_BASE + '/api/items/random', window.location.origin);
     url.searchParams.set('count', count);
     if (minYear) url.searchParams.set('min_year', minYear);
-    if (excludeIds.length > 0) {
-        url.searchParams.set('exclude', excludeIds.join(','));
-    }
-    
+    if (excludeIds.length > 0) url.searchParams.set('exclude', excludeIds.join(','));
     const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch random items');
     return res.json();
@@ -1525,21 +2008,20 @@ async function fetchStats() {
 async function init() {
     try {
         document.getElementById('loadingText').textContent = 'Loading inventory...';
-        
-        // Fetch stats
         statsData = await fetchStats();
         document.getElementById('statsBadge').textContent = `${statsData.total_items.toLocaleString()} items`;
         totalItems = statsData.total_items;
-        
-        // Fetch first page
         allItems = await fetchItems({ sort: currentSort, limit: ITEMS_PER_PAGE });
         
-        // Show app
         document.getElementById('loadingScreen').classList.add('hidden');
         document.getElementById('app').classList.add('active');
         document.getElementById('highScoreText').textContent = 'Best: ' + highScore;
         
+        // Build category list for dropdown
+        allCategories = Object.keys(CATEGORIES).sort();
+        
         renderGallery();
+        renderCatFlaggedList();
     } catch (err) {
         document.getElementById('loadingError').textContent = 'Error: ' + err.message;
     }
@@ -1579,17 +2061,8 @@ function renderGallery() {
     });
 }
 
-document.getElementById('prevBtn').onclick = async () => {
-    if (page > 1) {
-        page--;
-        await loadGalleryPage();
-    }
-};
-
-document.getElementById('nextBtn').onclick = async () => {
-    page++;
-    await loadGalleryPage();
-};
+document.getElementById('prevBtn').onclick = async () => { if (page > 1) { page--; await loadGalleryPage(); } };
+document.getElementById('nextBtn').onclick = async () => { page++; await loadGalleryPage(); };
 
 let searchTimeout;
 document.getElementById('searchInput').oninput = e => {
@@ -1653,7 +2126,7 @@ function hideAllSections() {
     document.getElementById('filterScreen').classList.remove('active');
     document.getElementById('infoSection').classList.remove('active');
     document.getElementById('trendsSection').classList.remove('active');
-    document.getElementById('debugSection').classList.remove('active');
+    document.getElementById('catGameSection').classList.remove('active');
     document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
 }
 
@@ -1683,111 +2156,278 @@ document.getElementById('trendsTab').onclick = () => {
     loadTrends();
 };
 
-document.getElementById('debugTab').onclick = () => {
+document.getElementById('catGameTab').onclick = () => {
     hideAllSections();
-    document.getElementById('debugTab').classList.add('active');
-    document.getElementById('debugSection').classList.add('active');
-    loadDebugItems(0);
+    document.getElementById('catGameTab').classList.add('active');
+    document.getElementById('catGameSection').classList.add('active');
+    startCatGame();
 };
 
-// ========== DEBUG ==========
-let debugItems = [];
-let debugFilter = 0; // 0 = zero measurements, 1 = one measurement
-
-async function loadDebugItems(filter) {
-    debugFilter = filter;
+// ========== CATEGORIZATION GAME ==========
+async function startCatGame() {
+    catIndex = 0;
+    catReviewed = 0;
+    catCorrectCount = 0;
     
-    // Update filter buttons
-    document.getElementById('debugFilter0').classList.toggle('active', filter === 0);
-    document.getElementById('debugFilter1').classList.toggle('active', filter === 1);
-    document.getElementById('debugFilterAll').classList.toggle('active', filter === 'all');
+    // Populate category dropdown
+    const select = document.getElementById('catCorrectionSelect');
+    select.innerHTML = '<option value="">-- Select existing category --</option>' + 
+        allCategories.map(c => `<option value="${c}">${c}</option>`).join('');
     
-    document.getElementById('debugCount').textContent = 'Loading...';
-    document.getElementById('debugList').innerHTML = '<div style="text-align:center;padding:40px;color:#666;">Scanning items...</div>';
-    
-    // Fetch items in batches
-    debugItems = [];
-    let skip = 0;
-    const batchSize = 100;
-    
-    while (true) {
-        const res = await fetch(API_BASE + `/api/items?limit=${batchSize}&skip=${skip}&sort=date_desc`);
-        const items = await res.json();
-        if (items.length === 0) break;
-        
-        // Filter to items with missing measurements
-        for (const item of items) {
-            const cat = detectGarmentCategory(item.title);
-            if (cat === 'accessory' || cat === 'shoes') continue;
-            
-            const m = extractMeasurements(item.description, item.title);
-            const count = Object.keys(m).length;
-            
-            // Vests only need 1 measurement (chest), so don't flag them
-            // Tops need 2 (chest + length), bottoms need 2 (waist + inseam)
-            const expectedCount = (cat === 'vest') ? 1 : 2;
-            
-            let include = false;
-            if (filter === 0) include = count === 0;
-            else if (filter === 1) include = count === 1 && cat !== 'vest'; // Don't flag vests
-            else include = count < expectedCount; // 'all' = less than expected
-            
-            if (include) debugItems.push(item);
-        }
-        
-        skip += batchSize;
-        document.getElementById('debugCount').textContent = `Scanned ${skip}... Found ${debugItems.length}`;
-        
-        // Stop after enough items or if we have enough debug items
-        if (skip >= 5000 || debugItems.length >= 200) break;
-    }
-    
-    document.getElementById('debugCount').textContent = debugItems.length;
-    renderDebugList();
+    await loadCatItems();
+    showCatItem();
 }
 
-function renderDebugList() {
-    const list = document.getElementById('debugList');
-    list.innerHTML = debugItems.slice(0, 50).map((item, i) => {
-        const cat = detectGarmentCategory(item.title);
-        const m = extractMeasurements(item.description, item.title);
-        const measKeys = Object.keys(m);
-        
-        // Get the Actual size section for debugging
-        const desc = item.description || '';
-        const sectionMatch = desc.match(/Actual (?:size|measurements):\s*((?:Shoulder|Width|Body|W\s*\d).+?cm.+?)(?=\s+Approximately\s*:|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
-        const section = sectionMatch ? sectionMatch[1].substring(0, 150) : 'No Actual size found';
-        
-        return `
-            <div class="info-card" style="margin-top: 12px;">
-                <div style="font-size: 13px; color: #4ade80; margin-bottom: 4px;">${cat.toUpperCase()} | ${measKeys.length} measurements</div>
-                <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">${item.title}</div>
-                <div style="font-size: 12px; color: #888; margin-bottom: 8px;">
-                    ${measKeys.length > 0 ? measKeys.map(k => k + ': ' + m[k]).join(' | ') : 'None extracted'}
-                </div>
-                <div style="font-size: 11px; color: #666; font-family: monospace; background: #0a0a0a; padding: 8px; border-radius: 6px; word-break: break-all;">
-                    ${section}
-                </div>
+async function loadCatItems() {
+    let params = { sort: 'date_desc', limit: 100 };
+    
+    if (catFilter === 'recent') {
+        const now = new Date();
+        params.min_year = now.getFullYear();
+    }
+    
+    catItems = await fetchItems(params);
+    
+    // Filter for "Other" only if needed
+    if (catFilter === 'other') {
+        catItems = catItems.filter(item => isOtherCategory(categorizeItem(item.title)));
+    }
+    
+    // Shuffle
+    catItems.sort(() => Math.random() - 0.5);
+    
+    catIndex = 0;
+    updateCatProgress();
+}
+
+function showCatItem() {
+    if (catIndex >= catItems.length) {
+        document.getElementById('catItemCard').classList.add('hidden');
+        document.getElementById('catEmpty').style.display = 'block';
+        return;
+    }
+    
+    document.getElementById('catItemCard').classList.remove('hidden');
+    document.getElementById('catEmpty').style.display = 'none';
+    document.getElementById('catCorrection').classList.remove('active');
+    
+    const item = catItems[catIndex];
+    const category = categorizeItem(item.title);
+    
+    document.getElementById('catItemTitle').textContent = item.title;
+    
+    const catValue = document.getElementById('catAssignedValue');
+    catValue.textContent = category;
+    catValue.classList.toggle('is-other', isOtherCategory(category));
+    
+    // Reset inputs
+    document.getElementById('catCorrectionSelect').value = '';
+    document.getElementById('catNewCategory').value = '';
+    
+    updateCatProgress();
+}
+
+function updateCatProgress() {
+    const total = catItems.length;
+    const pct = total > 0 ? (catIndex / total * 100) : 0;
+    
+    document.getElementById('catProgressFill').style.width = pct + '%';
+    document.getElementById('catProgressText').textContent = `${catIndex} / ${total}`;
+    
+    const acc = catReviewed > 0 ? Math.round(catCorrectCount / catReviewed * 100) : 0;
+    document.getElementById('catAccuracy').textContent = `${acc}% accuracy`;
+    
+    document.getElementById('catReviewed').textContent = catReviewed;
+    document.getElementById('catCorrect').textContent = catCorrectCount;
+    document.getElementById('catFlagged').textContent = catFlaggedItems.length;
+    document.getElementById('catFlaggedCount').textContent = catFlaggedItems.length;
+}
+
+function catMarkCorrect() {
+    catReviewed++;
+    catCorrectCount++;
+    catIndex++;
+    showCatItem();
+}
+
+function catMarkWrong() {
+    document.getElementById('catCorrection').classList.add('active');
+}
+
+function catSubmitCorrection() {
+    const item = catItems[catIndex];
+    const wasCategory = categorizeItem(item.title);
+    const shouldCategory = document.getElementById('catCorrectionSelect').value || 
+                          document.getElementById('catNewCategory').value.trim();
+    
+    if (!shouldCategory) {
+        alert('Please select or enter what category this should be');
+        return;
+    }
+    
+    // Add to flagged list
+    catFlaggedItems.push({
+        title: item.title,
+        was: wasCategory,
+        should: shouldCategory,
+        isNew: document.getElementById('catNewCategory').value.trim() !== '',
+        timestamp: Date.now()
+    });
+    
+    // Save to localStorage
+    localStorage.setItem('vCatFlagged', JSON.stringify(catFlaggedItems));
+    
+    catReviewed++;
+    catIndex++;
+    
+    renderCatFlaggedList();
+    showCatItem();
+}
+
+function catSkip() {
+    catIndex++;
+    showCatItem();
+}
+
+function renderCatFlaggedList() {
+    const list = document.getElementById('catFlaggedList');
+    
+    if (catFlaggedItems.length === 0) {
+        list.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">No items flagged yet</div>';
+        return;
+    }
+    
+    list.innerHTML = catFlaggedItems.map((item, i) => `
+        <div class="cat-flagged-item">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div class="cat-flagged-item-title">${item.title}</div>
+                <button class="cat-flagged-delete" onclick="deleteFlaggedItem(${i})">×</button>
             </div>
-        `;
-    }).join('');
+            <div class="cat-flagged-item-cats">
+                <span class="cat-flagged-was">Was: ${item.was}</span>
+                <span>→</span>
+                <span class="cat-flagged-should">Should: ${item.should}${item.isNew ? ' (NEW)' : ''}</span>
+            </div>
+        </div>
+    `).join('');
     
-    if (debugItems.length > 50) {
-        list.innerHTML += `<div style="text-align: center; padding: 20px; color: #666;">Showing first 50 of ${debugItems.length} items</div>`;
-    }
+    updateCatProgress();
 }
 
-document.getElementById('debugFilter0').onclick = () => loadDebugItems(0);
-document.getElementById('debugFilter1').onclick = () => loadDebugItems(1);
-document.getElementById('debugFilterAll').onclick = () => loadDebugItems('all');
+function deleteFlaggedItem(idx) {
+    catFlaggedItems.splice(idx, 1);
+    localStorage.setItem('vCatFlagged', JSON.stringify(catFlaggedItems));
+    renderCatFlaggedList();
+}
 
+function copyFlaggedForClaude() {
+    if (catFlaggedItems.length === 0) {
+        alert('No items flagged yet!');
+        return;
+    }
+    
+    // Format for Claude
+    let text = `CATEGORY FIXES NEEDED (${catFlaggedItems.length} items)\n`;
+    text += '='.repeat(50) + '\n\n';
+    
+    // Group by "should" category
+    const byCategory = {};
+    catFlaggedItems.forEach(item => {
+        const key = item.should;
+        if (!byCategory[key]) byCategory[key] = [];
+        byCategory[key].push(item);
+    });
+    
+    // New categories first
+    const newCats = Object.entries(byCategory).filter(([k, v]) => v.some(x => x.isNew));
+    const existingCats = Object.entries(byCategory).filter(([k, v]) => !v.some(x => x.isNew));
+    
+    if (newCats.length > 0) {
+        text += '🆕 NEW CATEGORIES NEEDED:\n';
+        text += '-'.repeat(30) + '\n';
+        newCats.forEach(([cat, items]) => {
+            text += `\n"${cat}":\n`;
+            items.forEach(item => {
+                text += `  - "${item.title}" (was: ${item.was})\n`;
+            });
+        });
+        text += '\n';
+    }
+    
+    if (existingCats.length > 0) {
+        text += '🔧 REGEX FIXES NEEDED:\n';
+        text += '-'.repeat(30) + '\n';
+        existingCats.forEach(([cat, items]) => {
+            text += `\n"${cat}" should match:\n`;
+            items.forEach(item => {
+                text += `  - "${item.title}" (was: ${item.was})\n`;
+            });
+        });
+    }
+    
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('catCopyBtn');
+        btn.textContent = '✓ Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.textContent = '📋 Copy for Claude';
+            btn.classList.remove('copied');
+        }, 2000);
+    });
+}
+
+// Event listeners for categorization game
+document.getElementById('catBtnCorrect').onclick = catMarkCorrect;
+document.getElementById('catBtnWrong').onclick = catMarkWrong;
+document.getElementById('catSubmitCorrection').onclick = catSubmitCorrection;
+document.getElementById('catCopyBtn').onclick = copyFlaggedForClaude;
+
+document.getElementById('catFilterAll').onclick = async () => {
+    catFilter = 'all';
+    document.querySelectorAll('.cat-control-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('catFilterAll').classList.add('active');
+    await loadCatItems();
+    showCatItem();
+};
+
+document.getElementById('catFilterOther').onclick = async () => {
+    catFilter = 'other';
+    document.querySelectorAll('.cat-control-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('catFilterOther').classList.add('active');
+    await loadCatItems();
+    showCatItem();
+};
+
+document.getElementById('catFilterRecent').onclick = async () => {
+    catFilter = 'recent';
+    document.querySelectorAll('.cat-control-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('catFilterRecent').classList.add('active');
+    await loadCatItems();
+    showCatItem();
+};
+
+// Keyboard shortcuts for categorization
+document.addEventListener('keydown', e => {
+    if (!document.getElementById('catGameSection').classList.contains('active')) return;
+    if (document.getElementById('catCorrection').classList.contains('active')) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            catSubmitCorrection();
+        }
+        return;
+    }
+    
+    if (e.key === '1') catMarkCorrect();
+    if (e.key === '2') catMarkWrong();
+    if (e.key === 's' || e.key === 'S') catSkip();
+});
+
+// ========== INFO STATS ==========
 function updateInfoStats() {
     if (statsData) {
         document.getElementById('infoTotalItems').textContent = statsData.total_items.toLocaleString();
         document.getElementById('infoNewest').textContent = formatDateShort(statsData.newest_date);
         document.getElementById('infoOldest').textContent = formatDateShort(statsData.oldest_date);
-        
-        // Parse last scrape info
         const lastScrape = statsData.last_scrape || '';
         if (lastScrape.includes(' - ')) {
             const parts = lastScrape.split(' - ');
@@ -1803,15 +2443,13 @@ function showFilterScreen() {
     document.getElementById('filterScreen').classList.add('active');
     document.getElementById('gameSection').classList.remove('active');
     
-    // Mode selection
     document.getElementById('mode20').onclick = () => selectMode('20');
     document.getElementById('modeEndless').onclick = () => selectMode('endless');
-    selectMode('20'); // Default
+    selectMode('20');
     
-    // Currency selection
     document.getElementById('currencyUSD').onclick = () => selectCurrency('usd');
     document.getElementById('currencyYen').onclick = () => selectCurrency('yen');
-    selectCurrency('usd'); // Default
+    selectCurrency('usd');
     
     const yearGrid = document.getElementById('yearGrid');
     yearGrid.innerHTML = '';
@@ -1828,8 +2466,6 @@ function showFilterScreen() {
     selectedYear = null;
     document.getElementById('startBtn').classList.remove('active');
     document.getElementById('filterInfo').textContent = 'Select a year';
-    
-    // Show study stats
     document.getElementById('studyStats').innerHTML = getStudyStatsHtml();
 }
 
@@ -1843,34 +2479,23 @@ function selectMode(mode) {
     gameMode = mode;
     document.getElementById('mode20').classList.toggle('selected', mode === '20');
     document.getElementById('modeEndless').classList.toggle('selected', mode === 'endless');
-    
-    if (mode === '20') {
-        document.getElementById('modeDesc').textContent = 'Quick 20-item session with scoring';
-    } else {
-        document.getElementById('modeDesc').textContent = 'Endless practice with spaced repetition - items you miss come back more often';
-    }
+    document.getElementById('modeDesc').textContent = mode === '20' 
+        ? 'Quick 20-item session with scoring' 
+        : 'Endless practice with spaced repetition';
 }
 
 async function selectYear(year) {
     selectedYear = year;
-    
     document.querySelectorAll('.year-btn').forEach(btn => {
-        btn.classList.remove('selected');
-        if (parseInt(btn.dataset.year) === year) {
-            btn.classList.add('selected');
-        }
+        btn.classList.toggle('selected', parseInt(btn.dataset.year) === year);
     });
-    
     document.getElementById('filterInfo').textContent = `Training on items from ${year} onward`;
     document.getElementById('startBtn').classList.add('active');
-    
-    // Update stats for selected year
     document.getElementById('studyStats').innerHTML = getStudyStatsHtml();
 }
 
 document.getElementById('startBtn').onclick = async () => {
     if (!selectedYear) return;
-    
     document.getElementById('filterScreen').classList.remove('active');
     document.getElementById('gameSection').classList.add('active');
     
@@ -1882,7 +2507,7 @@ document.getElementById('startBtn').onclick = async () => {
         document.getElementById('endlessControls').classList.remove('active');
     } else {
         deck = await fetchRandomItems(selectedYear, BATCH_SIZE);
-        deck = sortByPriority(deck); // Sort by spaced repetition priority
+        deck = sortByPriority(deck);
         document.getElementById('progressWrap').style.display = 'none';
         document.getElementById('endlessControls').classList.add('active');
     }
@@ -1890,19 +2515,77 @@ document.getElementById('startBtn').onclick = async () => {
     startGame();
 };
 
+// ========== SPACED REPETITION ==========
+function saveStudyHistory() {
+    localStorage.setItem('vStudyHistory2', JSON.stringify(studyHistory));
+}
+
+function recordGuess(itemId, pctError, soldDate) {
+    const now = Date.now();
+    if (!studyHistory[itemId]) {
+        studyHistory[itemId] = { lastSeen: now, timesShown: 1, lastError: pctError, avgError: pctError, soldDate: soldDate || null, correct: pctError <= 30 ? 1 : 0, total: 1 };
+    } else {
+        const h = studyHistory[itemId];
+        h.avgError = (h.avgError * h.timesShown + pctError) / (h.timesShown + 1);
+        h.timesShown++;
+        h.lastError = pctError;
+        h.lastSeen = now;
+        h.total++;
+        if (pctError <= 30) h.correct++;
+        if (soldDate) h.soldDate = soldDate;
+    }
+    saveStudyHistory();
+}
+
+function getPriority(item) {
+    const id = item.id;
+    const h = studyHistory[id];
+    if (!h) return 100;
+    const daysSince = (Date.now() - h.lastSeen) / (1000 * 60 * 60 * 24);
+    const recencyBoost = Math.min(daysSince, 30);
+    const priority = (h.avgError / 100) * 50 + recencyBoost * 2;
+    if (h.lastError <= 30 && daysSince < 3) return priority * 0.3;
+    return priority;
+}
+
+function sortByPriority(items) {
+    return items.sort((a, b) => getPriority(b) - getPriority(a));
+}
+
+function getStatsForYear(minYear) {
+    let totalGuesses = 0, totalCorrect = 0, itemCount = 0, weakCount = 0;
+    for (const [id, h] of Object.entries(studyHistory)) {
+        if (h.soldDate) {
+            const itemYear = new Date(h.soldDate).getFullYear();
+            if (itemYear < minYear) continue;
+        }
+        itemCount++;
+        totalGuesses += h.total || h.timesShown || 1;
+        totalCorrect += h.correct || (h.avgError <= 30 ? h.timesShown : 0);
+        if (h.avgError > 40) weakCount++;
+    }
+    return { totalGuesses, totalCorrect, itemCount, weakCount };
+}
+
+function getStudyStatsHtml() {
+    const totalItems = Object.keys(studyHistory).length;
+    if (totalItems === 0) return `<div class="study-stats-row">No study history yet.</div>`;
+    const stats = getStatsForYear(selectedYear || 0);
+    if (stats.itemCount === 0) return `<div class="study-stats-row">No items from ${selectedYear}+ studied yet</div>`;
+    const acc = stats.totalGuesses > 0 ? Math.round(stats.totalCorrect / stats.totalGuesses * 100) : 0;
+    return `
+        <div class="study-stats-row">Guesses: <span class="study-stats-val">${stats.totalGuesses}</span></div>
+        <div class="study-stats-row">Items: <span class="study-stats-val">${stats.itemCount}</span></div>
+        <div class="study-stats-row">Accuracy: <span class="study-stats-val">${acc}%</span></div>
+        ${stats.weakCount > 0 ? `<div class="study-stats-row">Need review: <span class="study-stats-val">${stats.weakCount}</span></div>` : ''}
+    `;
+}
+
 // ========== GAME ==========
 function startGame() {
-    cardIndex = 0;
-    score = 0;
-    streak = 0;
-    bestStreak = 0;
-    correct = 0;
-    total = 0;
-    perfects = 0;
-    
+    cardIndex = 0; score = 0; streak = 0; bestStreak = 0; correct = 0; total = 0; perfects = 0;
     document.getElementById('gameCard').classList.remove('hidden');
     document.getElementById('gameOver').classList.remove('active');
-    
     updateStats();
     showCard();
 }
@@ -1910,44 +2593,30 @@ function startGame() {
 function showCard() {
     const item = deck[cardIndex];
     sessionItemIds.add(item.id);
-    
     document.getElementById('gameImg').src = item.images?.[0] || '';
     document.getElementById('gameTitle').textContent = item.title;
     document.getElementById('guessInput').value = '';
     
-    // Update currency display
     const symbol = gameCurrency === 'yen' ? '¥' : '$';
     document.querySelector('.dollar-sign').textContent = symbol;
     
-    // Update quick buttons for currency
     const quickBtns = document.querySelectorAll('.quick-btn');
     if (gameCurrency === 'yen') {
         const yenVals = ['75000', '150000', '225000', '350000', '500000', '750000', '1000000', '2000000'];
-        const yenLabels = ['¥75,000', '¥150,000', '¥225,000', '¥350,000', '¥500,000', '¥750,000', '¥1,000,000', '¥2,000,000'];
-        quickBtns.forEach((btn, i) => {
-            btn.dataset.val = yenVals[i];
-            btn.textContent = yenLabels[i];
-        });
+        const yenLabels = ['¥75K', '¥150K', '¥225K', '¥350K', '¥500K', '¥750K', '¥1M', '¥2M'];
+        quickBtns.forEach((btn, i) => { btn.dataset.val = yenVals[i]; btn.textContent = yenLabels[i]; });
     } else {
         const usdVals = ['500', '1000', '1500', '2500', '5000', '10000', '25000', '50000'];
-        const usdLabels = ['$500', '$1,000', '$1,500', '$2,500', '$5,000', '$10,000', '$25,000', '$50,000'];
-        quickBtns.forEach((btn, i) => {
-            btn.dataset.val = usdVals[i];
-            btn.textContent = usdLabels[i];
-        });
+        const usdLabels = ['$500', '$1K', '$1.5K', '$2.5K', '$5K', '$10K', '$25K', '$50K'];
+        quickBtns.forEach((btn, i) => { btn.dataset.val = usdVals[i]; btn.textContent = usdLabels[i]; });
     }
     
     const measurements = extractMeasurements(item.description, item.title);
     let metaHtml = '';
-    
-    if (item.sold_date) {
-        metaHtml += `<div class="game-meta-item"><span class="game-meta-label">Sold:</span><span class="game-meta-val">${formatDate(item.sold_date)}</span></div>`;
-    }
-    
+    if (item.sold_date) metaHtml += `<div class="game-meta-item"><span class="game-meta-label">Sold:</span><span class="game-meta-val">${formatDate(item.sold_date)}</span></div>`;
     for (const [key, val] of Object.entries(measurements)) {
         metaHtml += `<div class="game-meta-item"><span class="game-meta-label">${key}:</span><span class="game-meta-val">${val}</span></div>`;
     }
-    
     document.getElementById('gameMeta').innerHTML = metaHtml;
     
     document.getElementById('guessPhase').classList.remove('hidden');
@@ -1957,8 +2626,7 @@ function showCard() {
         document.getElementById('progFill').style.width = (cardIndex / ROUNDS * 100) + '%';
         document.getElementById('progText').textContent = `${cardIndex + 1} / ${ROUNDS}`;
     } else {
-        // Endless mode - show session stats
-        document.getElementById('progText').textContent = `Item ${total + 1} this session`;
+        document.getElementById('progText').textContent = `Item ${total + 1}`;
     }
     
     document.getElementById('guessInput').focus();
@@ -1973,11 +2641,7 @@ function updateStats() {
 function submitGuess() {
     const guessVal = document.getElementById('guessInput').value;
     const guess = parseInt(guessVal);
-    
-    if (!guess || guess <= 0) {
-        alert('Enter a price guess!');
-        return;
-    }
+    if (!guess || guess <= 0) { alert('Enter a price guess!'); return; }
     
     const item = deck[cardIndex];
     const actual = gameCurrency === 'yen' ? item.price_yen : item.price_usd;
@@ -1985,37 +2649,18 @@ function submitGuess() {
     const diff = Math.abs(guess - actual);
     const pct = (diff / actual) * 100;
     
-    // Record for spaced repetition (endless mode only)
-    if (gameMode === 'endless') {
-        recordGuess(item.id, pct, item.sold_date);
-    }
-    
+    if (gameMode === 'endless') recordGuess(item.id, pct, item.sold_date);
     total++;
     
     let pts, emoji, msg, msgClass;
-    
-    if (pct <= 5) {
-        pts = 500; emoji = '🎯'; msg = 'PERFECT!'; msgClass = 'perfect';
-        streak++; correct++; perfects++;
-    } else if (pct <= 15) {
-        pts = 300; emoji = '🔥'; msg = 'Great!'; msgClass = 'great';
-        streak++; correct++;
-    } else if (pct <= 30) {
-        pts = 150; emoji = '👍'; msg = 'Good!'; msgClass = 'good';
-        streak++; correct++;
-    } else if (pct <= 50) {
-        pts = 50; emoji = '😅'; msg = 'Close...'; msgClass = 'close';
-        streak = 0;
-    } else if (pct <= 100) {
-        pts = -50; emoji = '😬'; msg = 'Way off!'; msgClass = 'miss';
-        streak = 0;
-    } else {
-        pts = -100; emoji = '💀'; msg = 'Ouch!'; msgClass = 'miss';
-        streak = 0;
-    }
+    if (pct <= 5) { pts = 500; emoji = '🎯'; msg = 'PERFECT!'; msgClass = 'perfect'; streak++; correct++; perfects++; }
+    else if (pct <= 15) { pts = 300; emoji = '🔥'; msg = 'Great!'; msgClass = 'great'; streak++; correct++; }
+    else if (pct <= 30) { pts = 150; emoji = '👍'; msg = 'Good!'; msgClass = 'good'; streak++; correct++; }
+    else if (pct <= 50) { pts = 50; emoji = '😅'; msg = 'Close...'; msgClass = 'close'; streak = 0; }
+    else if (pct <= 100) { pts = -50; emoji = '😬'; msg = 'Way off!'; msgClass = 'miss'; streak = 0; }
+    else { pts = -100; emoji = '💀'; msg = 'Ouch!'; msgClass = 'miss'; streak = 0; }
     
     if (streak >= 3) pts += (streak - 2) * 25;
-    
     bestStreak = Math.max(bestStreak, streak);
     score = Math.max(0, score + pts);
     
@@ -2030,78 +2675,55 @@ function submitGuess() {
     
     document.getElementById('guessPhase').classList.add('hidden');
     document.getElementById('resultPhase').classList.add('active');
-    
     updateStats();
 }
 
 async function nextCard() {
     cardIndex++;
-    
     if (gameMode === '20') {
-        if (cardIndex >= ROUNDS) {
-            endGame();
-        } else {
-            showCard();
-        }
+        if (cardIndex >= ROUNDS) endGame();
+        else showCard();
     } else {
-        // Endless mode - fetch more items if running low
         if (cardIndex >= deck.length - 5) {
             try {
                 const excludeIds = Array.from(sessionItemIds);
                 let newItems = await fetchRandomItems(selectedYear, BATCH_SIZE, excludeIds);
-                
-                // If no new items, we've seen everything - reset and re-study
                 if (newItems.length === 0 && sessionItemIds.size > 0) {
-                    console.log('All items studied this session, resetting for re-study...');
                     sessionItemIds.clear();
                     newItems = await fetchRandomItems(selectedYear, BATCH_SIZE, []);
                 }
-                
-                // Filter and add to deck
                 const fresh = newItems.filter(item => !sessionItemIds.has(item.id));
                 deck = deck.concat(sortByPriority(fresh));
-            } catch (e) {
-                console.error('Failed to fetch more items:', e);
-            }
+            } catch (e) { console.error('Failed to fetch more items:', e); }
         }
-        
-        if (cardIndex < deck.length) {
-            showCard();
-        } else {
-            // Truly no more items (empty database for this year filter)
-            endGame();
-        }
+        if (cardIndex < deck.length) showCard();
+        else endGame();
     }
 }
 
-function quitEndless() {
-    endGame();
-}
+function quitEndless() { endGame(); }
 
 function endGame() {
     document.getElementById('gameCard').classList.add('hidden');
     document.getElementById('gameOver').classList.add('active');
     document.getElementById('endlessControls').classList.remove('active');
     
-    document.getElementById('goScore').textContent = score.toLocaleString();
+    document.getElementById('goScore').textContent = gameMode === 'endless' ? total + ' items' : score.toLocaleString();
     document.getElementById('goAcc').textContent = Math.round(correct / total * 100) + '%';
     document.getElementById('goStreak').textContent = bestStreak;
     document.getElementById('goPerfect').textContent = perfects;
     
     let emoji = '😅';
     if (gameMode === 'endless') {
-        // Endless mode - base emoji on items studied
         if (total >= 100) emoji = '🏆';
         else if (total >= 50) emoji = '⭐';
         else if (total >= 25) emoji = '🔥';
         else if (total >= 10) emoji = '👍';
-        document.getElementById('goScore').textContent = total + ' items';
     } else {
         if (score >= 5000) emoji = '🏆';
         else if (score >= 3000) emoji = '⭐';
         else if (score >= 1500) emoji = '🔥';
         else if (score >= 500) emoji = '👍';
-        
         if (score > highScore) {
             highScore = score;
             localStorage.setItem('vHighScore', highScore);
@@ -2118,203 +2740,90 @@ document.getElementById('restartBtn').onclick = () => showFilterScreen();
 document.getElementById('quitBtn').onclick = quitEndless;
 
 document.querySelectorAll('.quick-btn').forEach(btn => {
-    btn.onclick = () => {
-        document.getElementById('guessInput').value = btn.dataset.val;
-    };
+    btn.onclick = () => { document.getElementById('guessInput').value = btn.dataset.val; };
 });
 
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-        document.getElementById('modal').classList.remove('active');
-    }
-    
+    if (e.key === 'Escape') document.getElementById('modal').classList.remove('active');
     if (document.getElementById('gameSection').classList.contains('active')) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            if (document.getElementById('resultPhase').classList.contains('active')) {
-                nextCard();
-            } else {
-                submitGuess();
-            }
+            if (document.getElementById('resultPhase').classList.contains('active')) nextCard();
+            else submitGuess();
         }
     }
 });
 
-// ========== OPTIMIZED TRENDS ANALYSIS ==========
-
+// ========== TRENDS ==========
 let trendsData = null;
 
 async function loadTrends() {
-    if (trendsData) {
-        renderTrends();
-        return;
-    }
-    
+    if (trendsData) { renderTrends(); return; }
     document.getElementById('trendsLoading').style.display = 'block';
     document.getElementById('trendsContent').style.display = 'none';
     
     try {
         const res = await fetch(API_BASE + '/api/trends');
         if (!res.ok) throw new Error('Failed to load trends');
-        
         trendsData = await res.json();
-        
         document.getElementById('trendsLoading').style.display = 'none';
         document.getElementById('trendsContent').style.display = 'block';
-        
         renderTrends();
     } catch (error) {
-        document.getElementById('trendsLoading').innerHTML = `
-            <div style="color: #f87171; text-align: center; padding: 40px;">
-                Failed to load trends: ${error.message}
-            </div>
-        `;
+        document.getElementById('trendsLoading').innerHTML = `<div style="color: #f87171;">Failed to load trends: ${error.message}</div>`;
     }
 }
 
 function renderTrends() {
-    const { all_categories, hot_categories, cold_categories, volume_changes, summary, generated_at } = trendsData;
-    
-    // Summary
+    const { all_categories, hot_categories, cold_categories, volume_changes, summary } = trendsData;
     document.getElementById('trendsSummaryText').innerHTML = summary;
-    
-    // Hot categories
-    document.getElementById('trendsHot').innerHTML = hot_categories && hot_categories.length > 0 
+    document.getElementById('trendsHot').innerHTML = hot_categories?.length > 0 
         ? hot_categories.map(cat => renderTrendItem(cat, 'price')).join('')
-        : '<div style="color: #666; padding: 12px;">No significant price increases this month</div>';
-    
-    // Cold categories
-    document.getElementById('trendsCold').innerHTML = cold_categories && cold_categories.length > 0 
+        : '<div style="color: #666; padding: 12px;">No significant price increases</div>';
+    document.getElementById('trendsCold').innerHTML = cold_categories?.length > 0 
         ? cold_categories.map(cat => renderTrendItem(cat, 'price')).join('')
-        : '<div style="color: #666; padding: 12px;">No significant price drops this month</div>';
+        : '<div style="color: #666; padding: 12px;">No significant price drops</div>';
     
-    // Volume changes - split into up and down
-    const volume_up = volume_changes ? volume_changes.filter(c => c.volume_change > 0) : [];
-    const volume_down = volume_changes ? volume_changes.filter(c => c.recent_count === 0) : [];
-    
+    const volume_up = volume_changes?.filter(c => c.volume_change > 0) || [];
+    const volume_down = volume_changes?.filter(c => c.recent_count === 0) || [];
     let volumeHtml = '';
     if (volume_up.length > 0) {
-        volumeHtml += '<div style="margin-bottom: 8px; color: #4ade80; font-weight: 600;">📈 Listing more than usual:</div>';
+        volumeHtml += '<div style="margin-bottom: 8px; color: #4ade80; font-weight: 600;">📈 More than usual:</div>';
         volumeHtml += volume_up.map(cat => renderTrendItem(cat, 'volume')).join('');
     }
     if (volume_down.length > 0) {
-        volumeHtml += '<div style="margin-top: 16px; margin-bottom: 8px; color: #f87171; font-weight: 600;">📉 Not listing this month:</div>';
+        volumeHtml += '<div style="margin-top: 16px; margin-bottom: 8px; color: #f87171; font-weight: 600;">📉 Not listing:</div>';
         volumeHtml += volume_down.map(cat => renderTrendItem(cat, 'none')).join('');
     }
-    if (volumeHtml === '') {
-        volumeHtml = '<div style="color: #666; padding: 12px;">Volume relatively stable</div>';
-    }
-    document.getElementById('trendsVolume').innerHTML = volumeHtml;
+    document.getElementById('trendsVolume').innerHTML = volumeHtml || '<div style="color: #666; padding: 12px;">Volume stable</div>';
     
-    // All categories
-    const activeCategories = all_categories ? all_categories.filter(c => c.recent_count >= 1) : [];
-    document.getElementById('trendsAll').innerHTML = activeCategories
-        .map(cat => renderTrendItem(cat, 'both')).join('');
-    
-    // Debug stats
-    renderTrendsDebug();
+    const activeCategories = all_categories?.filter(c => c.recent_count >= 1) || [];
+    document.getElementById('trendsAll').innerHTML = activeCategories.map(cat => renderTrendItem(cat, 'both')).join('');
 }
 
 function renderTrendItem(cat, mode) {
     const priceClass = cat.price_change > 0 ? 'up' : cat.price_change < 0 ? 'down' : 'neutral';
     const priceArrow = cat.price_change > 0 ? '↑' : cat.price_change < 0 ? '↓' : '→';
     const volArrow = cat.volume_change > 0 ? '↑' : cat.volume_change < 0 ? '↓' : '→';
-    
     const smallSample = cat.recent_count <= 2 ? ` <span style="color:#888;font-size:11px;">(n=${cat.recent_count})</span>` : '';
     
-    let details = '';
     if (mode === 'none') {
-        details = `Usually ${cat.trailing_monthly_avg}/mo · avg $${cat.trailing_avg_price.toLocaleString()}`;
-        return `
-            <div class="trend-item">
-                <div>
-                    <div class="trend-name">${cat.name}</div>
-                    <div class="trend-details">${details}</div>
-                </div>
-                <span class="trend-change neutral">0 listed</span>
-            </div>
-        `;
+        return `<div class="trend-item"><div><div class="trend-name">${cat.name}</div><div class="trend-details">Usually ${cat.trailing_monthly_avg}/mo · avg $${cat.trailing_avg_price.toLocaleString()}</div></div><span class="trend-change neutral">0 listed</span></div>`;
     }
     
-    if (mode === 'price' || mode === 'both') {
-        details += `$${cat.recent_avg_price.toLocaleString()} avg (was $${cat.trailing_avg_price.toLocaleString()})${smallSample}`;
-    }
+    let details = '';
+    if (mode === 'price' || mode === 'both') details += `$${cat.recent_avg_price.toLocaleString()} avg (was $${cat.trailing_avg_price.toLocaleString()})${smallSample}`;
     if (mode === 'volume' || mode === 'both') {
         if (details) details += ' · ';
         details += `${cat.recent_count} this month (avg ${cat.trailing_monthly_avg}/mo)`;
     }
     
-    let changeDisplay = '';
-    if (mode === 'volume') {
-        changeDisplay = `<span class="trend-change ${cat.volume_change > 0 ? 'up' : 'down'}">${volArrow} ${Math.abs(cat.volume_change)}%</span>`;
-    } else {
-        changeDisplay = `<span class="trend-change ${priceClass}">${priceArrow} ${Math.abs(cat.price_change)}%</span>`;
-    }
+    const changeDisplay = mode === 'volume' 
+        ? `<span class="trend-change ${cat.volume_change > 0 ? 'up' : 'down'}">${volArrow} ${Math.abs(cat.volume_change)}%</span>`
+        : `<span class="trend-change ${priceClass}">${priceArrow} ${Math.abs(cat.price_change)}%</span>`;
     
-    return `
-        <div class="trend-item">
-            <div>
-                <div class="trend-name">${cat.name}</div>
-                <div class="trend-details">${details}</div>
-            </div>
-            ${changeDisplay}
-        </div>
-    `;
+    return `<div class="trend-item"><div><div class="trend-name">${cat.name}</div><div class="trend-details">${details}</div></div>${changeDisplay}</div>`;
 }
-
-function renderTrendsDebug() {
-    const { all_categories, generated_at, stats } = trendsData;
-    
-    const totalCategories = stats ? stats.total_categories : (all_categories ? all_categories.length : 0);
-    const withData = all_categories ? all_categories.filter(c => c.recent_count > 0 || c.trailing_count >= 3).length : 0;
-    const recentTotal = all_categories ? all_categories.reduce((sum, c) => sum + c.recent_count, 0) : 0;
-    const trailingTotal = all_categories ? all_categories.reduce((sum, c) => sum + c.trailing_count, 0) : 0;
-    
-    const cachedDate = new Date(generated_at);
-    const cacheAge = Math.round((Date.now() - cachedDate.getTime()) / 1000 / 60); // minutes
-    
-    document.getElementById('trendsDebugStats').innerHTML = `
-        <div>Categories tracked: <strong>${totalCategories}</strong></div>
-        <div>Categories with data: <strong>${withData}</strong></div>
-        <div>This month items: <strong>${recentTotal}</strong></div>
-        <div>Trailing 6mo items: <strong>${trailingTotal}</strong></div>
-        <div style="color: #4ade80">Cache age: <strong>${cacheAge} minutes</strong></div>
-    `;
-}
-
-// Test category functionality
-document.getElementById('trendsDebugBtn').onclick = async () => {
-    const input = document.getElementById('trendsDebugInput').value;
-    if (!input) return;
-    
-    try {
-        const res = await fetch(API_BASE + `/api/trends/test?title=${encodeURIComponent(input)}`);
-        const result = await res.json();
-        
-        const isOther = result.category.includes('Other');
-        
-        let html = `
-            <div style="margin-bottom: 12px;">
-                <strong>Category:</strong> 
-                <span style="color: ${isOther ? '#f87171' : '#4ade80'}">${result.category}</span>
-            </div>
-        `;
-        
-        if (result.pattern) {
-            html += `<div style="color: #666; font-family: monospace; font-size: 11px; word-break: break-all;">Pattern: ${result.pattern}</div>`;
-        }
-        
-        document.getElementById('trendsDebugResult').style.display = 'block';
-        document.getElementById('trendsDebugResult').innerHTML = html;
-    } catch (error) {
-        document.getElementById('trendsDebugResult').innerHTML = `<div style="color: #f87171;">Error: ${error.message}</div>`;
-        document.getElementById('trendsDebugResult').style.display = 'block';
-    }
-};
-
-document.getElementById('trendsDebugInput').onkeyup = (e) => {
-    if (e.key === 'Enter') document.getElementById('trendsDebugBtn').click();
-};
 
 // ========== START ==========
 init();
