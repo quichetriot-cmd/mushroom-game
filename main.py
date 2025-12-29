@@ -173,404 +173,426 @@ Complete category patterns for trends analysis.
 """
 
 # Pre-compile all regexes for maximum performance
+
+# MARKET-DRIVEN CATEGORIES v3
+# Era + Brand + Type for collectibles (Carhartt, Lee)
+# Era-specific for high-value workwear (Chinstrap, Coveralls)
 CATEGORIES = {
-    # === LEVI'S JEANS ===
-    "Levi's S501XX (WW2)": re.compile(r"levi.*s501|s501xx", re.IGNORECASE),
+    # ========================================================================
+    # LEVI'S - SPECIFIC VARIANTS FIRST
+    # ========================================================================
+    
+    # Specific color/wash variants (different markets)
+    "Levi's 501 Black": re.compile(r"levi.*501.*(black|0658)", re.IGNORECASE),
+    "Levi's 501 Redline": re.compile(r"levi.*501.*redline", re.IGNORECASE),
+    "Levi's 70507 Black Galactic": re.compile(r"levi.*70507.*(black|galactic|0260)", re.IGNORECASE),
+    
+    # WW2 Era (highest value)
+    "Levi's S501XX": re.compile(r"levi.*s501|s501xx", re.IGNORECASE),
+    "Levi's S506XX": re.compile(r"s506xx", re.IGNORECASE),
+    
+    # XX era jeans
     "Levi's 501XX Buckleback": re.compile(r"levi.*501.*buckleback", re.IGNORECASE),
     "Levi's 501XX": re.compile(r"levi.*501.*xx|levi.*501zxx", re.IGNORECASE),
-    "Levi's 501 Big E": re.compile(r"levi.*501.*big\s*e|levi.*501e\b", re.IGNORECASE),
-    "Levi's 501 66 Single": re.compile(r"levi.*501.*66", re.IGNORECASE),
-    "Levi's 501 (Other)": re.compile(r"levi.*501", re.IGNORECASE),
-    "Levi's 502 Big E": re.compile(r"levi.*502.*big\s*e|levi.*502e\b", re.IGNORECASE),
-    "Levi's 505 Big E": re.compile(r"levi.*505.*big\s*e|levi.*505e\b", re.IGNORECASE),
-    "Levi's 505 66 Single": re.compile(r"levi.*505.*66|levi.*505ss", re.IGNORECASE),
-    "Levi's 606 Big E": re.compile(r"levi.*606", re.IGNORECASE),
-    "Levi's 517 Jeans": re.compile(r"levi.*\b517\b(?!xx)", re.IGNORECASE),
-    "Levi's 518": re.compile(r"levi.*\b518\b", re.IGNORECASE),
-    "Levi's 701 (Women's)": re.compile(r"levi.*\b701\b", re.IGNORECASE),
     "Levi's 551ZXX": re.compile(r"levi.*551", re.IGNORECASE),
     "Levi's 503ZXX/BXX": re.compile(r"levi.*503", re.IGNORECASE),
     "Levi's 550ZXX": re.compile(r"levi.*550", re.IGNORECASE),
     
-    # === LEVI'S JACKETS ===
-    "Levi's 213 (Pre-Type1)": re.compile(r"levi.*\b213\b", re.IGNORECASE),
-    "Levi's S506XX (WW2)": re.compile(r"s506xx", re.IGNORECASE),
-    "Levi's 506XXE (Big E)": re.compile(r"506xxe", re.IGNORECASE),
-    "Levi's 506XX (1st)": re.compile(r"506xx", re.IGNORECASE),
-    "Levi's 507XX (2nd)": re.compile(r"levi.*507.*xx|levi.*507bxx", re.IGNORECASE),
-    "Levi's 517XX": re.compile(r"levi.*517xx", re.IGNORECASE),
-    "Levi's 519XX (Blanket)": re.compile(r"levi.*519", re.IGNORECASE),
-    "Levi's 557XX": re.compile(r"levi.*557.*xx|levi.*557e\b", re.IGNORECASE),
-    "Levi's 557 (3rd)": re.compile(r"levi.*\b557\b", re.IGNORECASE),
-    "Levi's 558XX": re.compile(r"levi.*558.*xx|levi.*558e\b", re.IGNORECASE),
-    "Levi's 559XX": re.compile(r"levi.*559.*xx|levi.*559e\b", re.IGNORECASE),
+    # Big E era
+    "Levi's 501 Big E": re.compile(r"levi.*501.*big\s*e|levi.*501e\b", re.IGNORECASE),
+    "Levi's 502 Big E": re.compile(r"levi.*502.*big\s*e", re.IGNORECASE),
+    "Levi's 505 Big E": re.compile(r"levi.*505.*big\s*e|levi.*505e\b", re.IGNORECASE),
+    "Levi's 606 Big E": re.compile(r"levi.*606.*big\s*e", re.IGNORECASE),
+    
+    # 66 era
+    "Levi's 501 66 Single": re.compile(r"levi.*501.*66", re.IGNORECASE),
+    "Levi's 505 66 Single": re.compile(r"levi.*505.*66|levi.*505ss", re.IGNORECASE),
+    
+    # Other jeans
+    "Levi's 606": re.compile(r"levi.*606", re.IGNORECASE),
+    "Levi's 517": re.compile(r"levi.*\b517\b(?!xx)", re.IGNORECASE),
+    "Levi's 518": re.compile(r"levi.*\b518\b", re.IGNORECASE),
+    "Levi's 701": re.compile(r"levi.*\b701\b", re.IGNORECASE),
+    "Levi's 501": re.compile(r"levi.*501", re.IGNORECASE),
+    
+    # Jackets by type
+    "Levi's 506XXE": re.compile(r"506xxe", re.IGNORECASE),
+    "Levi's 506XX": re.compile(r"506xx", re.IGNORECASE),
+    "Levi's 507XX": re.compile(r"levi.*507.*xx|levi.*507bxx", re.IGNORECASE),
+    "Levi's 557XX": re.compile(r"levi.*557.*xx|levi.*557e", re.IGNORECASE),
+    "Levi's 557": re.compile(r"levi.*\b557\b", re.IGNORECASE),
     "Levi's 70505-0117": re.compile(r"70505-0117", re.IGNORECASE),
-    "Levi's 70505 (3rd)": re.compile(r"levi.*70505", re.IGNORECASE),
+    "Levi's 70505": re.compile(r"levi.*70505", re.IGNORECASE),
     "Levi's 70506": re.compile(r"levi.*70506", re.IGNORECASE),
     "Levi's 70507": re.compile(r"levi.*70507", re.IGNORECASE),
+    "Levi's 517XX": re.compile(r"levi.*517xx", re.IGNORECASE),
+    "Levi's 519XX": re.compile(r"levi.*519", re.IGNORECASE),
+    "Levi's 558XX": re.compile(r"levi.*558", re.IGNORECASE),
+    "Levi's 559XX": re.compile(r"levi.*559", re.IGNORECASE),
     "Levi's 71205 Boa": re.compile(r"levi.*71205|levi.*boa", re.IGNORECASE),
-    "Levi's 71506": re.compile(r"levi.*71506", re.IGNORECASE),
     "Levi's Shorthorn": re.compile(r"levi.*shorthorn", re.IGNORECASE),
     "Levi's Saddleman": re.compile(r"levi.*saddleman", re.IGNORECASE),
     "Levi's Advertising": re.compile(r"levi.*advertising|levi.*banner", re.IGNORECASE),
-    "Levi's Other": re.compile(r"levi", re.IGNORECASE),
+    "Levi's": re.compile(r"levi", re.IGNORECASE),
     
-    # === LEE ===
+    # ========================================================================
+    # LEE - ERA + TYPE SPECIFIC
+    # ========================================================================
+    
+    # WW2 Era
+    "Lee S91-J": re.compile(r"lee.*s91-?j", re.IGNORECASE),
+    
+    # Jackets
     "Lee 191-J": re.compile(r"lee.*191-?j", re.IGNORECASE),
-    "Lee S91-J (WW2)": re.compile(r"lee.*s91-?j", re.IGNORECASE),
     "Lee 91-LJ": re.compile(r"lee.*91-?lj", re.IGNORECASE),
-    "Lee 91-J Chore": re.compile(r"lee.*91-j|lee.*91j", re.IGNORECASE),
-    "Lee 101-J Jacket": re.compile(r"lee.*101-?j\b", re.IGNORECASE),
+    "Lee 91-J": re.compile(r"lee.*91-j|lee.*91j", re.IGNORECASE),
+    "Lee 101-J": re.compile(r"lee.*101-?j\b", re.IGNORECASE),
     "Lee 98-J": re.compile(r"lee.*98-?j", re.IGNORECASE),
-    "Lee 91-B": re.compile(r"lee.*91-b", re.IGNORECASE),
-    "Lee 91-SB": re.compile(r"lee.*91-sb", re.IGNORECASE),
     "Lee 81-LJ": re.compile(r"lee.*81-?lj", re.IGNORECASE),
-    "Lee 44-J": re.compile(r"lee.*44-?j", re.IGNORECASE),
+    "Lee Storm Rider": re.compile(r"lee.*storm\s*rider", re.IGNORECASE),
+    
+    # Era + Type specific (your correction)
+    "1950s Lee Denim Western": re.compile(r"lee.*denim.*western.*(195|1950)|lee.*(195|1950).*denim.*western", re.IGNORECASE),
+    "Lee Denim Western": re.compile(r"lee.*denim.*western", re.IGNORECASE),
+    
+    # Jeans
     "Lee 101Z": re.compile(r"lee.*101z", re.IGNORECASE),
     "Lee 101B Cowboy": re.compile(r"lee.*101b|lee.*cowboy", re.IGNORECASE),
-    "Lee 191": re.compile(r"lee.*\b191\b", re.IGNORECASE),
-    "Lee 220": re.compile(r"lee.*220", re.IGNORECASE),
-    "Lee Westerner": re.compile(r"lee.*westerner", re.IGNORECASE),
     "Lee Riders": re.compile(r"lee.*riders", re.IGNORECASE),
-    "Lee Storm Rider": re.compile(r"lee.*storm\s*rider", re.IGNORECASE),
-    "Lee White Canvas": re.compile(r"lee.*white.*canvas", re.IGNORECASE),
-    "Lee Coverall": re.compile(r"lee.*coverall", re.IGNORECASE),
-    "Lee HBT": re.compile(r"lee.*hbt", re.IGNORECASE),
-    "Lee Princeton": re.compile(r"lee.*princeton", re.IGNORECASE),
-    "Lee Jelt": re.compile(r"lee.*jelt", re.IGNORECASE),
     "Lee Frisco": re.compile(r"lee.*frisco", re.IGNORECASE),
-    "Lee Leens": re.compile(r"lee.*leens", re.IGNORECASE),
+    
+    # Workwear
+    "Lee Coverall": re.compile(r"lee.*coverall", re.IGNORECASE),
+    "Lee Overall": re.compile(r"lee.*overall", re.IGNORECASE),
     "Lee Painter": re.compile(r"lee.*painter", re.IGNORECASE),
-    "Lee Boss/Logger": re.compile(r"lee.*boss|lee.*logger", re.IGNORECASE),
+    
+    # Special
+    "Lee Princeton Beer Jacket": re.compile(r"lee.*princeton.*beer|princeton.*beer.*lee", re.IGNORECASE),
+    "Lee Princeton": re.compile(r"lee.*princeton", re.IGNORECASE),
     "Lee Advertising": re.compile(r"lee.*advertising|lee.*sign", re.IGNORECASE),
     "Buddy Lee Doll": re.compile(r"buddy\s*lee", re.IGNORECASE),
-    "Lee Other": re.compile(r"\blee\b", re.IGNORECASE),
+    "Lee": re.compile(r"\blee\b", re.IGNORECASE),
     
-    # === WRANGLER ===
+    # ========================================================================
+    # WRANGLER
+    # ========================================================================
     "Wrangler 111MJ Proto": re.compile(r"111mj.*proto|proto.*111mj", re.IGNORECASE),
     "Wrangler 111MJ": re.compile(r"wrangler.*111mj|111mj", re.IGNORECASE),
     "Wrangler 11MJZ": re.compile(r"wrangler.*11mjz", re.IGNORECASE),
     "Wrangler 11MWZ": re.compile(r"wrangler.*11mwz|11mwz", re.IGNORECASE),
-    "Wrangler 11MW": re.compile(r"wrangler.*11mw\b", re.IGNORECASE),
     "Wrangler 24MJ": re.compile(r"wrangler.*24mj", re.IGNORECASE),
-    "Wrangler 27MW": re.compile(r"wrangler.*27mw", re.IGNORECASE),
-    "Wrangler 77MJZ": re.compile(r"wrangler.*77mjz", re.IGNORECASE),
-    "Wrangler 124MJ": re.compile(r"wrangler.*124mj", re.IGNORECASE),
-    "Wrangler 12MJZ": re.compile(r"wrangler.*12mjz", re.IGNORECASE),
-    "Wrangler 888MJ": re.compile(r"wrangler.*888mj", re.IGNORECASE),
     "Wrangler Blue Bell": re.compile(r"wrangler.*blue\s*bell|blue\s*bell.*wrangler", re.IGNORECASE),
-    "Wrangler Other": re.compile(r"wrangler", re.IGNORECASE),
+    "Wrangler": re.compile(r"wrangler", re.IGNORECASE),
     
-    # === CHAMPION ===
-    "Champion Rock Hood": re.compile(r"rock\s*hood", re.IGNORECASE),
-    "Champion Afterhoody": re.compile(r"afterhoody|after\s*hoody", re.IGNORECASE),
-    "Champion W/F Double Face": re.compile(r"champion.*w\/f|double\s*face", re.IGNORECASE),
-    "Champion USMA": re.compile(r"usma|west\s*point", re.IGNORECASE),
-    "Champion USAFA": re.compile(r"usafa|air\s*force\s*academy", re.IGNORECASE),
-    "Champion USNA": re.compile(r"usna|naval\s*academy", re.IGNORECASE),
-    "Champion Kings Point": re.compile(r"kings\s*point", re.IGNORECASE),
-    "Champion Coast Guard": re.compile(r"champion.*coast\s*guard|coast\s*guard.*reverse", re.IGNORECASE),
-    "Champion Reverse Weave": re.compile(r"reverse\s*weave", re.IGNORECASE),
-    "Champion Football Tee": re.compile(r"champion.*football", re.IGNORECASE),
-    "Champion Flock Print": re.compile(r"champion.*flock", re.IGNORECASE),
-    "Champion Water Print": re.compile(r"champion.*water", re.IGNORECASE),
-    "Champion Two-Tone": re.compile(r"champion.*two-tone", re.IGNORECASE),
-    "Champion Other": re.compile(r"champion", re.IGNORECASE),
+    # ========================================================================
+    # CHINSTRAP - HIGHEST VALUE WORKWEAR (Your insight!)
+    # ========================================================================
+    "1920s Chinstrap": re.compile(r"chinstrap.*(192|1920)|192.*chinstrap|1920.*chinstrap", re.IGNORECASE),
+    "1930s Chinstrap Coverall": re.compile(r"chinstrap.*coverall.*(193|1930)|193.*chinstrap.*coverall|1930.*chinstrap.*coverall|coverall.*chinstrap.*(193|1930)", re.IGNORECASE),
+    "1930s Chinstrap": re.compile(r"chinstrap.*(193|1930)|193.*chinstrap|1930.*chinstrap", re.IGNORECASE),
+    "1940s Chinstrap": re.compile(r"chinstrap.*(194|1940)|194.*chinstrap|1940.*chinstrap", re.IGNORECASE),
+    "Chinstrap": re.compile(r"chinstrap", re.IGNORECASE),
     
-    # === VINTAGE SWEATSHIRTS ===
-    "Spalding Sweat": re.compile(r"spalding", re.IGNORECASE),
-    "Duxbak Sweat": re.compile(r"duxbak", re.IGNORECASE),
-    "Spruce Sweat": re.compile(r"spruce", re.IGNORECASE),
-    "Bodygard Sweat": re.compile(r"bodygard", re.IGNORECASE),
-    "Akom Sweat": re.compile(r"akom", re.IGNORECASE),
-    "Russell Sweat": re.compile(r"russell", re.IGNORECASE),
-    "Two-Tone Sweat": re.compile(r"two-?\s*tone.*sweat|sweat.*two-?\s*tone", re.IGNORECASE),
-    "Water Print Sweat": re.compile(r"water\s*print", re.IGNORECASE),
-    "Composer Print": re.compile(r"beethoven|bach|brahms|nietzsche", re.IGNORECASE),
-    "Peanuts/Snoopy": re.compile(r"peanuts|snoopy|charlie\s*brown|schroeder|pig\s*pen", re.IGNORECASE),
-    "W/V Sweat": re.compile(r"w\/v", re.IGNORECASE),
-    "S/V Sweat": re.compile(r"s\/v", re.IGNORECASE),
-    "Sweat Hoody": re.compile(r"sweat\s*hoody|s\/f\s*sweat", re.IGNORECASE),
-    "Flock Print (Black Body)": re.compile(r"black.*flock|flock.*black\s*body", re.IGNORECASE),
-    "Flock Print": re.compile(r"flock\s*print|flock", re.IGNORECASE),
-    "Sweatshirt": re.compile(r"sweat\s*shirt|sweatshirt", re.IGNORECASE),
-    
-    # === U.S. NAVY ===
-    "Navy Blue N-1 Deck": re.compile(r"blue.*n-1|n-1.*blue|blue.*deck", re.IGNORECASE),
-    "Navy N-1 Pique": re.compile(r"n-1.*pique|pique.*n-1", re.IGNORECASE),
-    "Navy A-2 Deck": re.compile(r"a-2.*deck", re.IGNORECASE),
-    "Navy N-1 Deck": re.compile(r"n-1.*deck|n-1\b", re.IGNORECASE),
-    "Navy Dangaree (Shawl)": re.compile(r"dangaree", re.IGNORECASE),
-    "Navy Dungaree Jacket": re.compile(r"navy.*dungaree.*jacket|usn.*dungaree.*jacket", re.IGNORECASE),
-    "Navy Dungaree Pants": re.compile(r"navy.*dungaree.*(trouser|pants)|usn.*dungaree.*(trouser|pants)", re.IGNORECASE),
-    "Navy NAF-1168": re.compile(r"naf-1168", re.IGNORECASE),
-    "Navy Summer Flight Jacket": re.compile(r"an-j-2|an6551|an6552|m-421a|summer.*flight", re.IGNORECASE),
-    "Navy Flight Jacket": re.compile(r"navy.*flight|u\.s\.n.*flight", re.IGNORECASE),
-    "Navy P-Coat": re.compile(r"navy.*p-coat|navy.*pea\s*coat", re.IGNORECASE),
-    "Navy Gunner Smock": re.compile(r"gunner\s*smock", re.IGNORECASE),
-    "Navy HBT": re.compile(r"navy.*hbt|usn.*hbt", re.IGNORECASE),
-    "Navy Catapult Jacket": re.compile(r"catapult", re.IGNORECASE),
-    "Navy Sweat": re.compile(r"navy.*sweat", re.IGNORECASE),
-    "Navy Other": re.compile(r"u\.s\.navy|u\.s\.n\b", re.IGNORECASE),
-    
-    # === U.S. COAST GUARD ===
-    "Coast Guard": re.compile(r"coast\s*guard", re.IGNORECASE),
-    
-    # === ROYAL NAVY (British) ===
-    "Royal Navy": re.compile(r"royal\s*navy", re.IGNORECASE),
-    
-    # === U.S. ARMY ===
-    "Army M-65": re.compile(r"m-65", re.IGNORECASE),
-    "Army M-43/M-48/M-51": re.compile(r"m-43|m-48|m-51", re.IGNORECASE),
-    "Army Tanker": re.compile(r"tanker\s*jacket", re.IGNORECASE),
-    "Army Dungaree/Denim": re.compile(r"army.*dungaree|army.*denim", re.IGNORECASE),
-    "Army Jungle Jacket": re.compile(r"jungle", re.IGNORECASE),
-    "Army Khaki/Chino": re.compile(r"army.*khaki|army.*chino", re.IGNORECASE),
-    "Army Mackinaw": re.compile(r"army.*mackinaw", re.IGNORECASE),
-    "Army HBT": re.compile(r"army.*hbt", re.IGNORECASE),
-    "Army Daisy Mae Hat": re.compile(r"daisy\s*mae", re.IGNORECASE),
-    "Army Snow Parka": re.compile(r"army.*snow|army.*parka", re.IGNORECASE),
-    "Army Other": re.compile(r"u\.s\.army", re.IGNORECASE),
-    
-    # === USMC ===
-    "USMC P-41/P-42/P-44": re.compile(r"p-4[124]", re.IGNORECASE),
-    "USMC Other": re.compile(r"usmc", re.IGNORECASE),
-    
-    # === USAF ===
-    "USAF G-1 Linecrewman": re.compile(r"g-1.*linecrewman|linecrewman.*jacket", re.IGNORECASE),
-    "USAF MA-1": re.compile(r"ma-1", re.IGNORECASE),
-    "USAF L-2/L-2B": re.compile(r"l-2[ab]?(?:\b|$)", re.IGNORECASE),
-    "USAF B-15/B-10": re.compile(r"b-15|b-10", re.IGNORECASE),
-    "USAF A-2": re.compile(r"usaa?f.*a-2|a-2.*flight", re.IGNORECASE),
-    "USAF CWU": re.compile(r"cwu", re.IGNORECASE),
-    "USAF Other": re.compile(r"usaf|u\.s\.air\s*force", re.IGNORECASE),
-    
-    # === OTHER MILITARY ===
-    "G-1 Flight Jacket": re.compile(r"g-1", re.IGNORECASE),
-    "Tiger Stripe Camo": re.compile(r"tiger\s*stripe", re.IGNORECASE),
-    "PCU/ECWCS": re.compile(r"pcu|ecwcs|level\s*\d.*jacket", re.IGNORECASE),
-    "Military Surplus": re.compile(r"military|bdu", re.IGNORECASE),
-    
-    # === WORKWEAR BRANDS ===
-    "Carhartt Brown Duck": re.compile(r"carhartt.*brown\s*duck", re.IGNORECASE),
-    "Carhartt Salt & Pepper": re.compile(r"carhartt.*salt.*pepper", re.IGNORECASE),
+    # ========================================================================
+    # CARHARTT - ERA + TYPE (Special collectible brand)
+    # ========================================================================
+    "1930s Carhartt Coverall": re.compile(r"carhartt.*coverall.*(193|1930)|193.*carhartt.*coverall|1930.*carhartt.*coverall", re.IGNORECASE),
+    "1940s Carhartt Coverall": re.compile(r"carhartt.*coverall.*(194|1940)|194.*carhartt.*coverall|1940.*carhartt.*coverall", re.IGNORECASE),
+    "1950s Carhartt Duck Coverall": re.compile(r"carhartt.*(brown\s*duck|duck).*coverall.*(195|1950)|carhartt.*coverall.*(195|1950)", re.IGNORECASE),
+    "1960s Carhartt Coverall": re.compile(r"carhartt.*coverall.*(196|1960)|196.*carhartt.*coverall|1960.*carhartt.*coverall", re.IGNORECASE),
+    "1940s Carhartt Overall": re.compile(r"carhartt.*overall.*(194|1940)|194.*carhartt.*overall|1940.*carhartt.*overall", re.IGNORECASE),
+    "1950s Carhartt Overall": re.compile(r"carhartt.*overall.*(195|1950)|195.*carhartt.*overall|1950.*carhartt.*overall", re.IGNORECASE),
     "Carhartt Denim": re.compile(r"carhartt.*denim", re.IGNORECASE),
+    "Carhartt Brown Duck": re.compile(r"carhartt.*(brown\s*duck|duck)", re.IGNORECASE),
     "Carhartt Detroit": re.compile(r"carhartt.*detroit", re.IGNORECASE),
     "Carhartt": re.compile(r"carhartt", re.IGNORECASE),
+    
+    # ========================================================================
+    # COVERALLS BY ERA (Generic - after Carhartt catches its items)
+    # ========================================================================
+    "1930s Coverall": re.compile(r"coverall.*(193|1930)|193.*coverall|1930.*coverall", re.IGNORECASE),
+    "1940s Coverall": re.compile(r"coverall.*(194|1940)|194.*coverall|1940.*coverall|ww2.*coverall|coverall.*ww2", re.IGNORECASE),
+    "1950s Coverall": re.compile(r"coverall.*(195|1950)|195.*coverall|1950.*coverall", re.IGNORECASE),
+    "1960s Coverall": re.compile(r"coverall.*(196|1960)|196.*coverall|1960.*coverall", re.IGNORECASE),
+    "Coverall": re.compile(r"coverall", re.IGNORECASE),
+    
+    # ========================================================================
+    # OVERALLS BY ERA
+    # ========================================================================
+    "1930s Overall": re.compile(r"overall.*(193|1930)|193.*overall|1930.*overall", re.IGNORECASE),
+    "1940s Overall": re.compile(r"overall.*(194|1940)|194.*overall|1940.*overall", re.IGNORECASE),
+    "1950s Overall": re.compile(r"overall.*(195|1950)|195.*overall|1950.*overall", re.IGNORECASE),
+    "Overall": re.compile(r"overall", re.IGNORECASE),
+    
+    # ========================================================================
+    # OTHER WORKWEAR BRANDS
+    # ========================================================================
+    "1930s Hercules": re.compile(r"hercules.*(193|1930)|193.*hercules|1930.*hercules", re.IGNORECASE),
     "Hercules": re.compile(r"hercules", re.IGNORECASE),
+    "1940s Head Light": re.compile(r"head\s*light.*(194|1940)|194.*head\s*light|1940.*head\s*light", re.IGNORECASE),
     "Head Light": re.compile(r"head\s*light", re.IGNORECASE),
     "Big Yank Mountain Pocket": re.compile(r"big\s*yank.*mountain\s*pocket", re.IGNORECASE),
     "Big Yank Chambray": re.compile(r"big\s*yank.*chambray", re.IGNORECASE),
-    "Big Yank Flannel": re.compile(r"big\s*yank.*flannel", re.IGNORECASE),
     "Big Yank": re.compile(r"big\s*yank", re.IGNORECASE),
-    "Big Mac": re.compile(r"big\s*mac", re.IGNORECASE),
+    "1930s Big Smith": re.compile(r"big\s*smith.*(193|1930)|193.*big\s*smith|1930.*big\s*smith", re.IGNORECASE),
     "Big Smith": re.compile(r"big\s*smith", re.IGNORECASE),
     "Osh Kosh": re.compile(r"osh\s*kosh|oshkosh", re.IGNORECASE),
     "Sweet-Orr": re.compile(r"sweet-orr", re.IGNORECASE),
-    "Super Pay Day": re.compile(r"super\s*pay\s*day", re.IGNORECASE),
     "Pay Day": re.compile(r"pay\s*day", re.IGNORECASE),
     "Finck's": re.compile(r"finck", re.IGNORECASE),
     "Can't Bust'Em": re.compile(r"can't\s*bust|can\'t\s*bust", re.IGNORECASE),
-    "Boss of the Road": re.compile(r"boss\s*(of\s*the\s*)?road", re.IGNORECASE),
     "Strong Reliable": re.compile(r"strong\s*reliable", re.IGNORECASE),
-    "MW Pioneer": re.compile(r"mw.*pioneer|pioneer.*denim", re.IGNORECASE),
-    "Blue Bell": re.compile(r"blue\s*bell", re.IGNORECASE),
-    "Stronghold": re.compile(r"stronghold", re.IGNORECASE),
-    "Crown": re.compile(r"\bcrown\b", re.IGNORECASE),
-    "N&W": re.compile(r"\bn\s*&\s*w\b", re.IGNORECASE),
-    "Black Bear": re.compile(r"black\s*bear", re.IGNORECASE),
-    "Carter's": re.compile(r"carter", re.IGNORECASE),
-    "Test": re.compile(r"\btest\b", re.IGNORECASE),
-    "Powell": re.compile(r"powell", re.IGNORECASE),
-    "W.P.A": re.compile(r"w\.?p\.?a\b", re.IGNORECASE),
-    "Freeland": re.compile(r"freeland", re.IGNORECASE),
-    "Burlington": re.compile(r"burlington", re.IGNORECASE),
-    "Dubbleware": re.compile(r"dubbleware", re.IGNORECASE),
-    "Winner": re.compile(r"\bwinner\b", re.IGNORECASE),
-    "Round House": re.compile(r"round\s*house", re.IGNORECASE),
     "Pointer": re.compile(r"pointer", re.IGNORECASE),
-    "Montgomery Ward": re.compile(r"montgomery\s*ward", re.IGNORECASE),
-    "Sears/Roebucks": re.compile(r"sears|roebucks", re.IGNORECASE),
-    "JCPenney/Foremost": re.compile(r"j\.?c\.?\s*penney|jcp|penneys|foremost", re.IGNORECASE),
-    "Ox Hide": re.compile(r"ox\s*hide", re.IGNORECASE),
+    "Round House": re.compile(r"round\s*house", re.IGNORECASE),
+    "Crown Advertising": re.compile(r"crown.*(advertising|clock)", re.IGNORECASE),
+    "Crown": re.compile(r"\bcrown\b", re.IGNORECASE),
     
-    # === WORKWEAR TYPES ===
-    "Coverall": re.compile(r"coverall", re.IGNORECASE),
-    "All-in-One": re.compile(r"all\s*in\s*one|all-in-one", re.IGNORECASE),
-    "Overall (Bib)": re.compile(r"overall", re.IGNORECASE),
+    # ========================================================================
+    # WORKWEAR TYPES
+    # ========================================================================
+    "1930s Painter Pants": re.compile(r"painter.*(193|1930)|193.*painter|1930.*painter", re.IGNORECASE),
     "Painter Pants": re.compile(r"painter", re.IGNORECASE),
+    "Engineer Pants": re.compile(r"engineer.*pant", re.IGNORECASE),
     "Double Knee": re.compile(r"double\s*knee", re.IGNORECASE),
-    "Engineer Pants": re.compile(r"engineer", re.IGNORECASE),
-    "Logger Pants": re.compile(r"logger", re.IGNORECASE),
-    "Shop Coat": re.compile(r"shop\s*coat", re.IGNORECASE),
-    "Chore Coat": re.compile(r"chore", re.IGNORECASE),
     "Chambray Shirt": re.compile(r"chambray", re.IGNORECASE),
-    "Chinstrap": re.compile(r"chinstrap", re.IGNORECASE),
     "Buckleback": re.compile(r"buckleback", re.IGNORECASE),
     "Railroad": re.compile(r"railroad", re.IGNORECASE),
-    "Prison": re.compile(r"prison", re.IGNORECASE),
-    "Change Button": re.compile(r"change\s*button", re.IGNORECASE),
     "Denim Work Trousers": re.compile(r"denim.*(trouser|work\s*pant)|denim.*pant", re.IGNORECASE),
     "Work Shirt": re.compile(r"work\s*shirt", re.IGNORECASE),
     
-    # === PATTERNS/MATERIALS ===
-    "Star Stripe": re.compile(r"star\s*stripe", re.IGNORECASE),
-    "Wabash Stripe": re.compile(r"wabash", re.IGNORECASE),
-    "Hickory Stripe": re.compile(r"hickory", re.IGNORECASE),
-    "Salt & Pepper": re.compile(r"salt.*pepper", re.IGNORECASE),
-    "Duck Canvas": re.compile(r"duck\s*canvas|canvas\s*duck|brown\s*duck", re.IGNORECASE),
-    "Blanket Lined": re.compile(r"blanket\s*lined", re.IGNORECASE),
-    "Shadow Plaid": re.compile(r"shadow\s*plaid|shadow.*check", re.IGNORECASE),
+    # ========================================================================
+    # CHAMPION - MILITARY VS CIVILIAN
+    # ========================================================================
+    "Champion Rock Hood": re.compile(r"rock\s*hood", re.IGNORECASE),
+    "Champion Afterhoody": re.compile(r"afterhoody|after\s*hoody", re.IGNORECASE),
+    "Champion USMA Reverse Weave": re.compile(r"usma.*reverse|reverse.*usma|west\s*point.*reverse", re.IGNORECASE),
+    "Champion USAFA Reverse Weave": re.compile(r"usafa.*reverse|reverse.*usafa", re.IGNORECASE),
+    "Champion USNA Reverse Weave": re.compile(r"usna.*reverse|reverse.*usna", re.IGNORECASE),
+    "Champion Navy Reverse Weave": re.compile(r"(navy|u\.s\.n).*reverse\s*weave|reverse\s*weave.*(navy|u\.s\.n)", re.IGNORECASE),
+    "Champion Military Reverse Weave": re.compile(r"(army|air\s*force|coast\s*guard|marines|military).*reverse|reverse.*(army|air\s*force|coast\s*guard|marines)", re.IGNORECASE),
+    "Champion W/F Double Face": re.compile(r"champion.*w\/f|double\s*face", re.IGNORECASE),
+    "Champion Football Tee Water Print": re.compile(r"champion.*(football|water\s*print).*(water\s*print|football)", re.IGNORECASE),
+    "Champion Football Tee": re.compile(r"champion.*football", re.IGNORECASE),
+    "Champion Two-Tone": re.compile(r"champion.*two-tone", re.IGNORECASE),
+    "Champion Reverse Weave": re.compile(r"reverse\s*weave", re.IGNORECASE),
+    "Champion": re.compile(r"champion", re.IGNORECASE),
     
-    # === OUTDOOR BRANDS ===
+    # ========================================================================
+    # SWEATSHIRTS - SPECIFIC TYPES
+    # ========================================================================
+    "Spalding Sweat": re.compile(r"spalding.*sweat", re.IGNORECASE),
+    "Spruce Sweat": re.compile(r"spruce.*sweat", re.IGNORECASE),
+    "Beethoven Sweat": re.compile(r"beethoven", re.IGNORECASE),
+    "Bach Sweat": re.compile(r"\bbach\b", re.IGNORECASE),
+    "Peanuts Schroeder Sweat": re.compile(r"schroeder", re.IGNORECASE),
+    "Peanuts Snoopy Sweat": re.compile(r"snoopy|peanuts|charlie\s*brown", re.IGNORECASE),
+    "1940s W/V Sweat": re.compile(r"w\/v.*(194|1940)|194.*w\/v|1940.*w\/v", re.IGNORECASE),
+    "W/V Sweat": re.compile(r"\bw\/v\b", re.IGNORECASE),
+    "S/V Sweat": re.compile(r"\bs\/v\b", re.IGNORECASE),
+    "Two-Tone Sweat": re.compile(r"two-?\s*tone.*sweat|sweat.*two-?\s*tone", re.IGNORECASE),
+    "Water Print Sweat": re.compile(r"water\s*print", re.IGNORECASE),
+    "Flock Print Black Body": re.compile(r"(black.*body|black.*flock).*sweat|flock.*(black|body)|black.*flock", re.IGNORECASE),
+    "Flock Print Sweat": re.compile(r"flock", re.IGNORECASE),
+    
+    # ========================================================================
+    # U.S. NAVY - SPECIFIC TYPES
+    # ========================================================================
+    "Navy WEP Flight Jacket": re.compile(r"wep", re.IGNORECASE),
+    "Navy AN-J-2 Summer Flight": re.compile(r"an-j-2|an6551|an6552", re.IGNORECASE),
+    "Navy M-421a Flight": re.compile(r"m-421a", re.IGNORECASE),
+    "Navy Summer Flight Jacket": re.compile(r"summer.*flight", re.IGNORECASE),
+    "Navy G-1 Flight Jacket": re.compile(r"(navy|u\.s\.n).*g-1", re.IGNORECASE),
+    "Navy Blue N-1 Deck": re.compile(r"blue.*n-1|n-1.*blue|blue.*deck", re.IGNORECASE),
+    "Navy N-1 Pique": re.compile(r"n-1.*pique|pique.*n-1", re.IGNORECASE),
+    "Navy A-2 Deck": re.compile(r"a-2.*deck", re.IGNORECASE),
+    "Navy N-1 Deck": re.compile(r"n-1", re.IGNORECASE),
+    "Navy Dungaree Jacket": re.compile(r"(navy|usn).*dungaree.*jacket", re.IGNORECASE),
+    "Navy Dungaree Pants": re.compile(r"(navy|usn).*dungaree.*(trouser|pants)", re.IGNORECASE),
+    "Navy P-Coat": re.compile(r"navy.*p-coat|pea\s*coat", re.IGNORECASE),
+    "Navy HBT": re.compile(r"(navy|usn).*hbt", re.IGNORECASE),
+    "Navy": re.compile(r"u\.s\.navy|u\.s\.n\b|usn\b", re.IGNORECASE),
+    
+    # ========================================================================
+    # USMC
+    # ========================================================================
+    "USMC Frog Skin Camo": re.compile(r"(usmc|marine).*frog|duck.*hunter|frog\s*skin", re.IGNORECASE),
+    "USMC P-44 Monkey Pants": re.compile(r"p-44.*(trouser|pants|hbt)", re.IGNORECASE),
+    "USMC P-41/P-42/P-44": re.compile(r"p-4[124]", re.IGNORECASE),
+    "USMC": re.compile(r"usmc|marine", re.IGNORECASE),
+    
+    # ========================================================================
+    # USAF
+    # ========================================================================
+    "USAF G-1 Linecrewman": re.compile(r"g-1.*linecrewman|linecrewman", re.IGNORECASE),
+    "USAF L-2A": re.compile(r"l-2a", re.IGNORECASE),
+    "USAF L-2B": re.compile(r"l-2b", re.IGNORECASE),
+    "USAF MA-1": re.compile(r"ma-1", re.IGNORECASE),
+    "USAF B-15": re.compile(r"b-15", re.IGNORECASE),
+    "USAF B-10": re.compile(r"b-10", re.IGNORECASE),
+    "USAF A-2": re.compile(r"usaf.*a-2|a-2.*flight", re.IGNORECASE),
+    "USAF": re.compile(r"usaf|u\.s\.air\s*force", re.IGNORECASE),
+    
+    # ========================================================================
+    # OTHER MILITARY
+    # ========================================================================
+    "Denim N-3B": re.compile(r"denim.*n-3b|n-3b.*denim", re.IGNORECASE),
+    "Army M-65": re.compile(r"m-65", re.IGNORECASE),
+    "Army M-43/M-48/M-51": re.compile(r"m-43|m-48|m-51", re.IGNORECASE),
+    "Army Tanker": re.compile(r"tanker\s*jacket", re.IGNORECASE),
+    "Army HBT": re.compile(r"army.*hbt", re.IGNORECASE),
+    "Army": re.compile(r"u\.s\.army", re.IGNORECASE),
+    "G-1 Flight Jacket": re.compile(r"g-1", re.IGNORECASE),
+    "Coast Guard": re.compile(r"coast\s*guard", re.IGNORECASE),
+    
+    # ========================================================================
+    # PATAGONIA - SPECIFIC PRODUCT LINES
+    # ========================================================================
     "Patagonia MARS": re.compile(r"patagonia.*mars|mars.*patagonia", re.IGNORECASE),
-    "Patagonia DAS Parka": re.compile(r"patagonia.*das|das\s*parka", re.IGNORECASE),
+    "Patagonia DAS Parka": re.compile(r"patagonia.*das", re.IGNORECASE),
     "Patagonia Glissade": re.compile(r"patagonia.*glissade|glissade", re.IGNORECASE),
     "Patagonia Snap-T": re.compile(r"patagonia.*snap-t|snap-t", re.IGNORECASE),
-    "Patagonia Down": re.compile(r"patagonia.*(down|puff)", re.IGNORECASE),
+    "Patagonia Puff/Down": re.compile(r"patagonia.*(puff|down)", re.IGNORECASE),
     "Patagonia Retro": re.compile(r"patagonia.*retro", re.IGNORECASE),
+    "Patagonia Synchilla": re.compile(r"patagonia.*synchilla", re.IGNORECASE),
     "Patagonia": re.compile(r"patagonia", re.IGNORECASE),
-    "L.L.Bean Leather Handle Tote": re.compile(r"l\.?l\.?\s*bean.*leather.*handle|leather.*handle.*tote", re.IGNORECASE),
+    
+    # ========================================================================
+    # OTHER OUTDOOR
+    # ========================================================================
+    "L.L.Bean Leather Handle Tote": re.compile(r"l\.?l\.?\s*bean.*leather.*handle", re.IGNORECASE),
     "L.L.Bean Tote": re.compile(r"l\.?l\.?\s*bean.*tote", re.IGNORECASE),
     "L.L.Bean Warden": re.compile(r"l\.?l\.?\s*bean.*warden", re.IGNORECASE),
     "L.L.Bean": re.compile(r"l\.?l\.?\s*bean", re.IGNORECASE),
+    "North Face Down": re.compile(r"north\s*face.*(down|brooks\s*range|expedition)", re.IGNORECASE),
     "North Face": re.compile(r"north\s*face", re.IGNORECASE),
+    "Eddie Bauer Down": re.compile(r"eddie\s*bauer.*(down|leather.*down)", re.IGNORECASE),
     "Eddie Bauer": re.compile(r"eddie\s*bauer", re.IGNORECASE),
+    "REI Down": re.compile(r"rei.*(down|expedition)", re.IGNORECASE),
     "REI": re.compile(r"\brei\b", re.IGNORECASE),
-    "Brown's Beach": re.compile(r"brown'?s?\s*beach", re.IGNORECASE),
-    "Rocky Mountain": re.compile(r"rocky\s*mountain", re.IGNORECASE),
-    "Arc'teryx": re.compile(r"arc.teryx", re.IGNORECASE),
-    "Filson": re.compile(r"filson", re.IGNORECASE),
-    "Sierra Designs": re.compile(r"sierra\s*designs", re.IGNORECASE),
-    "Alpine Designs": re.compile(r"alpine\s*designs", re.IGNORECASE),
+    "Gerry Down": re.compile(r"gerry.*(down|expedition)", re.IGNORECASE),
     "Gerry": re.compile(r"\bgerry\b", re.IGNORECASE),
+    "Brown's Beach": re.compile(r"brown'?s?\s*beach", re.IGNORECASE),
+    "Sierra Designs": re.compile(r"sierra\s*designs", re.IGNORECASE),
+    "Filson": re.compile(r"filson", re.IGNORECASE),
     "Barbour": re.compile(r"barbour", re.IGNORECASE),
-    "Willis & Geiger": re.compile(r"willis.*geiger", re.IGNORECASE),
-    "Down Jacket": re.compile(r"down\s*(jacket|parka|vest|hoody)|expedition.*down", re.IGNORECASE),
-    "Hunting Jacket": re.compile(r"hunting.*jacket|shooting", re.IGNORECASE),
-    "Ski Jacket": re.compile(r"ski\s*jacket", re.IGNORECASE),
+    "Down Parka": re.compile(r"down.*(parka|jacket)|expedition.*down", re.IGNORECASE),
     
-    # === SOUVENIR/TOUR JACKETS ===
+    # ========================================================================
+    # SOUVENIR JACKETS - LOCATION SPECIFIC
+    # ========================================================================
+    "Okinawa Souvenir": re.compile(r"okinawa", re.IGNORECASE),
+    "Korea Souvenir": re.compile(r"korea.*souvenir|korea.*jacket", re.IGNORECASE),
+    "Alaska Souvenir": re.compile(r"alaska.*souvenir|alaska.*jacket", re.IGNORECASE),
+    "Panama Souvenir": re.compile(r"panama", re.IGNORECASE),
     "Vietnam Souvenir": re.compile(r"viet-?nam.*souvenir", re.IGNORECASE),
     "Vietnam Tour": re.compile(r"viet-?nam.*tour", re.IGNORECASE),
-    "Japan Tiger Souvenir": re.compile(r"japan.*tiger|tiger.*souvenir", re.IGNORECASE),
-    "Japan Corduroy Souvenir": re.compile(r"japan.*corduroy.*souvenir|corduroy.*souvenir", re.IGNORECASE),
     "Misawa Souvenir": re.compile(r"misawa", re.IGNORECASE),
+    "Japan Tiger Souvenir": re.compile(r"japan.*tiger|tiger.*japan", re.IGNORECASE),
+    "Japan Corduroy Souvenir": re.compile(r"corduroy.*souvenir", re.IGNORECASE),
     "Japan Souvenir": re.compile(r"japan.*souvenir|sukajan", re.IGNORECASE),
-    "Okinawa Souvenir": re.compile(r"okinawa.*souvenir", re.IGNORECASE),
-    "Korea Souvenir": re.compile(r"korea.*souvenir", re.IGNORECASE),
-    "Alaska Souvenir": re.compile(r"alaska.*souvenir", re.IGNORECASE),
-    "Souvenir Jacket Other": re.compile(r"souvenir", re.IGNORECASE),
+    "Souvenir Jacket": re.compile(r"souvenir", re.IGNORECASE),
     
-    # === JACKET TYPES ===
-    "Award/Car Club": re.compile(r"award\s*jacket|car\s*club", re.IGNORECASE),
-    "Pharaoh Jacket": re.compile(r"pharaoh", re.IGNORECASE),
-    "Drizzler Jacket": re.compile(r"drizzler", re.IGNORECASE),
-    "Western Jacket": re.compile(r"western.*jacket|gabardine.*jacket", re.IGNORECASE),
-    "Kodiak": re.compile(r"kodiak", re.IGNORECASE),
-    "Fake Fur Jacket": re.compile(r"fake\s*fur", re.IGNORECASE),
-    "Logger Cruiser": re.compile(r"logger.*cruiser|cruiser.*jacket", re.IGNORECASE),
-    "Car Coat": re.compile(r"car\s*coat", re.IGNORECASE),
-    "Mackinaw": re.compile(r"mackinaw", re.IGNORECASE),
-    
-    # === HAWAIIAN SHIRTS ===
-    "Kamehameha": re.compile(r"kamehameha", re.IGNORECASE),
-    "Kahanamoku": re.compile(r"kahanamoku", re.IGNORECASE),
-    "Del Mar": re.compile(r"del\s*mar", re.IGNORECASE),
-    "Hawaiian/Aloha": re.compile(r"hawaiian|aloha", re.IGNORECASE),
-    
-    # === SHIRTS ===
-    "Rayon Shirt": re.compile(r"rayon.*shirt|rayon", re.IGNORECASE),
-    "Pilgrim Flannel": re.compile(r"pilgrim.*flannel|pilgrim.*plaid|pilgrim", re.IGNORECASE),
-    "Sun Valley Flannel": re.compile(r"sun\s*valley.*flannel|sun\s*valley", re.IGNORECASE),
+    # ========================================================================
+    # SHIRTS BY ERA + TYPE (Your clarification insight)
+    # ========================================================================
+    "1950s Corduroy Shirt": re.compile(r"corduroy.*(shirt|box).*(195|1950)|195.*corduroy|1950.*corduroy", re.IGNORECASE),
+    "1960s Corduroy Shirt": re.compile(r"corduroy.*(shirt|box).*(196|1960)|196.*corduroy|1960.*corduroy", re.IGNORECASE),
+    "Corduroy Shirt": re.compile(r"corduroy.*(shirt|box)", re.IGNORECASE),
+    "1950s Rayon Shirt": re.compile(r"rayon.*(195|1950)|195.*rayon|1950.*rayon", re.IGNORECASE),
+    "1960s Shadow Plaid Rayon": re.compile(r"(shadow.*plaid|arrow).*(196|1960)|(196|1960).*(shadow.*plaid|arrow)", re.IGNORECASE),
+    "Rayon Shirt": re.compile(r"rayon", re.IGNORECASE),
+    "Shadow Plaid Shirt": re.compile(r"shadow\s*plaid|shadow.*check", re.IGNORECASE),
+    "1950s Pilgrim Flannel": re.compile(r"pilgrim.*(195|1950)|195.*pilgrim|1950.*pilgrim", re.IGNORECASE),
+    "1950s Sun Valley Flannel": re.compile(r"sun\s*valley.*(195|1950)|195.*sun\s*valley|1950.*sun\s*valley", re.IGNORECASE),
+    "Pilgrim Flannel": re.compile(r"pilgrim", re.IGNORECASE),
+    "Sun Valley Flannel": re.compile(r"sun\s*valley", re.IGNORECASE),
     "Flannel Shirt": re.compile(r"flannel", re.IGNORECASE),
     "Western Shirt": re.compile(r"western.*shirt", re.IGNORECASE),
     "Wool Shirt": re.compile(r"wool.*shirt", re.IGNORECASE),
-    "Denim Shirt": re.compile(r"denim.*shirt", re.IGNORECASE),
-    "Corduroy Shirt": re.compile(r"corduroy.*shirt", re.IGNORECASE),
-    "Arrow Shirt": re.compile(r"\barrow\b.*shirt|\barrow\b", re.IGNORECASE),
+    "Arrow Shirt": re.compile(r"\barrow\b", re.IGNORECASE),
     
-    # === TEES ===
-    "Band Tee": re.compile(r"(nirvana|metallica|grateful\s*dead|rolling\s*stones|beatles|zeppelin|hendrix|floyd|ramones|clash|pistols|sabbath|maiden|motorhead|slayer|megadeth|pantera|soundgarden|pearl\s*jam|alice\s*in\s*chains|dinosaur|red\s*hot|radio\s*head|guns.*roses|ac\/dc|kiss\b|van\s*halen|def\s*leppard|ozzy|judas\s*priest|iron\s*maiden).*t-shirt|tour.*t-shirt", re.IGNORECASE),
+    # ========================================================================
+    # HAWAIIAN
+    # ========================================================================
+    "Kamehameha": re.compile(r"kamehameha", re.IGNORECASE),
+    "Kahanamoku": re.compile(r"kahanamoku", re.IGNORECASE),
+    "Hawaiian/Aloha": re.compile(r"hawaiian|aloha", re.IGNORECASE),
+    
+    # ========================================================================
+    # TEES - BRAND SPECIFIC
+    # ========================================================================
+    "Band Tee": re.compile(r"(dinosaur|nirvana|metallica|grateful\s*dead|rolling\s*stones|beatles|zeppelin|hendrix|floyd|ramones|clash|pistols|sabbath|maiden|motorhead|slayer|megadeth|pantera|soundgarden|pearl\s*jam|alice\s*in\s*chains|red\s*hot|radio\s*head|guns.*roses|ac\/dc|kiss\b|van\s*halen|ozzy).*t-shirt|tour.*t-shirt", re.IGNORECASE),
     "Harley-Davidson Tee": re.compile(r"harley.*t-shirt|harley.*tee", re.IGNORECASE),
+    "Stussy Tee": re.compile(r"stussy.*t-shirt", re.IGNORECASE),
     "Stussy": re.compile(r"stussy", re.IGNORECASE),
+    "Nike Tee": re.compile(r"nike.*t-shirt", re.IGNORECASE),
     "Photo Print Tee": re.compile(r"photo.*print|bruce\s*weber", re.IGNORECASE),
     "Vintage T-Shirt": re.compile(r"t-shirt", re.IGNORECASE),
     
-    # === SWEATERS ===
+    # ========================================================================
+    # SWEATERS
+    # ========================================================================
     "Mohair Cardigan": re.compile(r"mohair", re.IGNORECASE),
-    "Cowichan Jacket": re.compile(r"cowichan.*jacket", re.IGNORECASE),
-    "Cowichan Sweater": re.compile(r"cowichan", re.IGNORECASE),
+    "Cowichan": re.compile(r"cowichan", re.IGNORECASE),
     "Pendleton": re.compile(r"pendleton", re.IGNORECASE),
+    "McGregor": re.compile(r"mcgregor", re.IGNORECASE),
     
-    # === NATIVE/SOUTHWEST ===
+    # ========================================================================
+    # NATIVE/SOUTHWEST
+    # ========================================================================
     "Navajo/Chimayo": re.compile(r"navajo|chimayo|ortega", re.IGNORECASE),
     
-    # === LEATHER ===
+    # ========================================================================
+    # LEATHER
+    # ========================================================================
     "Buco Leather": re.compile(r"\bbuco\b", re.IGNORECASE),
     "Schott Leather": re.compile(r"schott", re.IGNORECASE),
-    "Beck Leather": re.compile(r"\bbeck\b", re.IGNORECASE),
     "Horsehide": re.compile(r"horsehide", re.IGNORECASE),
+    "Car Coat": re.compile(r"car\s*coat", re.IGNORECASE),
+    "Cafe Racer": re.compile(r"cafe\s*racer", re.IGNORECASE),
     
-    # === PREMIUM BRANDS ===
-    "Brooks Brothers": re.compile(r"brooks\s*brothers", re.IGNORECASE),
-    "McGregor": re.compile(r"mcgregor", re.IGNORECASE),
-    "Burberry": re.compile(r"burberry", re.IGNORECASE),
-    
-    # === COLLEGE/SPORTS ===
-    "Beer Jacket": re.compile(r"beer\s*jacket", re.IGNORECASE),
-    "Varsity/Letterman": re.compile(r"varsity|letterman", re.IGNORECASE),
-    "Sports Jacket": re.compile(r"sports?\s*jacket", re.IGNORECASE),
-    "Military Academy": re.compile(r"usafa|usma|usna|west\s*point|naval\s*academy|air\s*force\s*academy", re.IGNORECASE),
-    
-    # === SHOES ===
-    "Nike Shoes": re.compile(r"nike.*(shoes|sneaker|jordan|dunk|cortez|waffle|blazer)", re.IGNORECASE),
+    # ========================================================================
+    # SHOES
+    # ========================================================================
+    "Nike Shoes": re.compile(r"nike.*(shoes|sneaker|jordan|dunk|cortez|waffle|blazer|vandal)", re.IGNORECASE),
     "Nike": re.compile(r"\bnike\b", re.IGNORECASE),
     "Converse": re.compile(r"converse", re.IGNORECASE),
     "Red Wing Boots": re.compile(r"red\s*wing", re.IGNORECASE),
     "Vans": re.compile(r"\bvans\b", re.IGNORECASE),
     
-    # === ACCESSORIES ===
-    "Advertising/Display": re.compile(r"advertising|banner|display|sign\b|wall\s*clock", re.IGNORECASE),
+    # ========================================================================
+    # ACCESSORIES
+    # ========================================================================
+    "Advertising": re.compile(r"advertising|banner|display|wall\s*clock", re.IGNORECASE),
     "Tote Bag": re.compile(r"tote", re.IGNORECASE),
     "Quilt": re.compile(r"quilt", re.IGNORECASE),
     "Navajo Rug": re.compile(r"navajo.*rug|swastika.*rug|\brug\b", re.IGNORECASE),
-    "Canvas Bag": re.compile(r"canvas.*bag", re.IGNORECASE),
-    "Newspaper Bag": re.compile(r"newspaper", re.IGNORECASE),
     "Backpack": re.compile(r"back\s*pack|backpack|gregory|chouinard|kelty", re.IGNORECASE),
-    "Studded Belt": re.compile(r"studded.*belt|jewel.*belt", re.IGNORECASE),
-    "Belt": re.compile(r"\bbelt\b", re.IGNORECASE),
     "Blanket": re.compile(r"\bblanket\b", re.IGNORECASE),
-    "Apron": re.compile(r"\bapron\b", re.IGNORECASE),
-    "Bandana": re.compile(r"bandana", re.IGNORECASE),
-    "Indigo": re.compile(r"\bindigo\b", re.IGNORECASE),
     
-    # === KNITS/SWEATERS ===
-    "Cardigan": re.compile(r"cardigan", re.IGNORECASE),
-    "Vest": re.compile(r"\bvest\b", re.IGNORECASE),
-    "Pullover Sweater": re.compile(r"pullover", re.IGNORECASE),
+    # ========================================================================
+    # JACKET TYPES
+    # ========================================================================
+    "Award/Varsity Jacket": re.compile(r"award\s*jacket|varsity|letterman", re.IGNORECASE),
+    "Drizzler Jacket": re.compile(r"drizzler", re.IGNORECASE),
+    "Western Jacket": re.compile(r"western.*jacket|gabardine.*jacket", re.IGNORECASE),
+    "Mackinaw": re.compile(r"mackinaw", re.IGNORECASE),
     
-    # === CATCH-ALLS ===
-    "Cafe Racer": re.compile(r"cafe\s*racer", re.IGNORECASE),
-    "Motorcycle Jacket": re.compile(r"motorcycle", re.IGNORECASE),
+    # ========================================================================
+    # CATCH-ALLS
+    # ========================================================================
     "Denim Jacket": re.compile(r"denim\s*jacket", re.IGNORECASE),
     "Denim Jeans": re.compile(r"jeans", re.IGNORECASE),
     "Gore-Tex": re.compile(r"gore-tex", re.IGNORECASE),
     "Corduroy": re.compile(r"corduroy", re.IGNORECASE),
-    "Polo/Ralph Lauren": re.compile(r"polo|ralph\s*lauren", re.IGNORECASE),
-    "Anorak": re.compile(r"anorak", re.IGNORECASE),
     "Leather Jacket": re.compile(r"leather.*jacket", re.IGNORECASE),
-    "Work Jacket": re.compile(r"work\s*jacket", re.IGNORECASE),
-    "Boat Jacket": re.compile(r"boat\s*jacket", re.IGNORECASE),
     "Parka": re.compile(r"parka", re.IGNORECASE),
-    
-    # === ERA CATCH-ALLS (after all brands) ===
-    "WW1 Military": re.compile(r"ww1", re.IGNORECASE),
-    "WW2 Military": re.compile(r"ww2", re.IGNORECASE),
-    
-    # === FINAL CATCH-ALLS ===
-    "Jacket (Other)": re.compile(r"jacket", re.IGNORECASE),
-    "Shirt (Other)": re.compile(r"shirt", re.IGNORECASE),
+    "Cardigan": re.compile(r"cardigan", re.IGNORECASE),
+    "Vest": re.compile(r"\bvest\b", re.IGNORECASE),
+    "Sweatshirt": re.compile(r"sweat", re.IGNORECASE),
+    "WW2 Military": re.compile(r"ww2|wwii", re.IGNORECASE),
+    "Jacket": re.compile(r"jacket", re.IGNORECASE),
+    "Shirt": re.compile(r"shirt", re.IGNORECASE),
     "Trousers": re.compile(r"trouser|pants", re.IGNORECASE),
 }
 
