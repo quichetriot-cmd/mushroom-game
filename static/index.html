@@ -2415,15 +2415,19 @@ function showCatItem() {
     confEl.style.color = confidence === 'high' ? '#155724' : confidence === 'medium' ? '#856404' : '#721c24';
     
     // Smart suggestions
+    // Smart suggestions
     const suggestions = getSuggestedCategories(item.title);
     const suggestionsEl = document.getElementById('catSuggestions');
-    suggestionsEl.innerHTML = suggestions.map(sug => 
-        `<button class="cat-suggest-btn" onclick="quickAssign('${sug.replace(/'/g, "\\'")}')" 
-         style="padding:4px 10px;border:1px solid #ddd;border-radius:12px;background:${sug === category ? '#e3f2fd' : '#fff'};
-         cursor:pointer;font-size:12px;transition:all 0.2s;"
-         onmouseover="this.style.background='#e3f2fd'" onmouseout="this.style.background='${sug === category ? '#e3f2fd' : '#fff'}'"
-        >${sug}</button>`
-    ).join('');
+    suggestionsEl.innerHTML = '';
+    suggestions.forEach(sug => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-suggest-btn';
+        btn.textContent = sug;
+        btn.style.cssText = 'padding:4px 10px;border:1px solid #ddd;border-radius:12px;background:' + 
+            (sug === category ? '#e3f2fd' : '#fff') + ';cursor:pointer;font-size:12px;';
+        btn.onclick = () => quickAssign(sug);
+        suggestionsEl.appendChild(btn);
+    });
     
     // Find similar items for batch processing
     const similar = findSimilarItems(item.title, catItems.slice(catIndex + 1));
@@ -2721,7 +2725,7 @@ document.getElementById('catFilterRandom').onclick = async () => {
 };
 
 document.getElementById('catClearSeen').onclick = async () => {
-    if (confirm('Clear viewing history? This will reset which items you've seen.')) {
+    if (confirm('Clear viewing history? This will reset which items you have seen.')) {
         catSeenIds = [];
         localStorage.setItem('vCatSeen', '[]');
         await loadCatItems();
