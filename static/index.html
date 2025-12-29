@@ -1271,17 +1271,24 @@
             <div class="cat-controls">
                 <button class="cat-control-btn active" id="catFilterAll">All Items</button>
                 <button class="cat-control-btn" id="catFilterOther">Only "Other"</button>
-                <button class="cat-control-btn" id="catFilterRecent">This Month</button>
+                <button class="cat-control-btn" id="catFilterRecent">Recent</button>
+                <button class="cat-control-btn" id="catFilterSmart">🧠 Smart</button>
+                <button class="cat-control-btn" id="catFilterRandom">Random</button>
+                <button class="cat-control-btn" id="catClearSeen" style="margin-left:auto;background:#dc3545;">Clear History</button>
             </div>
             
             <!-- Current Item -->
             <div class="cat-item-card" id="catItemCard">
                 <div class="cat-item-title" id="catItemTitle">Loading...</div>
                 
+                <div class="cat-item-stats" id="catItemStats" style="display:flex;gap:15px;margin-bottom:10px;font-size:13px;color:#666;"><span id="catItemPrice"></span><span id="catItemDate"></span></div>
                 <div class="cat-assigned">
                     <span class="cat-assigned-label">Auto-assigned:</span>
                     <span class="cat-assigned-value" id="catAssignedValue">-</span>
+                    <span class="cat-confidence" id="catConfidence" style="margin-left:8px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;"></span>
                 </div>
+                
+                <div class="cat-suggestions" id="catSuggestions" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
                 
                 <div class="cat-vote-buttons">
                     <button class="cat-vote-btn correct" id="catBtnCorrect">✓ Correct</button>
@@ -1301,6 +1308,8 @@
                     <button class="cat-submit-correction" id="catSubmitCorrection">Submit & Next →</button>
                 </div>
                 
+                <div class="cat-similar" id="catSimilar" style="display:none;margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;font-size:13px;"></div>
+                
                 <div class="cat-keyboard-hint">
                     <kbd>1</kbd> Correct · <kbd>2</kbd> Wrong · <kbd>Enter</kbd> Submit · <kbd>S</kbd> Skip
                 </div>
@@ -1312,6 +1321,7 @@
                 </div>
                 <div class="cat-progress-text">
                     <span id="catProgressText">0 / 0</span>
+                    <span id="catSeenCount" style="margin-left:10px;color:#666;font-size:12px;"></span>
                     <span id="catAccuracy">--% accuracy</span>
                 </div>
             </div>
@@ -1495,7 +1505,8 @@ let catIndex = 0;
 let catReviewed = 0;
 let catCorrectCount = 0;
 let catFlaggedItems = JSON.parse(localStorage.getItem('vCatFlagged') || '[]');
-let catFilter = 'all'; // 'all', 'other', 'recent'
+let catFilter = 'all';
+let catSeenIds = JSON.parse(localStorage.getItem('vCatSeen') || '[]'); // 'all', 'other', 'recent'
 let allCategories = []; // Will be populated from backend
 
 // Category patterns (mirrored from backend for client-side categorization)
@@ -1985,6 +1996,106 @@ function categorizeItem(title) {
     return 'Other';
 }
 
+// Smart categorization with confidence scoring
+function categorizeItemWithConfidence(title) {
+    const matches = [];
+    
+    for (const [cat, regex] of Object.entries(CATEGORIES)) {
+        if (regex.test(title)) {
+            // Calculate confidence based on pattern specificity
+            const patternStr = regex.toString();
+            let confidence = 'medium';
+            
+            // High confidence: specific product codes, era+brand combos
+            if (/\d{3,}|xx|big\s*e|mars|das|wep|usma|usafa/.test(patternStr.toLowerCase())) {
+                confidence = 'high';
+            }
+            // Low confidence: very generic patterns
+            if (/^\/?(jacket|shirt|sweat|trouser|pants|other)\/?/i.test(patternStr)) {
+                confidence = 'low';
+            }
+            
+            matches.push({ category: cat, confidence, pattern: patternStr });
+        }
+    }
+    
+    if (matches.length === 0) {
+        return { category: 'Other', confidence: 'low', matches: [] };
+    }
+    
+    // Return first match (highest priority) with all matches for suggestions
+    return { 
+        category: matches[0].category, 
+        confidence: matches[0].confidence,
+        matches: matches.slice(0, 5)
+    };
+}
+
+// Generate smart suggestions based on title keywords
+function getSuggestedCategories(title) {
+    const suggestions = new Set();
+    const titleLower = title.toLowerCase();
+    
+    // Keyword-based suggestions
+    const keywordMap = {
+        'carhartt': ['Carhartt', 'Carhartt Brown Duck', 'Carhartt Denim'],
+        'levi': ["Levi's 501XX", "Levi's 501 Big E", "Levi's 507XX", "Levi's"],
+        'champion': ['Champion Reverse Weave', 'Champion Football Tee', 'Champion'],
+        'patagonia': ['Patagonia MARS', 'Patagonia Snap-T', 'Patagonia Retro', 'Patagonia'],
+        'coverall': ['1940s Coverall', '1950s Coverall', 'Coverall'],
+        'overall': ['1950s Overall', 'Overall'],
+        'chinstrap': ['1930s Chinstrap', 'Chinstrap'],
+        'flight': ['Navy G-1 Flight Jacket', 'G-1 Flight Jacket', 'USAF MA-1'],
+        'souvenir': ['Japan Souvenir', 'Vietnam Tour', 'Korea Souvenir', 'Souvenir Jacket'],
+        'flannel': ['1950s Pilgrim Flannel', 'Flannel Shirt'],
+        'sweat': ['Champion Reverse Weave', 'Flock Print Sweat', 'Sweatshirt'],
+        'denim': ['Denim Jacket', 'Denim Jeans', 'Denim Work Trousers'],
+        'boot': ['Red Wing Boots', 'Nike Shoes'],
+        'bag': ['L.L.Bean Tote', 'Tote Bag', 'Backpack'],
+        'n-1': ['Navy N-1 Deck', 'Navy'],
+        'lee': ['Lee 101-J', 'Lee Riders', 'Lee Coverall', 'Lee'],
+        'wrangler': ['Wrangler 111MJ', 'Wrangler'],
+        'military': ['Army', 'Navy', 'USMC', 'USAF'],
+        'harley': ['Harley-Davidson Tee'],
+        'nike': ['Nike Shoes', 'Nike Tee', 'Nike'],
+    };
+    
+    for (const [keyword, cats] of Object.entries(keywordMap)) {
+        if (titleLower.includes(keyword)) {
+            cats.forEach(c => suggestions.add(c));
+        }
+    }
+    
+    // Era-based suggestions
+    if (/193\d|1930/.test(title)) suggestions.add('1930s Coverall');
+    if (/194\d|1940|ww2/i.test(title)) suggestions.add('1940s Coverall');
+    if (/195\d|1950/.test(title)) suggestions.add('1950s Coverall');
+    
+    // Add current match
+    const current = categorizeItem(title);
+    suggestions.add(current);
+    
+    // Convert to array and limit
+    return Array.from(suggestions).slice(0, 6);
+}
+
+// Find similar items for batch processing
+function findSimilarItems(title, items) {
+    const titleWords = title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const keyWords = titleWords.filter(w => 
+        !['with', 'good', 'very', 'mint', 'condition', 'around', 'size', 'rare', 'deadstock'].includes(w)
+    ).slice(0, 4);
+    
+    if (keyWords.length === 0) return [];
+    
+    return items.filter(item => {
+        if (item.title === title) return false;
+        const itemLower = item.title.toLowerCase();
+        const matchCount = keyWords.filter(w => itemLower.includes(w)).length;
+        return matchCount >= Math.min(2, keyWords.length);
+    });
+}
+
 function isOtherCategory(cat) {
     return cat === 'Other' || cat.includes('Other');
 }
@@ -2191,23 +2302,76 @@ async function startCatGame() {
 }
 
 async function loadCatItems() {
-    let params = { sort: 'date_desc', limit: 100 };
+    let items = [];
+    const batchSize = 100;
     
-    if (catFilter === 'recent') {
-        const now = new Date();
-        params.min_year = now.getFullYear();
+    if (catFilter === 'smart') {
+        // SMART: High-value + low-confidence items first
+        const params = { sort: 'price_desc', limit: 300 };
+        items = await fetchItems(params);
+        items = items.filter(item => !catSeenIds.includes(item.id));
+        
+        // Score by value * confidence (low confidence = higher priority)
+        items = items.map(item => {
+            const result = categorizeItemWithConfidence(item.title);
+            const confScore = result.confidence === 'low' ? 3 : result.confidence === 'medium' ? 2 : 1;
+            const priceScore = item.price_usd || 0;
+            return { ...item, smartScore: priceScore * confScore, confidence: result.confidence };
+        });
+        
+        // Sort by smart score descending
+        items.sort((a, b) => b.smartScore - a.smartScore);
+        
+    } else if (catFilter === 'random') {
+        // True random from entire database, excluding recently seen
+        items = await fetchRandomItems(null, batchSize, catSeenIds.slice(-500));
+        
+    } else if (catFilter === 'recent') {
+        // Recent items - last 3 months
+        const params = { sort: 'date_desc', limit: 200 };
+        items = await fetchItems(params);
+        items = items.filter(item => !catSeenIds.includes(item.id));
+        
+    } else if (catFilter === 'other') {
+        // Uncategorized items only
+        const params = { sort: 'date_desc', limit: 300 };
+        items = await fetchItems(params);
+        items = items.filter(item => 
+            !catSeenIds.includes(item.id) && 
+            isOtherCategory(categorizeItem(item.title))
+        );
+        
+    } else {
+        // 'all' - mix of random and recent for variety
+        try {
+            const [randomItems, recentItems] = await Promise.all([
+                fetchRandomItems(null, Math.floor(batchSize / 2), catSeenIds.slice(-500)),
+                fetchItems({ sort: 'date_desc', limit: Math.floor(batchSize / 2) })
+            ]);
+            const recentFiltered = recentItems.filter(item => !catSeenIds.includes(item.id));
+            items = [...randomItems, ...recentFiltered];
+        } catch (e) {
+            // Fallback if random endpoint doesn't exist
+            const params = { sort: 'date_desc', limit: 200 };
+            items = await fetchItems(params);
+            items = items.filter(item => !catSeenIds.includes(item.id));
+        }
     }
     
-    catItems = await fetchItems(params);
+    // Remove duplicates
+    const seen = new Set();
+    items = items.filter(item => {
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+    });
     
-    // Filter for "Other" only if needed
-    if (catFilter === 'other') {
-        catItems = catItems.filter(item => isOtherCategory(categorizeItem(item.title)));
+    // Don't shuffle smart queue - keep priority order
+    if (catFilter !== 'smart') {
+        items.sort(() => Math.random() - 0.5);
     }
     
-    // Shuffle
-    catItems.sort(() => Math.random() - 0.5);
-    
+    catItems = items;
     catIndex = 0;
     updateCatProgress();
 }
@@ -2222,15 +2386,56 @@ function showCatItem() {
     document.getElementById('catItemCard').classList.remove('hidden');
     document.getElementById('catEmpty').style.display = 'none';
     document.getElementById('catCorrection').classList.remove('active');
+    document.getElementById('catSimilar').style.display = 'none';
     
     const item = catItems[catIndex];
-    const category = categorizeItem(item.title);
+    const result = categorizeItemWithConfidence(item.title);
+    const category = result.category;
+    const confidence = result.confidence;
     
+    // Title
     document.getElementById('catItemTitle').textContent = item.title;
     
+    // Quick stats (price & date)
+    const statsEl = document.getElementById('catItemStats');
+    const priceStr = item.price_usd ? `$${item.price_usd.toLocaleString()}` : '';
+    const dateStr = item.date ? new Date(item.date).toLocaleDateString('en-US', {month:'short', year:'numeric'}) : '';
+    document.getElementById('catItemPrice').textContent = priceStr;
+    document.getElementById('catItemDate').textContent = dateStr;
+    
+    // Category with confidence
     const catValue = document.getElementById('catAssignedValue');
     catValue.textContent = category;
     catValue.classList.toggle('is-other', isOtherCategory(category));
+    
+    // Confidence badge
+    const confEl = document.getElementById('catConfidence');
+    confEl.textContent = confidence.toUpperCase();
+    confEl.style.background = confidence === 'high' ? '#d4edda' : confidence === 'medium' ? '#fff3cd' : '#f8d7da';
+    confEl.style.color = confidence === 'high' ? '#155724' : confidence === 'medium' ? '#856404' : '#721c24';
+    
+    // Smart suggestions
+    const suggestions = getSuggestedCategories(item.title);
+    const suggestionsEl = document.getElementById('catSuggestions');
+    suggestionsEl.innerHTML = suggestions.map(sug => 
+        `<button class="cat-suggest-btn" onclick="quickAssign('${sug.replace(/'/g, "\\'")}')" 
+         style="padding:4px 10px;border:1px solid #ddd;border-radius:12px;background:${sug === category ? '#e3f2fd' : '#fff'};
+         cursor:pointer;font-size:12px;transition:all 0.2s;"
+         onmouseover="this.style.background='#e3f2fd'" onmouseout="this.style.background='${sug === category ? '#e3f2fd' : '#fff'}'"
+        >${sug}</button>`
+    ).join('');
+    
+    // Find similar items for batch processing
+    const similar = findSimilarItems(item.title, catItems.slice(catIndex + 1));
+    if (similar.length > 0) {
+        const similarEl = document.getElementById('catSimilar');
+        similarEl.style.display = 'block';
+        similarEl.innerHTML = `⚡ <strong>${similar.length}</strong> similar items found. After flagging, you can apply to all.`;
+        // Store for later
+        window.currentSimilarItems = similar;
+    } else {
+        window.currentSimilarItems = [];
+    }
     
     // Reset inputs
     document.getElementById('catCorrectionSelect').value = '';
@@ -2239,12 +2444,81 @@ function showCatItem() {
     updateCatProgress();
 }
 
+// Quick assign from suggestion button
+function quickAssign(category) {
+    const item = catItems[catIndex];
+    const currentCategory = categorizeItem(item.title);
+    
+    if (category === currentCategory) {
+        // It's correct - just mark as correct
+        catMarkCorrect();
+    } else {
+        // Flag it with this category
+        catFlaggedItems.push({
+            title: item.title,
+            was: currentCategory,
+            should: category,
+            isNew: false,
+            timestamp: Date.now()
+        });
+        localStorage.setItem('vCatFlagged', JSON.stringify(catFlaggedItems));
+        
+        // Track as seen
+        if (item) {
+            catSeenIds.push(item.id);
+            if (catSeenIds.length > 1000) catSeenIds = catSeenIds.slice(-500);
+            localStorage.setItem('vCatSeen', JSON.stringify(catSeenIds));
+        }
+        
+        catReviewed++;
+        catIndex++;
+        renderCatFlaggedList();
+        
+        // Offer to apply to similar
+        if (window.currentSimilarItems && window.currentSimilarItems.length > 0) {
+            if (confirm(`Apply "${category}" to ${window.currentSimilarItems.length} similar items too?`)) {
+                applyToSimilar(category, currentCategory);
+            }
+        }
+        
+        showCatItem();
+    }
+}
+
+// Apply correction to all similar items
+function applyToSimilar(shouldCategory, wasCategory) {
+    const similar = window.currentSimilarItems || [];
+    similar.forEach(item => {
+        catFlaggedItems.push({
+            title: item.title,
+            was: wasCategory,
+            should: shouldCategory,
+            isNew: false,
+            timestamp: Date.now(),
+            batchApplied: true
+        });
+        catSeenIds.push(item.id);
+    });
+    
+    localStorage.setItem('vCatFlagged', JSON.stringify(catFlaggedItems));
+    if (catSeenIds.length > 1000) catSeenIds = catSeenIds.slice(-500);
+    localStorage.setItem('vCatSeen', JSON.stringify(catSeenIds));
+    
+    // Remove similar items from queue
+    const similarIds = new Set(similar.map(i => i.id));
+    catItems = catItems.filter(i => !similarIds.has(i.id));
+    
+    renderCatFlaggedList();
+    alert(`Applied to ${similar.length} similar items!`);
+}
+
 function updateCatProgress() {
     const total = catItems.length;
     const pct = total > 0 ? (catIndex / total * 100) : 0;
     
     document.getElementById('catProgressFill').style.width = pct + '%';
     document.getElementById('catProgressText').textContent = `${catIndex} / ${total}`;
+    document.getElementById('catSeenCount').textContent = `(${catSeenIds.length} seen total)`;
     
     const acc = catReviewed > 0 ? Math.round(catCorrectCount / catReviewed * 100) : 0;
     document.getElementById('catAccuracy').textContent = `${acc}% accuracy`;
@@ -2256,6 +2530,12 @@ function updateCatProgress() {
 }
 
 function catMarkCorrect() {
+    const item = catItems[catIndex];
+    if (item) {
+        catSeenIds.push(item.id);
+        if (catSeenIds.length > 1000) catSeenIds = catSeenIds.slice(-500);
+        localStorage.setItem('vCatSeen', JSON.stringify(catSeenIds));
+    }
     catReviewed++;
     catCorrectCount++;
     catIndex++;
@@ -2297,6 +2577,12 @@ function catSubmitCorrection() {
 }
 
 function catSkip() {
+    const item = catItems[catIndex];
+    if (item) {
+        catSeenIds.push(item.id);
+        if (catSeenIds.length > 1000) catSeenIds = catSeenIds.slice(-500);
+        localStorage.setItem('vCatSeen', JSON.stringify(catSeenIds));
+    }
     catIndex++;
     showCatItem();
 }
@@ -2416,6 +2702,33 @@ document.getElementById('catFilterRecent').onclick = async () => {
     document.getElementById('catFilterRecent').classList.add('active');
     await loadCatItems();
     showCatItem();
+};
+
+document.getElementById('catFilterSmart').onclick = async () => {
+    catFilter = 'smart';
+    document.querySelectorAll('.cat-control-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('catFilterSmart').classList.add('active');
+    await loadCatItems();
+    showCatItem();
+};
+
+document.getElementById('catFilterRandom').onclick = async () => {
+    catFilter = 'random';
+    document.querySelectorAll('.cat-control-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('catFilterRandom').classList.add('active');
+    await loadCatItems();
+    showCatItem();
+};
+
+document.getElementById('catClearSeen').onclick = async () => {
+    if (confirm('Clear viewing history? This will reset which items you've seen.')) {
+        catSeenIds = [];
+        localStorage.setItem('vCatSeen', '[]');
+        await loadCatItems();
+        showCatItem();
+        alert('History cleared! ' + catItems.length + ' items loaded.');
+    }
+
 };
 
 // Keyboard shortcuts for categorization
