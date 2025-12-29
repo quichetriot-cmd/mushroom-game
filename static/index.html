@@ -1499,10 +1499,6 @@ let catFilter = 'all'; // 'all', 'other', 'recent'
 let allCategories = []; // Will be populated from backend
 
 // Category patterns (mirrored from backend for client-side categorization)
-// CATEGORIES for index.html (JavaScript version)
-// 98.9% categorization rate on 11,138 items
-// Copy this into the CATEGORIES const in index.html
-
 // MARKET-DRIVEN CATEGORIES v3
 // Era + Brand + Type for collectibles, era-specific for workwear
 const CATEGORIES = {
@@ -1882,7 +1878,30 @@ const CATEGORIES = {
     "Jacket": /jacket/i,
     "Shirt": /shirt/i,
     "Trousers": /trouser|pants/i,
-};    if (!desc) return {};
+};
+
+// ========== HELPERS ==========
+function cmToInches(cm) {
+    return (cm / 2.54).toFixed(1);
+}
+
+function detectGarmentCategory(title) {
+    const t = title.toLowerCase();
+    if (/\b(sign|banner|statue|poster|display)\b/.test(t)) return 'accessory';
+    const accessoryPattern = /\b(bag|tote|backpack|wallet|belt|hat|cap|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|lamp)\b/;
+    if (accessoryPattern.test(t) && !/\b(jacket|coat|shirt|vest|jeans|pants|trousers?)\b/.test(t)) return 'accessory';
+    if (/\b(shoes|boots|sneaker|loafer|oxford|moccasin|converse|slip-on)\b/.test(t)) return 'shoes';
+    if (/all in one|all-in-one|allinone|union.?alls|jumperalls|playsuit/.test(t)) return 'allinone';
+    if (/\b(jacket|coat|shirt|parka|cardigan|sweater|sweatshirt|hoodie|hoody|blazer|pullover|anorak|windbreaker|bomber|blouson|smock|jkt|snap-t|fleece|weave|jumper)\b/.test(t)) return 'tops';
+    if (/\bvest\b/.test(t)) return 'vest';
+    if (/\bcoverall\b/.test(t)) return 'tops';
+    if (/\boveralls?\b/.test(t)) return 'bottoms';
+    if (/\b(jeans|jeens|pants|trousers?|dungaree|shorts|chino)\b/.test(t)) return 'bottoms';
+    return 'tops';
+}
+
+function extractMeasurements(desc, title = '') {
+    if (!desc) return {};
     const category = detectGarmentCategory(title);
     if (category === 'accessory') return {};
     
