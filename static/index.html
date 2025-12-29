@@ -1503,429 +1503,386 @@ let allCategories = []; // Will be populated from backend
 // 98.9% categorization rate on 11,138 items
 // Copy this into the CATEGORIES const in index.html
 
+// MARKET-DRIVEN CATEGORIES v3
+// Era + Brand + Type for collectibles, era-specific for workwear
 const CATEGORIES = {
-    // === LEVI'S JEANS ===
-    "Levi's S501XX (WW2)": /levi.*s501|s501xx/i,
+    // ========================================================================
+    // LEVI'S - SPECIFIC VARIANTS FIRST
+    // ========================================================================
+    // Specific color/wash variants (different markets)
+    "Levi's 501 Black": /levi.*501.*(black|0658)/i,
+    "Levi's 501 Redline": /levi.*501.*redline/i,
+    "Levi's 70507 Black Galactic": /levi.*70507.*(black|galactic|0260)/i,
+    // WW2 Era (highest value)
+    "Levi's S501XX": /levi.*s501|s501xx/i,
+    "Levi's S506XX": /s506xx/i,
+    // XX era jeans
     "Levi's 501XX Buckleback": /levi.*501.*buckleback/i,
     "Levi's 501XX": /levi.*501.*xx|levi.*501zxx/i,
-    "Levi's 501 Big E": /levi.*501.*big\s*e|levi.*501e\b/i,
-    "Levi's 501 66 Single": /levi.*501.*66/i,
-    "Levi's 501 (Other)": /levi.*501/i,
-    "Levi's 502 Big E": /levi.*502.*big\s*e|levi.*502e\b/i,
-    "Levi's 505 Big E": /levi.*505.*big\s*e|levi.*505e\b/i,
-    "Levi's 505 66 Single": /levi.*505.*66|levi.*505ss/i,
-    "Levi's 606 Big E": /levi.*606/i,
-    "Levi's 517 Jeans": /levi.*\b517\b(?!xx)/i,
-    "Levi's 518": /levi.*\b518\b/i,
-    "Levi's 701 (Women's)": /levi.*\b701\b/i,
     "Levi's 551ZXX": /levi.*551/i,
     "Levi's 503ZXX/BXX": /levi.*503/i,
     "Levi's 550ZXX": /levi.*550/i,
-    
-    // === LEVI'S JACKETS ===
-    "Levi's 213 (Pre-Type1)": /levi.*\b213\b/i,
-    "Levi's S506XX (WW2)": /s506xx/i,
-    "Levi's 506XXE (Big E)": /506xxe/i,
-    "Levi's 506XX (1st)": /506xx/i,
-    "Levi's 507XX (2nd)": /levi.*507.*xx|levi.*507bxx/i,
-    "Levi's 517XX": /levi.*517xx/i,
-    "Levi's 519XX (Blanket)": /levi.*519/i,
-    "Levi's 557XX": /levi.*557.*xx|levi.*557e\b/i,
-    "Levi's 557 (3rd)": /levi.*\b557\b/i,
-    "Levi's 558XX": /levi.*558.*xx|levi.*558e\b/i,
-    "Levi's 559XX": /levi.*559.*xx|levi.*559e\b/i,
+    // Big E era
+    "Levi's 501 Big E": /levi.*501.*big\s*e|levi.*501e\b/i,
+    "Levi's 502 Big E": /levi.*502.*big\s*e/i,
+    "Levi's 505 Big E": /levi.*505.*big\s*e|levi.*505e\b/i,
+    "Levi's 606 Big E": /levi.*606.*big\s*e/i,
+    // 66 era
+    "Levi's 501 66 Single": /levi.*501.*66/i,
+    "Levi's 505 66 Single": /levi.*505.*66|levi.*505ss/i,
+    // Other jeans
+    "Levi's 606": /levi.*606/i,
+    "Levi's 517": /levi.*\b517\b(?!xx)/i,
+    "Levi's 518": /levi.*\b518\b/i,
+    "Levi's 701": /levi.*\b701\b/i,
+    "Levi's 501": /levi.*501/i,
+    // Jackets by type
+    "Levi's 506XXE": /506xxe/i,
+    "Levi's 506XX": /506xx/i,
+    "Levi's 507XX": /levi.*507.*xx|levi.*507bxx/i,
+    "Levi's 557XX": /levi.*557.*xx|levi.*557e/i,
+    "Levi's 557": /levi.*\b557\b/i,
     "Levi's 70505-0117": /70505-0117/i,
-    "Levi's 70505 (3rd)": /levi.*70505/i,
+    "Levi's 70505": /levi.*70505/i,
     "Levi's 70506": /levi.*70506/i,
     "Levi's 70507": /levi.*70507/i,
+    "Levi's 517XX": /levi.*517xx/i,
+    "Levi's 519XX": /levi.*519/i,
+    "Levi's 558XX": /levi.*558/i,
+    "Levi's 559XX": /levi.*559/i,
     "Levi's 71205 Boa": /levi.*71205|levi.*boa/i,
-    "Levi's 71506": /levi.*71506/i,
     "Levi's Shorthorn": /levi.*shorthorn/i,
     "Levi's Saddleman": /levi.*saddleman/i,
     "Levi's Advertising": /levi.*advertising|levi.*banner/i,
-    "Levi's Other": /levi/i,
-    
-    // === LEE ===
+    "Levi's": /levi/i,
+    // ========================================================================
+    // LEE - ERA + TYPE SPECIFIC
+    // ========================================================================
+    // WW2 Era
+    "Lee S91-J": /lee.*s91-?j/i,
+    // Jackets
     "Lee 191-J": /lee.*191-?j/i,
-    "Lee S91-J (WW2)": /lee.*s91-?j/i,
     "Lee 91-LJ": /lee.*91-?lj/i,
-    "Lee 91-J Chore": /lee.*91-j|lee.*91j/i,
-    "Lee 101-J Jacket": /lee.*101-?j\b/i,
+    "Lee 91-J": /lee.*91-j|lee.*91j/i,
+    "Lee 101-J": /lee.*101-?j\b/i,
     "Lee 98-J": /lee.*98-?j/i,
-    "Lee 91-B": /lee.*91-b/i,
-    "Lee 91-SB": /lee.*91-sb/i,
     "Lee 81-LJ": /lee.*81-?lj/i,
-    "Lee 44-J": /lee.*44-?j/i,
+    "Lee Storm Rider": /lee.*storm\s*rider/i,
+    // Era + Type specific (your correction)
+    "1950s Lee Denim Western": /lee.*denim.*western.*(195|1950)|lee.*(195|1950).*denim.*western/i,
+    "Lee Denim Western": /lee.*denim.*western/i,
+    // Jeans
     "Lee 101Z": /lee.*101z/i,
     "Lee 101B Cowboy": /lee.*101b|lee.*cowboy/i,
-    "Lee 191": /lee.*\b191\b/i,
-    "Lee 220": /lee.*220/i,
-    "Lee Westerner": /lee.*westerner/i,
     "Lee Riders": /lee.*riders/i,
-    "Lee Storm Rider": /lee.*storm\s*rider/i,
-    "Lee White Canvas": /lee.*white.*canvas/i,
-    "Lee Coverall": /lee.*coverall/i,
-    "Lee HBT": /lee.*hbt/i,
-    "Lee Princeton": /lee.*princeton/i,
-    "Lee Jelt": /lee.*jelt/i,
     "Lee Frisco": /lee.*frisco/i,
-    "Lee Leens": /lee.*leens/i,
+    // Workwear
+    "Lee Coverall": /lee.*coverall/i,
+    "Lee Overall": /lee.*overall/i,
     "Lee Painter": /lee.*painter/i,
-    "Lee Boss/Logger": /lee.*boss|lee.*logger/i,
+    // Special
+    "Lee Princeton Beer Jacket": /lee.*princeton.*beer|princeton.*beer.*lee/i,
+    "Lee Princeton": /lee.*princeton/i,
     "Lee Advertising": /lee.*advertising|lee.*sign/i,
     "Buddy Lee Doll": /buddy\s*lee/i,
-    "Lee Other": /\blee\b/i,
-    
-    // === WRANGLER ===
+    "Lee": /\blee\b/i,
+    // ========================================================================
+    // WRANGLER
+    // ========================================================================
     "Wrangler 111MJ Proto": /111mj.*proto|proto.*111mj/i,
     "Wrangler 111MJ": /wrangler.*111mj|111mj/i,
     "Wrangler 11MJZ": /wrangler.*11mjz/i,
     "Wrangler 11MWZ": /wrangler.*11mwz|11mwz/i,
-    "Wrangler 11MW": /wrangler.*11mw\b/i,
     "Wrangler 24MJ": /wrangler.*24mj/i,
-    "Wrangler 27MW": /wrangler.*27mw/i,
-    "Wrangler 77MJZ": /wrangler.*77mjz/i,
-    "Wrangler 124MJ": /wrangler.*124mj/i,
-    "Wrangler 12MJZ": /wrangler.*12mjz/i,
-    "Wrangler 888MJ": /wrangler.*888mj/i,
     "Wrangler Blue Bell": /wrangler.*blue\s*bell|blue\s*bell.*wrangler/i,
-    "Wrangler Other": /wrangler/i,
-    
-    // === CHAMPION ===
-    "Champion Rock Hood": /rock\s*hood/i,
-    "Champion Afterhoody": /afterhoody|after\s*hoody/i,
-    "Champion W/F Double Face": /champion.*w\/f|double\s*face/i,
-    "Champion USMA": /usma|west\s*point/i,
-    "Champion USAFA": /usafa|air\s*force\s*academy/i,
-    "Champion USNA": /usna|naval\s*academy/i,
-    "Champion Kings Point": /kings\s*point/i,
-    "Champion Coast Guard": /champion.*coast\s*guard|coast\s*guard.*reverse/i,
-    "Champion Reverse Weave": /reverse\s*weave/i,
-    "Champion Football Tee": /champion.*football/i,
-    "Champion Flock Print": /champion.*flock/i,
-    "Champion Water Print": /champion.*water/i,
-    "Champion Two-Tone": /champion.*two-tone/i,
-    "Champion Other": /champion/i,
-    
-    // === VINTAGE SWEATSHIRTS ===
-    "Spalding Sweat": /spalding/i,
-    "Duxbak Sweat": /duxbak/i,
-    "Spruce Sweat": /spruce/i,
-    "Bodygard Sweat": /bodygard/i,
-    "Akom Sweat": /akom/i,
-    "Russell Sweat": /russell/i,
-    "Two-Tone Sweat": /two-?\s*tone.*sweat|sweat.*two-?\s*tone/i,
-    "Water Print Sweat": /water\s*print/i,
-    "Composer Print": /beethoven|bach|brahms|nietzsche/i,
-    "Peanuts/Snoopy": /peanuts|snoopy|charlie\s*brown|schroeder|pig\s*pen/i,
-    "W/V Sweat": /w\/v/i,
-    "S/V Sweat": /s\/v/i,
-    "Sweat Hoody": /sweat\s*hoody|s\/f\s*sweat/i,
-    "Flock Print (Black Body)": /black.*flock|flock.*black\s*body/i,
-    "Flock Print": /flock\s*print|flock/i,
-    "Sweatshirt": /sweat\s*shirt|sweatshirt/i,
-    
-    // === U.S. NAVY ===
-    "Navy Blue N-1 Deck": /blue.*n-1|n-1.*blue|blue.*deck/i,
-    "Navy N-1 Pique": /n-1.*pique|pique.*n-1/i,
-    "Navy A-2 Deck": /a-2.*deck/i,
-    "Navy N-1 Deck": /n-1.*deck|n-1\b/i,
-    "Navy Dangaree (Shawl)": /dangaree/i,
-    "Navy Dungaree Jacket": /navy.*dungaree.*jacket|usn.*dungaree.*jacket/i,
-    "Navy Dungaree Pants": /navy.*dungaree.*(trouser|pants)|usn.*dungaree.*(trouser|pants)/i,
-    "Navy NAF-1168": /naf-1168/i,
-    "Navy Summer Flight Jacket": /an-j-2|an6551|an6552|m-421a|summer.*flight/i,
-    "Navy Flight Jacket": /navy.*flight|u\.s\.n.*flight/i,
-    "Navy P-Coat": /navy.*p-coat|navy.*pea\s*coat/i,
-    "Navy Gunner Smock": /gunner\s*smock/i,
-    "Navy HBT": /navy.*hbt|usn.*hbt/i,
-    "Navy Catapult Jacket": /catapult/i,
-    "Navy Sweat": /navy.*sweat/i,
-    "Navy Other": /u\.s\.navy|u\.s\.n\b/i,
-    
-    // === U.S. COAST GUARD ===
-    "Coast Guard": /coast\s*guard/i,
-    
-    // === ROYAL NAVY (British) ===
-    "Royal Navy": /royal\s*navy/i,
-    
-    // === U.S. ARMY ===
-    "Army M-65": /m-65/i,
-    "Army M-43/M-48/M-51": /m-43|m-48|m-51/i,
-    "Army Tanker": /tanker\s*jacket/i,
-    "Army Dungaree/Denim": /army.*dungaree|army.*denim/i,
-    "Army Jungle Jacket": /jungle/i,
-    "Army Khaki/Chino": /army.*khaki|army.*chino/i,
-    "Army Mackinaw": /army.*mackinaw/i,
-    "Army HBT": /army.*hbt/i,
-    "Army Daisy Mae Hat": /daisy\s*mae/i,
-    "Army Snow Parka": /army.*snow|army.*parka/i,
-    "Army Other": /u\.s\.army/i,
-    
-    // === USMC ===
-    "USMC P-41/P-42/P-44": /p-4[124]/i,
-    "USMC Other": /usmc/i,
-    
-    // === USAF ===
-    "USAF G-1 Linecrewman": /g-1.*linecrewman|linecrewman.*jacket/i,
-    "USAF MA-1": /ma-1/i,
-    "USAF L-2/L-2B": /l-2[ab]?(?:\b|$)/i,
-    "USAF B-15/B-10": /b-15|b-10/i,
-    "USAF A-2": /usaa?f.*a-2|a-2.*flight/i,
-    "USAF CWU": /cwu/i,
-    "USAF Other": /usaf|u\.s\.air\s*force/i,
-    
-    // === OTHER MILITARY ===
-    "G-1 Flight Jacket": /g-1/i,
-    "Tiger Stripe Camo": /tiger\s*stripe/i,
-    "PCU/ECWCS": /pcu|ecwcs|level\s*\d.*jacket/i,
-    "Military Surplus": /military|bdu/i,
-    
-    // === WORKWEAR BRANDS ===
-    "Carhartt Brown Duck": /carhartt.*brown\s*duck/i,
-    "Carhartt Salt & Pepper": /carhartt.*salt.*pepper/i,
+    "Wrangler": /wrangler/i,
+    // ========================================================================
+    // CHINSTRAP - HIGHEST VALUE WORKWEAR (Your insight!)
+    // ========================================================================
+    "1920s Chinstrap": /chinstrap.*(192|1920)|192.*chinstrap|1920.*chinstrap/i,
+    "1930s Chinstrap Coverall": /chinstrap.*coverall.*(193|1930)|193.*chinstrap.*coverall|1930.*chinstrap.*coverall|coverall.*chinstrap.*(193|1930)/i,
+    "1930s Chinstrap": /chinstrap.*(193|1930)|193.*chinstrap|1930.*chinstrap/i,
+    "1940s Chinstrap": /chinstrap.*(194|1940)|194.*chinstrap|1940.*chinstrap/i,
+    "Chinstrap": /chinstrap/i,
+    // ========================================================================
+    // CARHARTT - ERA + TYPE (Special collectible brand)
+    // ========================================================================
+    "1930s Carhartt Coverall": /carhartt.*coverall.*(193|1930)|193.*carhartt.*coverall|1930.*carhartt.*coverall/i,
+    "1940s Carhartt Coverall": /carhartt.*coverall.*(194|1940)|194.*carhartt.*coverall|1940.*carhartt.*coverall/i,
+    "1950s Carhartt Duck Coverall": /carhartt.*(brown\s*duck|duck).*coverall.*(195|1950)|carhartt.*coverall.*(195|1950)/i,
+    "1960s Carhartt Coverall": /carhartt.*coverall.*(196|1960)|196.*carhartt.*coverall|1960.*carhartt.*coverall/i,
+    "1940s Carhartt Overall": /carhartt.*overall.*(194|1940)|194.*carhartt.*overall|1940.*carhartt.*overall/i,
+    "1950s Carhartt Overall": /carhartt.*overall.*(195|1950)|195.*carhartt.*overall|1950.*carhartt.*overall/i,
     "Carhartt Denim": /carhartt.*denim/i,
+    "Carhartt Brown Duck": /carhartt.*(brown\s*duck|duck)/i,
     "Carhartt Detroit": /carhartt.*detroit/i,
     "Carhartt": /carhartt/i,
+    // ========================================================================
+    // COVERALLS BY ERA (Generic - after Carhartt catches its items)
+    // ========================================================================
+    "1930s Coverall": /coverall.*(193|1930)|193.*coverall|1930.*coverall/i,
+    "1940s Coverall": /coverall.*(194|1940)|194.*coverall|1940.*coverall|ww2.*coverall|coverall.*ww2/i,
+    "1950s Coverall": /coverall.*(195|1950)|195.*coverall|1950.*coverall/i,
+    "1960s Coverall": /coverall.*(196|1960)|196.*coverall|1960.*coverall/i,
+    "Coverall": /coverall/i,
+    // ========================================================================
+    // OVERALLS BY ERA
+    // ========================================================================
+    "1930s Overall": /overall.*(193|1930)|193.*overall|1930.*overall/i,
+    "1940s Overall": /overall.*(194|1940)|194.*overall|1940.*overall/i,
+    "1950s Overall": /overall.*(195|1950)|195.*overall|1950.*overall/i,
+    "Overall": /overall/i,
+    // ========================================================================
+    // OTHER WORKWEAR BRANDS
+    // ========================================================================
+    "1930s Hercules": /hercules.*(193|1930)|193.*hercules|1930.*hercules/i,
     "Hercules": /hercules/i,
+    "1940s Head Light": /head\s*light.*(194|1940)|194.*head\s*light|1940.*head\s*light/i,
     "Head Light": /head\s*light/i,
     "Big Yank Mountain Pocket": /big\s*yank.*mountain\s*pocket/i,
     "Big Yank Chambray": /big\s*yank.*chambray/i,
-    "Big Yank Flannel": /big\s*yank.*flannel/i,
     "Big Yank": /big\s*yank/i,
-    "Big Mac": /big\s*mac/i,
+    "1930s Big Smith": /big\s*smith.*(193|1930)|193.*big\s*smith|1930.*big\s*smith/i,
     "Big Smith": /big\s*smith/i,
     "Osh Kosh": /osh\s*kosh|oshkosh/i,
     "Sweet-Orr": /sweet-orr/i,
-    "Super Pay Day": /super\s*pay\s*day/i,
     "Pay Day": /pay\s*day/i,
     "Finck's": /finck/i,
     "Can't Bust'Em": /can't\s*bust|can\'t\s*bust/i,
-    "Boss of the Road": /boss\s*(of\s*the\s*)?road/i,
     "Strong Reliable": /strong\s*reliable/i,
-    "MW Pioneer": /mw.*pioneer|pioneer.*denim/i,
-    "Blue Bell": /blue\s*bell/i,
-    "Stronghold": /stronghold/i,
-    "Crown": /\bcrown\b/i,
-    "N&W": /\bn\s*&\s*w\b/i,
-    "Black Bear": /black\s*bear/i,
-    "Carter's": /carter/i,
-    "Test": /\btest\b/i,
-    "Powell": /powell/i,
-    "W.P.A": /w\.?p\.?a\b/i,
-    "Freeland": /freeland/i,
-    "Burlington": /burlington/i,
-    "Dubbleware": /dubbleware/i,
-    "Winner": /\bwinner\b/i,
-    "Round House": /round\s*house/i,
     "Pointer": /pointer/i,
-    "Montgomery Ward": /montgomery\s*ward/i,
-    "Sears/Roebucks": /sears|roebucks/i,
-    "JCPenney/Foremost": /j\.?c\.?\s*penney|jcp|penneys|foremost/i,
-    "Ox Hide": /ox\s*hide/i,
-    
-    // === WORKWEAR TYPES ===
-    "Coverall": /coverall/i,
-    "All-in-One": /all\s*in\s*one|all-in-one/i,
-    "Overall (Bib)": /overall/i,
+    "Round House": /round\s*house/i,
+    "Crown Advertising": /crown.*(advertising|clock)/i,
+    "Crown": /\bcrown\b/i,
+    // ========================================================================
+    // WORKWEAR TYPES
+    // ========================================================================
+    "1930s Painter Pants": /painter.*(193|1930)|193.*painter|1930.*painter/i,
     "Painter Pants": /painter/i,
+    "Engineer Pants": /engineer.*pant/i,
     "Double Knee": /double\s*knee/i,
-    "Engineer Pants": /engineer/i,
-    "Logger Pants": /logger/i,
-    "Shop Coat": /shop\s*coat/i,
-    "Chore Coat": /chore/i,
     "Chambray Shirt": /chambray/i,
-    "Chinstrap": /chinstrap/i,
     "Buckleback": /buckleback/i,
     "Railroad": /railroad/i,
-    "Prison": /prison/i,
-    "Change Button": /change\s*button/i,
     "Denim Work Trousers": /denim.*(trouser|work\s*pant)|denim.*pant/i,
     "Work Shirt": /work\s*shirt/i,
-    
-    // === PATTERNS/MATERIALS ===
-    "Star Stripe": /star\s*stripe/i,
-    "Wabash Stripe": /wabash/i,
-    "Hickory Stripe": /hickory/i,
-    "Salt & Pepper": /salt.*pepper/i,
-    "Duck Canvas": /duck\s*canvas|canvas\s*duck|brown\s*duck/i,
-    "Blanket Lined": /blanket\s*lined/i,
-    "Shadow Plaid": /shadow\s*plaid|shadow.*check/i,
-    
-    // === OUTDOOR BRANDS ===
+    // ========================================================================
+    // CHAMPION - MILITARY VS CIVILIAN
+    // ========================================================================
+    "Champion Rock Hood": /rock\s*hood/i,
+    "Champion Afterhoody": /afterhoody|after\s*hoody/i,
+    "Champion USMA Reverse Weave": /usma.*reverse|reverse.*usma|west\s*point.*reverse/i,
+    "Champion USAFA Reverse Weave": /usafa.*reverse|reverse.*usafa/i,
+    "Champion USNA Reverse Weave": /usna.*reverse|reverse.*usna/i,
+    "Champion Navy Reverse Weave": /(navy|u\.s\.n).*reverse\s*weave|reverse\s*weave.*(navy|u\.s\.n)/i,
+    "Champion Military Reverse Weave": /(army|air\s*force|coast\s*guard|marines|military).*reverse|reverse.*(army|air\s*force|coast\s*guard|marines)/i,
+    "Champion W/F Double Face": /champion.*w\/f|double\s*face/i,
+    "Champion Football Tee Water Print": /champion.*(football|water\s*print).*(water\s*print|football)/i,
+    "Champion Football Tee": /champion.*football/i,
+    "Champion Two-Tone": /champion.*two-tone/i,
+    "Champion Reverse Weave": /reverse\s*weave/i,
+    "Champion": /champion/i,
+    // ========================================================================
+    // SWEATSHIRTS - SPECIFIC TYPES
+    // ========================================================================
+    "Spalding Sweat": /spalding.*sweat/i,
+    "Spruce Sweat": /spruce.*sweat/i,
+    "Beethoven Sweat": /beethoven/i,
+    "Bach Sweat": /\bbach\b/i,
+    "Peanuts Schroeder Sweat": /schroeder/i,
+    "Peanuts Snoopy Sweat": /snoopy|peanuts|charlie\s*brown/i,
+    "1940s W/V Sweat": /w\/v.*(194|1940)|194.*w\/v|1940.*w\/v/i,
+    "W/V Sweat": /\bw\/v\b/i,
+    "S/V Sweat": /\bs\/v\b/i,
+    "Two-Tone Sweat": /two-?\s*tone.*sweat|sweat.*two-?\s*tone/i,
+    "Water Print Sweat": /water\s*print/i,
+    "Flock Print Black Body": /(black.*body|black.*flock).*sweat|flock.*(black|body)|black.*flock/i,
+    "Flock Print Sweat": /flock/i,
+    // ========================================================================
+    // U.S. NAVY - SPECIFIC TYPES
+    // ========================================================================
+    "Navy WEP Flight Jacket": /wep/i,
+    "Navy AN-J-2 Summer Flight": /an-j-2|an6551|an6552/i,
+    "Navy M-421a Flight": /m-421a/i,
+    "Navy Summer Flight Jacket": /summer.*flight/i,
+    "Navy G-1 Flight Jacket": /(navy|u\.s\.n).*g-1/i,
+    "Navy Blue N-1 Deck": /blue.*n-1|n-1.*blue|blue.*deck/i,
+    "Navy N-1 Pique": /n-1.*pique|pique.*n-1/i,
+    "Navy A-2 Deck": /a-2.*deck/i,
+    "Navy N-1 Deck": /n-1/i,
+    "Navy Dungaree Jacket": /(navy|usn).*dungaree.*jacket/i,
+    "Navy Dungaree Pants": /(navy|usn).*dungaree.*(trouser|pants)/i,
+    "Navy P-Coat": /navy.*p-coat|pea\s*coat/i,
+    "Navy HBT": /(navy|usn).*hbt/i,
+    "Navy": /u\.s\.navy|u\.s\.n\b|usn\b/i,
+    // ========================================================================
+    // USMC
+    // ========================================================================
+    "USMC Frog Skin Camo": /(usmc|marine).*frog|duck.*hunter|frog\s*skin/i,
+    "USMC P-44 Monkey Pants": /p-44.*(trouser|pants|hbt)/i,
+    "USMC P-41/P-42/P-44": /p-4[124]/i,
+    "USMC": /usmc|marine/i,
+    // ========================================================================
+    // USAF
+    // ========================================================================
+    "USAF G-1 Linecrewman": /g-1.*linecrewman|linecrewman/i,
+    "USAF L-2A": /l-2a/i,
+    "USAF L-2B": /l-2b/i,
+    "USAF MA-1": /ma-1/i,
+    "USAF B-15": /b-15/i,
+    "USAF B-10": /b-10/i,
+    "USAF A-2": /usaf.*a-2|a-2.*flight/i,
+    "USAF": /usaf|u\.s\.air\s*force/i,
+    // ========================================================================
+    // OTHER MILITARY
+    // ========================================================================
+    "Denim N-3B": /denim.*n-3b|n-3b.*denim/i,
+    "Army M-65": /m-65/i,
+    "Army M-43/M-48/M-51": /m-43|m-48|m-51/i,
+    "Army Tanker": /tanker\s*jacket/i,
+    "Army HBT": /army.*hbt/i,
+    "Army": /u\.s\.army/i,
+    "G-1 Flight Jacket": /g-1/i,
+    "Coast Guard": /coast\s*guard/i,
+    // ========================================================================
+    // PATAGONIA - SPECIFIC PRODUCT LINES
+    // ========================================================================
     "Patagonia MARS": /patagonia.*mars|mars.*patagonia/i,
-    "Patagonia DAS Parka": /patagonia.*das|das\s*parka/i,
+    "Patagonia DAS Parka": /patagonia.*das/i,
     "Patagonia Glissade": /patagonia.*glissade|glissade/i,
     "Patagonia Snap-T": /patagonia.*snap-t|snap-t/i,
-    "Patagonia Down": /patagonia.*(down|puff)/i,
+    "Patagonia Puff/Down": /patagonia.*(puff|down)/i,
     "Patagonia Retro": /patagonia.*retro/i,
+    "Patagonia Synchilla": /patagonia.*synchilla/i,
     "Patagonia": /patagonia/i,
-    "L.L.Bean Leather Handle Tote": /l\.?l\.?\s*bean.*leather.*handle|leather.*handle.*tote/i,
+    // ========================================================================
+    // OTHER OUTDOOR
+    // ========================================================================
+    "L.L.Bean Leather Handle Tote": /l\.?l\.?\s*bean.*leather.*handle/i,
     "L.L.Bean Tote": /l\.?l\.?\s*bean.*tote/i,
     "L.L.Bean Warden": /l\.?l\.?\s*bean.*warden/i,
     "L.L.Bean": /l\.?l\.?\s*bean/i,
+    "North Face Down": /north\s*face.*(down|brooks\s*range|expedition)/i,
     "North Face": /north\s*face/i,
+    "Eddie Bauer Down": /eddie\s*bauer.*(down|leather.*down)/i,
     "Eddie Bauer": /eddie\s*bauer/i,
+    "REI Down": /rei.*(down|expedition)/i,
     "REI": /\brei\b/i,
-    "Brown's Beach": /brown'?s?\s*beach/i,
-    "Rocky Mountain": /rocky\s*mountain/i,
-    "Arc'teryx": /arc.teryx/i,
-    "Filson": /filson/i,
-    "Sierra Designs": /sierra\s*designs/i,
-    "Alpine Designs": /alpine\s*designs/i,
+    "Gerry Down": /gerry.*(down|expedition)/i,
     "Gerry": /\bgerry\b/i,
+    "Brown's Beach": /brown'?s?\s*beach/i,
+    "Sierra Designs": /sierra\s*designs/i,
+    "Filson": /filson/i,
     "Barbour": /barbour/i,
-    "Willis & Geiger": /willis.*geiger/i,
-    "Down Jacket": /down\s*(jacket|parka|vest|hoody)|expedition.*down/i,
-    "Hunting Jacket": /hunting.*jacket|shooting/i,
-    "Ski Jacket": /ski\s*jacket/i,
-    
-    // === SOUVENIR/TOUR JACKETS ===
+    "Down Parka": /down.*(parka|jacket)|expedition.*down/i,
+    // ========================================================================
+    // SOUVENIR JACKETS - LOCATION SPECIFIC
+    // ========================================================================
+    "Okinawa Souvenir": /okinawa/i,
+    "Korea Souvenir": /korea.*souvenir|korea.*jacket/i,
+    "Alaska Souvenir": /alaska.*souvenir|alaska.*jacket/i,
+    "Panama Souvenir": /panama/i,
     "Vietnam Souvenir": /viet-?nam.*souvenir/i,
     "Vietnam Tour": /viet-?nam.*tour/i,
-    "Japan Tiger Souvenir": /japan.*tiger|tiger.*souvenir/i,
-    "Japan Corduroy Souvenir": /japan.*corduroy.*souvenir|corduroy.*souvenir/i,
     "Misawa Souvenir": /misawa/i,
+    "Japan Tiger Souvenir": /japan.*tiger|tiger.*japan/i,
+    "Japan Corduroy Souvenir": /corduroy.*souvenir/i,
     "Japan Souvenir": /japan.*souvenir|sukajan/i,
-    "Okinawa Souvenir": /okinawa.*souvenir/i,
-    "Korea Souvenir": /korea.*souvenir/i,
-    "Alaska Souvenir": /alaska.*souvenir/i,
-    "Souvenir Jacket Other": /souvenir/i,
-    
-    // === JACKET TYPES ===
-    "Award/Car Club": /award\s*jacket|car\s*club/i,
-    "Pharaoh Jacket": /pharaoh/i,
-    "Drizzler Jacket": /drizzler/i,
-    "Western Jacket": /western.*jacket|gabardine.*jacket/i,
-    "Kodiak": /kodiak/i,
-    "Fake Fur Jacket": /fake\s*fur/i,
-    "Logger Cruiser": /logger.*cruiser|cruiser.*jacket/i,
-    "Car Coat": /car\s*coat/i,
-    "Mackinaw": /mackinaw/i,
-    
-    // === HAWAIIAN SHIRTS ===
-    "Kamehameha": /kamehameha/i,
-    "Kahanamoku": /kahanamoku/i,
-    "Del Mar": /del\s*mar/i,
-    "Hawaiian/Aloha": /hawaiian|aloha/i,
-    
-    // === SHIRTS ===
-    "Rayon Shirt": /rayon.*shirt|rayon/i,
-    "Pilgrim Flannel": /pilgrim.*flannel|pilgrim.*plaid|pilgrim/i,
-    "Sun Valley Flannel": /sun\s*valley.*flannel|sun\s*valley/i,
+    "Souvenir Jacket": /souvenir/i,
+    // ========================================================================
+    // SHIRTS BY ERA + TYPE (Your clarification insight)
+    // ========================================================================
+    "1950s Corduroy Shirt": /corduroy.*(shirt|box).*(195|1950)|195.*corduroy|1950.*corduroy/i,
+    "1960s Corduroy Shirt": /corduroy.*(shirt|box).*(196|1960)|196.*corduroy|1960.*corduroy/i,
+    "Corduroy Shirt": /corduroy.*(shirt|box)/i,
+    "1950s Rayon Shirt": /rayon.*(195|1950)|195.*rayon|1950.*rayon/i,
+    "1960s Shadow Plaid Rayon": /(shadow.*plaid|arrow).*(196|1960)|(196|1960).*(shadow.*plaid|arrow)/i,
+    "Rayon Shirt": /rayon/i,
+    "Shadow Plaid Shirt": /shadow\s*plaid|shadow.*check/i,
+    "1950s Pilgrim Flannel": /pilgrim.*(195|1950)|195.*pilgrim|1950.*pilgrim/i,
+    "1950s Sun Valley Flannel": /sun\s*valley.*(195|1950)|195.*sun\s*valley|1950.*sun\s*valley/i,
+    "Pilgrim Flannel": /pilgrim/i,
+    "Sun Valley Flannel": /sun\s*valley/i,
     "Flannel Shirt": /flannel/i,
     "Western Shirt": /western.*shirt/i,
     "Wool Shirt": /wool.*shirt/i,
-    "Denim Shirt": /denim.*shirt/i,
-    "Corduroy Shirt": /corduroy.*shirt/i,
-    "Arrow Shirt": /\barrow\b.*shirt|\barrow\b/i,
-    
-    // === TEES ===
-    "Band Tee": /(nirvana|metallica|grateful\s*dead|rolling\s*stones|beatles|zeppelin|hendrix|floyd|ramones|clash|pistols|sabbath|maiden|motorhead|slayer|megadeth|pantera|soundgarden|pearl\s*jam|alice\s*in\s*chains|dinosaur|red\s*hot|radio\s*head|guns.*roses|ac\/dc|kiss\b|van\s*halen|def\s*leppard|ozzy|judas\s*priest|iron\s*maiden).*t-shirt|tour.*t-shirt/i,
+    "Arrow Shirt": /\barrow\b/i,
+    // ========================================================================
+    // HAWAIIAN
+    // ========================================================================
+    "Kamehameha": /kamehameha/i,
+    "Kahanamoku": /kahanamoku/i,
+    "Hawaiian/Aloha": /hawaiian|aloha/i,
+    // ========================================================================
+    // TEES - BRAND SPECIFIC
+    // ========================================================================
+    "Band Tee": /(dinosaur|nirvana|metallica|grateful\s*dead|rolling\s*stones|beatles|zeppelin|hendrix|floyd|ramones|clash|pistols|sabbath|maiden|motorhead|slayer|megadeth|pantera|soundgarden|pearl\s*jam|alice\s*in\s*chains|red\s*hot|radio\s*head|guns.*roses|ac\/dc|kiss\b|van\s*halen|ozzy).*t-shirt|tour.*t-shirt/i,
     "Harley-Davidson Tee": /harley.*t-shirt|harley.*tee/i,
+    "Stussy Tee": /stussy.*t-shirt/i,
     "Stussy": /stussy/i,
+    "Nike Tee": /nike.*t-shirt/i,
     "Photo Print Tee": /photo.*print|bruce\s*weber/i,
     "Vintage T-Shirt": /t-shirt/i,
-    
-    // === SWEATERS ===
+    // ========================================================================
+    // SWEATERS
+    // ========================================================================
     "Mohair Cardigan": /mohair/i,
-    "Cowichan Jacket": /cowichan.*jacket/i,
-    "Cowichan Sweater": /cowichan/i,
+    "Cowichan": /cowichan/i,
     "Pendleton": /pendleton/i,
-    
-    // === NATIVE/SOUTHWEST ===
+    "McGregor": /mcgregor/i,
+    // ========================================================================
+    // NATIVE/SOUTHWEST
+    // ========================================================================
     "Navajo/Chimayo": /navajo|chimayo|ortega/i,
-    
-    // === LEATHER ===
+    // ========================================================================
+    // LEATHER
+    // ========================================================================
     "Buco Leather": /\bbuco\b/i,
     "Schott Leather": /schott/i,
-    "Beck Leather": /\bbeck\b/i,
     "Horsehide": /horsehide/i,
-    
-    // === PREMIUM BRANDS ===
-    "Brooks Brothers": /brooks\s*brothers/i,
-    "McGregor": /mcgregor/i,
-    "Burberry": /burberry/i,
-    
-    // === COLLEGE/SPORTS ===
-    "Beer Jacket": /beer\s*jacket/i,
-    "Varsity/Letterman": /varsity|letterman/i,
-    "Sports Jacket": /sports?\s*jacket/i,
-    "Military Academy": /usafa|usma|usna|west\s*point|naval\s*academy|air\s*force\s*academy/i,
-    
-    // === SHOES ===
-    "Nike Shoes": /nike.*(shoes|sneaker|jordan|dunk|cortez|waffle|blazer)/i,
+    "Car Coat": /car\s*coat/i,
+    "Cafe Racer": /cafe\s*racer/i,
+    // ========================================================================
+    // SHOES
+    // ========================================================================
+    "Nike Shoes": /nike.*(shoes|sneaker|jordan|dunk|cortez|waffle|blazer|vandal)/i,
     "Nike": /\bnike\b/i,
     "Converse": /converse/i,
     "Red Wing Boots": /red\s*wing/i,
     "Vans": /\bvans\b/i,
-    
-    // === ACCESSORIES ===
-    "Advertising/Display": /advertising|banner|display|sign\b|wall\s*clock/i,
+    // ========================================================================
+    // ACCESSORIES
+    // ========================================================================
+    "Advertising": /advertising|banner|display|wall\s*clock/i,
     "Tote Bag": /tote/i,
     "Quilt": /quilt/i,
     "Navajo Rug": /navajo.*rug|swastika.*rug|\brug\b/i,
-    "Canvas Bag": /canvas.*bag/i,
-    "Newspaper Bag": /newspaper/i,
     "Backpack": /back\s*pack|backpack|gregory|chouinard|kelty/i,
-    "Studded Belt": /studded.*belt|jewel.*belt/i,
-    "Belt": /\bbelt\b/i,
     "Blanket": /\bblanket\b/i,
-    "Apron": /\bapron\b/i,
-    "Bandana": /bandana/i,
-    "Indigo": /\bindigo\b/i,
-    
-    // === KNITS/SWEATERS ===
-    "Cardigan": /cardigan/i,
-    "Vest": /\bvest\b/i,
-    "Pullover Sweater": /pullover/i,
-    
-    // === CATCH-ALLS ===
-    "Cafe Racer": /cafe\s*racer/i,
-    "Motorcycle Jacket": /motorcycle/i,
+    // ========================================================================
+    // JACKET TYPES
+    // ========================================================================
+    "Award/Varsity Jacket": /award\s*jacket|varsity|letterman/i,
+    "Drizzler Jacket": /drizzler/i,
+    "Western Jacket": /western.*jacket|gabardine.*jacket/i,
+    "Mackinaw": /mackinaw/i,
+    // ========================================================================
+    // CATCH-ALLS
+    // ========================================================================
     "Denim Jacket": /denim\s*jacket/i,
     "Denim Jeans": /jeans/i,
     "Gore-Tex": /gore-tex/i,
     "Corduroy": /corduroy/i,
-    "Polo/Ralph Lauren": /polo|ralph\s*lauren/i,
-    "Anorak": /anorak/i,
     "Leather Jacket": /leather.*jacket/i,
-    "Work Jacket": /work\s*jacket/i,
-    "Boat Jacket": /boat\s*jacket/i,
     "Parka": /parka/i,
-    
-    // === ERA CATCH-ALLS (after all brands) ===
-    "WW1 Military": /ww1/i,
-    "WW2 Military": /ww2/i,
-    
-    // === FINAL CATCH-ALLS ===
-    "Jacket (Other)": /jacket/i,
-    "Shirt (Other)": /shirt/i,
+    "Cardigan": /cardigan/i,
+    "Vest": /\bvest\b/i,
+    "Sweatshirt": /sweat/i,
+    "WW2 Military": /ww2|wwii/i,
+    "Jacket": /jacket/i,
+    "Shirt": /shirt/i,
     "Trousers": /trouser|pants/i,
-};
-
-// ========== HELPERS ==========
-function cmToInches(cm) {
-    return (cm / 2.54).toFixed(1);
-}
-
-function detectGarmentCategory(title) {
-    const t = title.toLowerCase();
-    if (/\b(sign|banner|statue|poster|display)\b/.test(t)) return 'accessory';
-    const accessoryPattern = /\b(bag|tote|backpack|wallet|belt|hat|cap|ring|blanket|rug|bandana|quilt|doll|clock|toy|patch|tag|button|buckle|box|chair|lamp)\b/;
-    if (accessoryPattern.test(t) && !/\b(jacket|coat|shirt|vest|jeans|pants|trousers?)\b/.test(t)) return 'accessory';
-    if (/\b(shoes|boots|sneaker|loafer|oxford|moccasin|converse|slip-on)\b/.test(t)) return 'shoes';
-    if (/all in one|all-in-one|allinone|union.?alls|jumperalls|playsuit/.test(t)) return 'allinone';
-    if (/\b(jacket|coat|shirt|parka|cardigan|sweater|sweatshirt|hoodie|hoody|blazer|pullover|anorak|windbreaker|bomber|blouson|smock|jkt|snap-t|fleece|weave|jumper)\b/.test(t)) return 'tops';
-    if (/\bvest\b/.test(t)) return 'vest';
-    if (/\bcoverall\b/.test(t)) return 'tops';
-    if (/\boveralls?\b/.test(t)) return 'bottoms';
-    if (/\b(jeans|jeens|pants|trousers?|dungaree|shorts|chino)\b/.test(t)) return 'bottoms';
-    return 'tops';
-}
-
-function extractMeasurements(desc, title = '') {
-    if (!desc) return {};
+};    if (!desc) return {};
     const category = detectGarmentCategory(title);
     if (category === 'accessory') return {};
     
