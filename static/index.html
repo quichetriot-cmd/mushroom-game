@@ -968,16 +968,19 @@ async function loadGalleryPage() {
 }
 
 function renderGallery() {
-    document.getElementById('galleryGrid').innerHTML = allItems.map((item, i) => `
+    document.getElementById('galleryGrid').innerHTML = allItems.map((item, i) => {
+        const imgSrc = (item.images && item.images[0]) ? item.images[0] : '';
+        return `
         <div class="gallery-item" data-idx="${i}">
-            <img src="${item.images?.[0] || ''}" loading="lazy">
+            <img src="${imgSrc}" loading="lazy" alt="${item.title}">
             <div class="gallery-item-info">
                 <div class="gallery-item-title">${item.title}</div>
                 <div class="gallery-item-price">$${item.price_usd.toLocaleString()}</div>
                 <div class="gallery-item-date">${formatDate(item.sold_date)}</div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
     
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
     document.getElementById('pageInfo').textContent = `${page} / ${totalPages}`;
@@ -1015,7 +1018,8 @@ document.querySelectorAll('.sort-btn').forEach(btn => {
 // ========== MODAL ==========
 function openModal(idx) {
     const item = allItems[idx];
-    document.getElementById('modalImg').src = item.images?.[0] || '';
+    const imgSrc = (item.images && item.images[0]) ? item.images[0] : '';
+    document.getElementById('modalImg').src = imgSrc;
     document.getElementById('modalTitle').textContent = item.title;
     document.getElementById('modalPrice').textContent = '$' + item.price_usd.toLocaleString();
     document.getElementById('modalYen').textContent = '¥' + (item.price_yen || 0).toLocaleString();
@@ -1436,6 +1440,8 @@ function formatDate(dateStr) {
 function formatDateShort(dateStr) {
     if (!dateStr) return '-';
     const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
 
 // ========== START ==========
 init();
