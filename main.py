@@ -155,7 +155,8 @@ app.add_middleware(
 
 @app.get("/api/items")
 def get_items(
-sort: str = Query("price", regex="^(price|date|price_desc|date_desc)$"),    search: Optional[str] = None,
+    sort: str = Query("price_desc", regex="^(price|date|price_desc|price_asc|date_desc|date_asc)$"),
+    search: Optional[str] = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db)
@@ -168,9 +169,13 @@ sort: str = Query("price", regex="^(price|date|price_desc|date_desc)$"),    sear
         query = query.filter(Item.title.ilike(f"%{search}%"))
     
     # Sorting
-    if sort == "price":
+    if sort in ["price", "price_desc"]:
         query = query.order_by(Item.price_usd.desc())
-    else:  # date
+    elif sort == "price_asc":
+        query = query.order_by(Item.price_usd.asc())
+    elif sort == "date_asc":
+        query = query.order_by(Item.sold_date.asc())
+    else:  # date, date_desc
         query = query.order_by(Item.sold_date.desc())
     
     # Pagination
