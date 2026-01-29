@@ -153,6 +153,45 @@ app.add_middleware(
 
 # ========== API ENDPOINTS ==========
 
+@app.get("/api/items")
+def get_items(
+    sort: str = Query("price", regex="^(price|date)$"),
+    search: Optional[str] = None,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+    db: Session = Depends(get_db)
+):
+    """Get items with pagination, search, and sorting"""
+    query = db.query(Item)
+    
+    # Search filter
+    if search:
+        query = query.filter(Item.title.ilike(f"%{search}%"))
+    
+    # Sorting
+    if sort == "price":
+        query = query.order_by(Item.price_usd.desc())
+    else:  # date
+        query = query.order_by(Item.sold_date.desc())
+    
+    # Pagination
+    items = query.offset(skip).limit(limit).all()
+    
+    result = []
+    for item in items:
+        result.append(ItemResponse(
+            id=item.id,
+            title=item.title,
+            price_yen=item.price_yen,
+            price_usd=item.price_usd,
+            description=item.description or "",
+            images=json.loads(item.images) if item.images else [],
+            sold_date=item.sold_date.isoformat() if item.sold_date else ""
+        ))
+    
+    return result
+
+
 @app.get("/api/items/random")
 def get_random_items(
     count: int = Query(1, ge=1, le=50),
