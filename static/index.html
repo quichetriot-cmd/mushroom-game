@@ -1392,3 +1392,53 @@ init();
 </script>
 </body>
 </html>
+
+// Helper functions
+function cmToInches(cm) {
+    return (cm / 2.54).toFixed(1);
+}
+
+function extractMeasurements(desc, title = '') {
+    if (!desc) return {};
+    const m = {};
+    
+    // Extract measurements from description
+    const waistMatch = desc.match(/W\s*:?\s*(\d+(?:\.\d+)?)\s*cm/);
+    if (waistMatch) m['Waist'] = cmToInches(parseFloat(waistMatch[1])) + '"';
+    
+    const chestMatch = desc.match(/(?:Body\s*)?[Ww]idth\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)\s*cm/i);
+    if (chestMatch) {
+        const cm = parseFloat(chestMatch[1]);
+        if (cm >= 25 && cm <= 90) m['Chest'] = cmToInches(cm) + '"';
+    }
+    
+    const lengthMatch = desc.match(/Length\s*:?\s*(?:approx(?:imately)?\.?\s*)?(\d+(?:\.\d+)?)\s*cm/i);
+    if (lengthMatch) {
+        const cm = parseFloat(lengthMatch[1]);
+        if (cm >= 10 && cm <= 100) m['Length'] = cmToInches(cm) + '"';
+    }
+    
+    const inseamMatch = desc.match(/\/\s*(?:L\s*)?(\d+(?:\.\d+)?)\s*cm/i);
+    if (inseamMatch) {
+        const inches = parseFloat(cmToInches(parseFloat(inseamMatch[1])));
+        if (inches >= 5 && inches <= 50) m['Inseam'] = inches.toFixed(1) + '"';
+    }
+    
+    return m;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatDateShort(dateStr) {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+
+// ========== START ==========
+init();
+</script>
+</body>
+</html>
