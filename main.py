@@ -155,8 +155,7 @@ app.add_middleware(
 
 @app.get("/api/items")
 def get_items(
-    sort: str = Query("price", regex="^(price|date)$"),
-    search: Optional[str] = None,
+sort: str = Query("price", regex="^(price|date|price_desc|date_desc)$"),    search: Optional[str] = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db)
