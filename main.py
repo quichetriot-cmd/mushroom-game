@@ -19,7 +19,7 @@ import json
 import time
 
 from scraper import run_incremental_scrape
-
+# Updated Deps
 # Database setup
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./vintage.db")
 # Handle Railway's postgres:// vs postgresql://
