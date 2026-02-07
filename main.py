@@ -126,7 +126,26 @@ def scheduled_scrape():
 async def lifespan(app: FastAPI):
     # Startup
     global last_scrape_info
-    last_scrape_info = {"time": datetime.now().isoformat(), "new_items": 0}
+    
+    print("="*60)
+    print(f"[{datetime.now()}] APP STARTING - Running startup scrape...")
+    print("="*60)
+    
+    # Run scrape immediately on startup
+    db = SessionLocal()
+    try:
+        new_count = run_incremental_scrape(db)
+        last_scrape_info = {"time": datetime.now().isoformat(), "new_items": new_count}
+        print(f"[{datetime.now()}] Startup scrape complete. Added {new_count} new items.")
+    except Exception as e:
+        print(f"[{datetime.now()}] Startup scrape failed: {e}")
+        last_scrape_info = {"time": datetime.now().isoformat(), "new_items": 0}
+    finally:
+        db.close()
+    
+    print("="*60)
+    print(f"[{datetime.now()}] APP READY - Scrape complete, starting server...")
+    print("="*60)
     
     # Schedule daily scrape at 6 AM UTC
     scheduler.add_job(scheduled_scrape, 'cron', hour=6, minute=0)
