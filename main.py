@@ -17,16 +17,18 @@ from scraper import run_incremental_scrape
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///vintage.db")
 
+# Handle multiple postgres formats safely
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://")
+
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://")
 
 
 engine = create_engine(DATABASE_URL, future=True)
 SessionLocal = sessionmaker(bind=engine)
 
-
 Base.metadata.create_all(bind=engine)
-
 
 app = FastAPI()
 
