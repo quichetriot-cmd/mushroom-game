@@ -1,316 +1,142 @@
-from fastapi import FastAPI, Depends, HTTPException, Query
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from sqlalchemy import create_engine, Column, Integer, String, Float, Text, Date, func
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from apscheduler.schedulers.background import BackgroundScheduler
-from contextlib import asynccontextmanager
-from datetime import datetime, date, timedelta
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel
-from collections import defaultdict
-import os
-import secrets
-import re
 import json
-import time
+import os
+import threading
+from datetime import datetime
 
+from fastapi import FastAPI, Query
+from fastapi.staticfiles import StaticFiles
+
+from sqlalchemy import create_engine, func
+from sqlalchemy.orm import sessionmaker
+
+from apscheduler.schedulers.background import BackgroundScheduler
+
+from models import Base, Item
 from scraper import run_incremental_scrape
 
-# Database setup
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./vintage.db")
 
-# Convert Railway postgres URL to use psycopg driver explicitly
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///vintage.db")
+
 if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
-elif DATABASE_URL.startswith("postgresql://") and "+psycopg" not in DATABASE_URL:
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
-
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://")
 
 
-# Models
-class Item(Base):
-    __tablename__ = "items"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(500), index=True)
-    price_yen = Column(Integer)
-    price_usd = Column(Integer, index=True)
-    description = Column(Text)
-    images = Column(Text)  # JSON string of image URLs
-    sold_date = Column(Date, index=True)
-    created_at = Column(Date, default=date.today)
+engine = create_engine(DATABASE_URL, future=True)
+SessionLocal = sessionmaker(bind=engine)
 
 
-# Pydantic models
-class ItemResponse(BaseModel):
-    id: int
-    title: str
-    price_yen: int
-    price_usd: int
-    description: str
-    images: List[str]
-    sold_date: str
-    
-    class Config:
-        from_attributes = True
-
-
-class StatsResponse(BaseModel):
-    total_items: int
-    newest_date: str
-    oldest_date: str
-    last_scrape: str
-
-
-# Create tables
 Base.metadata.create_all(bind=engine)
 
 
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+app = FastAPI()
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 
-# Auth
-security = HTTPBasic()
-SCRAPE_USER = os.getenv("SCRAPE_USER", "admin")
-SCRAPE_PASS = os.getenv("SCRAPE_PASS", "changeme")
-
-def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
-    correct_user = secrets.compare_digest(credentials.username, SCRAPE_USER)
-    correct_pass = secrets.compare_digest(credentials.password, SCRAPE_PASS)
-    if not (correct_user and correct_pass):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    return credentials.username
+scrape_lock = threading.Lock()
 
 
-# Scheduler for daily scraping
-scheduler = BackgroundScheduler()
-last_scrape_info = {"time": None, "new_items": 0}
-scrape_lock = False
-
-
-def scheduled_scrape():
-    global last_scrape_info, scrape_lock
-    
-    if scrape_lock:
-        print(f"[{datetime.now()}] Scrape already in progress, skipping...")
+def run_scrape():
+    if not scrape_lock.acquire(blocking=False):
+        print("Scrape already running")
         return
-    
-    scrape_lock = True
-    print(f"[{datetime.now()}] Running scheduled scrape...")
-    db = SessionLocal()
+
     try:
-        new_count = run_incremental_scrape(db)
-        last_scrape_info = {"time": datetime.now().isoformat(), "new_items": new_count}
-        print(f"[{datetime.now()}] Scrape complete. Added {new_count} new items.")
-    except Exception as e:
-        print(f"[{datetime.now()}] Scrape failed: {e}")
-    finally:
+        db = SessionLocal()
+        run_incremental_scrape(db)
         db.close()
-        scrape_lock = False
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    global last_scrape_info
-    
-    print("="*60)
-    print(f"[{datetime.now()}] APP STARTING - Running startup scrape...")
-    print("="*60)
-    
-    # Run scrape immediately on startup
-    db = SessionLocal()
-    try:
-        new_count = run_incremental_scrape(db)
-        last_scrape_info = {"time": datetime.now().isoformat(), "new_items": new_count}
-        print(f"[{datetime.now()}] Startup scrape complete. Added {new_count} new items.")
-    except Exception as e:
-        print(f"[{datetime.now()}] Startup scrape failed: {e}")
-        last_scrape_info = {"time": datetime.now().isoformat(), "new_items": 0}
     finally:
-        db.close()
-    
-    print("="*60)
-    print(f"[{datetime.now()}] APP READY - Scrape complete, starting server...")
-    print("="*60)
-    
-    # Schedule daily scrape at 6 AM UTC
-    scheduler.add_job(scheduled_scrape, 'cron', hour=6, minute=0)
-    scheduler.start()
-    print("Scheduler started - daily scrape at 6 AM UTC")
-    
-    yield
-    
-    # Shutdown
-    scheduler.shutdown()
+        scrape_lock.release()
 
 
-app = FastAPI(title="Vintage Mushroom API", lifespan=lifespan)
-
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+scheduler = BackgroundScheduler()
+scheduler.add_job(run_scrape, "cron", hour=6)
+scheduler.start()
 
 
-# ========== API ENDPOINTS ==========
+@app.on_event("startup")
+def startup_scrape():
+    run_scrape()
+
 
 @app.get("/api/items")
 def get_items(
-    sort: str = Query("price_desc", regex="^(price|date|price_desc|price_asc|date_desc|date_asc)$"),
-    search: Optional[str] = None,
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
-    db: Session = Depends(get_db)
+    search: str = "",
+    sort: str = Query(
+        "price_desc",
+        pattern="^(price_desc|price_asc|date_desc|date_asc)$"
+    ),
+    skip: int = 0,
+    limit: int = 50
 ):
-    """Get items with pagination, search, and sorting"""
+
+    limit = min(limit, 500)
+
+    db = SessionLocal()
+
     query = db.query(Item)
-    
-    # Search filter
+
     if search:
         query = query.filter(Item.title.ilike(f"%{search}%"))
-    
-    # Sorting
-    if sort in ["price", "price_desc"]:
-        query = query.order_by(Item.price_usd.desc())
+
+    if sort == "price_desc":
+        query = query.order_by(Item.price_yen.desc())
+
     elif sort == "price_asc":
-        query = query.order_by(Item.price_usd.asc())
+        query = query.order_by(Item.price_yen.asc())
+
+    elif sort == "date_desc":
+        query = query.order_by(Item.sold_date.desc())
+
     elif sort == "date_asc":
         query = query.order_by(Item.sold_date.asc())
-    else:  # date, date_desc
-        query = query.order_by(Item.sold_date.desc())
-    
-    # Pagination
+
     items = query.offset(skip).limit(limit).all()
-    
-    result = []
+
+    results = []
+
     for item in items:
-        result.append(ItemResponse(
-            id=item.id,
-            title=item.title,
-            price_yen=item.price_yen,
-            price_usd=item.price_usd,
-            description=item.description or "",
-            images=json.loads(item.images) if item.images else [],
-            sold_date=item.sold_date.isoformat() if item.sold_date else ""
-        ))
-    
-    return result
+
+        images = item.get_images()
+
+        results.append({
+            "id": item.id,
+            "title": item.title,
+            "price_yen": item.price_yen,
+            "price_usd": item.price_usd,
+            "description": item.description,
+            "images": images,
+            "sold_date": item.sold_date
+        })
+
+    db.close()
+
+    return results
 
 
 @app.get("/api/items/random")
-def get_random_items(
-    count: int = Query(1, ge=1, le=50),
-    min_year: Optional[int] = None,
-    max_year: Optional[int] = None,
-    exclude: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Get random items with optional year filtering"""
-    query = db.query(Item)
-    
-    # Year filtering
-    if min_year:
-        start_date = date(min_year, 1, 1)
-        query = query.filter(Item.sold_date >= start_date)
-    if max_year:
-        end_date = date(max_year, 12, 31)
-        query = query.filter(Item.sold_date <= end_date)
-    
-    # Exclude IDs
-    if exclude:
-        try:
-            exclude_ids = [int(x) for x in exclude.split(',')]
-            query = query.filter(~Item.id.in_(exclude_ids))
-        except ValueError:
-            pass  # Ignore malformed exclude param
-    
-    items = query.order_by(func.random()).limit(count).all()
-    
-    result = []
+def get_random_items(count: int = 10):
+
+    db = SessionLocal()
+
+    items = db.query(Item).order_by(func.random()).limit(count).all()
+
+    results = []
+
     for item in items:
-        result.append(ItemResponse(
-            id=item.id,
-            title=item.title,
-            price_yen=item.price_yen,
-            price_usd=item.price_usd,
-            description=item.description or "",
-            images=json.loads(item.images) if item.images else [],
-            sold_date=item.sold_date.isoformat() if item.sold_date else ""
-        ))
-    
-    return result
 
+        images = item.get_images()
 
-@app.get("/api/stats", response_model=StatsResponse)
-def get_stats(db: Session = Depends(get_db)):
-    total = db.query(Item).count()
-    newest = db.query(func.max(Item.sold_date)).scalar()
-    oldest = db.query(func.min(Item.sold_date)).scalar()
-    
-    last_scrape_str = ""
-    if last_scrape_info["time"]:
-        last_scrape_str = f"{last_scrape_info['time']} - {last_scrape_info['new_items']} new"
-    
-    return StatsResponse(
-        total_items=total,
-        newest_date=newest.isoformat() if newest else "",
-        oldest_date=oldest.isoformat() if oldest else "",
-        last_scrape=last_scrape_str
-    )
+        results.append({
+            "id": item.id,
+            "title": item.title,
+            "price_yen": item.price_yen,
+            "price_usd": item.price_usd,
+            "description": item.description,
+            "images": images,
+            "sold_date": item.sold_date
+        })
 
+    db.close()
 
-@app.post("/api/scrape")
-def trigger_scrape(
-    username: str = Depends(verify_credentials),
-    db: Session = Depends(get_db)
-):
-    """Manually trigger a scrape (requires auth)"""
-    global last_scrape_info, scrape_lock
-    
-    if scrape_lock:
-        raise HTTPException(status_code=409, detail="Scrape already in progress")
-    
-    scrape_lock = True
-    try:
-        new_count = run_incremental_scrape(db)
-        last_scrape_info = {"time": datetime.now().isoformat(), "new_items": new_count}
-        return {"message": f"Scrape complete. Added {new_count} new items."}
-    finally:
-        scrape_lock = False
-
-
-@app.get("/api/health")
-def health_check():
-    return {"status": "ok", "time": datetime.now().isoformat()}
-
-
-# Serve frontend
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-
-@app.get("/")
-def serve_frontend():
-    return FileResponse("static/index.html")
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    return results
