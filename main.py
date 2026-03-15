@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from models import Base, Item
-from scraper import run_incremental_scrape
+from scraper import run_smart_scrape
 
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///vintage.db")
@@ -41,11 +41,12 @@ def run_scrape():
     if not scrape_lock.acquire(blocking=False):
         print("Scrape already running")
         return
-
     try:
         db = SessionLocal()
-        run_incremental_scrape(db)
+        run_smart_scrape(db)
         db.close()
+    except Exception as e:
+        print(f"Scrape failed: {e}")
     finally:
         scrape_lock.release()
 
@@ -57,7 +58,9 @@ scheduler.start()
 
 @app.on_event("startup")
 def startup_scrape():
-    run_scrape()
+    thread = threading.Thread(target=run_scrape)
+    thread.daemon = True
+    thread.start()
 
 
 @app.get("/api/items")
@@ -70,11 +73,8 @@ def get_items(
     skip: int = 0,
     limit: int = 50
 ):
-
     limit = min(limit, 500)
-
     db = SessionLocal()
-
     query = db.query(Item)
 
     if search:
@@ -82,24 +82,18 @@ def get_items(
 
     if sort == "price_desc":
         query = query.order_by(Item.price_yen.desc())
-
     elif sort == "price_asc":
         query = query.order_by(Item.price_yen.asc())
-
     elif sort == "date_desc":
         query = query.order_by(Item.sold_date.desc())
-
     elif sort == "date_asc":
         query = query.order_by(Item.sold_date.asc())
 
     items = query.offset(skip).limit(limit).all()
-
     results = []
 
     for item in items:
-
         images = item.get_images()
-
         results.append({
             "id": item.id,
             "title": item.title,
@@ -111,23 +105,17 @@ def get_items(
         })
 
     db.close()
-
     return results
 
 
 @app.get("/api/items/random")
 def get_random_items(count: int = 10):
-
     db = SessionLocal()
-
     items = db.query(Item).order_by(func.random()).limit(count).all()
-
     results = []
 
     for item in items:
-
         images = item.get_images()
-
         results.append({
             "id": item.id,
             "title": item.title,
@@ -139,5 +127,4 @@ def get_random_items(count: int = 10):
         })
 
     db.close()
-
     return results
