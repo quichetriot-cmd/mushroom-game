@@ -31,9 +31,6 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
-
-
 scrape_lock = threading.Lock()
 
 
@@ -138,3 +135,7 @@ def get_stats():
     return {
         "total_items": total
     }
+
+
+# Static files LAST — must be after all API routes
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
