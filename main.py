@@ -128,3 +128,13 @@ def get_random_items(count: int = 10):
 
     db.close()
     return results
+
+
+@app.get("/api/stats")
+def get_stats():
+    db = SessionLocal()
+    total = db.query(Item).count()
+    db.close()
+    return {
+        "total_items": total
+    }
