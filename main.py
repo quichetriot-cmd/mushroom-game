@@ -50,9 +50,9 @@ def run_scrape():
         scrape_lock.release()
 
 
-# Run every day at 2:46 PM
+# Run every day at 2:49 PM
 scheduler = BackgroundScheduler()
-scheduler.add_job(run_scrape, "cron", hour=14, minute=46)
+scheduler.add_job(run_scrape, "cron", hour=14, minute=49)
 scheduler.start()
 
 
