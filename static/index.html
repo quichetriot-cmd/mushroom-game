@@ -175,6 +175,19 @@
             color: #666;
             margin-top: 4px;
         }
+        .store-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            background: #1a3a2a;
+            color: #4ade80;
+            border: 1px solid #4ade80;
+            margin-top: 5px;
+        }
         
         .pagination {
             display: flex;
@@ -850,6 +863,7 @@
             <div class="modal-price" id="modalPrice"></div>
             <div class="modal-yen" id="modalYen"></div>
             <div class="modal-date" id="modalDate"></div>
+            <div class="store-badge" id="modalStore"></div>
             <div class="modal-measurements" id="modalMeasurements"></div>
             <div class="modal-section">
                 <div class="modal-section-title">Description</div>
@@ -1067,6 +1081,7 @@ function renderGallery() {
                 <div class="gallery-item-title">${item.title}</div>
                 <div class="gallery-item-price">$${item.price_usd.toLocaleString()}</div>
                 <div class="gallery-item-date">${formatDate(item.sold_date)}</div>
+                <div class="store-badge">${item.store || 'mushroom'}</div>
             </div>
         </div>
     `;
@@ -1114,6 +1129,7 @@ function openModal(idx) {
     document.getElementById('modalPrice').textContent = '$' + item.price_usd.toLocaleString();
     document.getElementById('modalYen').textContent = '¥' + (item.price_yen || 0).toLocaleString();
     document.getElementById('modalDate').textContent = item.sold_date ? 'Sold: ' + formatDate(item.sold_date) : '';
+    document.getElementById('modalStore').textContent = item.store || 'mushroom';
     document.getElementById('modalDesc').textContent = item.description || '';
     
     const measurements = extractMeasurements(item.description, item.title);
@@ -1338,6 +1354,7 @@ function showCard() {
     
     const measurements = extractMeasurements(item.description, item.title);
     let metaHtml = '';
+    metaHtml += `<div class="game-meta-item"><span class="game-meta-label">Store:</span><span class="game-meta-val"><span class="store-badge" style="font-size:10px;padding:1px 6px;">${item.store || 'mushroom'}</span></span></div>`;
     if (item.sold_date) metaHtml += `<div class="game-meta-item"><span class="game-meta-label">Sold:</span><span class="game-meta-val">${formatDate(item.sold_date)}</span></div>`;
     for (const [key, val] of Object.entries(measurements)) {
         metaHtml += `<div class="game-meta-item"><span class="game-meta-label">${key}:</span><span class="game-meta-val">${val}</span></div>`;
