@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from models import Base, Item
-from scraper import run_smart_scrape, run_sh_scrape
+from scraper import run_smart_scrape, run_sh_scrape, run_acorn_scrape
 
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///vintage.db")
@@ -78,6 +78,7 @@ def run_scrape():
         db = SessionLocal()
         run_smart_scrape(db)
         run_sh_scrape(db)
+        run_acorn_scrape(db)
         db.close()
     except Exception as e:
         print(f"Scrape failed: {e}")
@@ -101,7 +102,7 @@ def startup_scrape():
 @app.get("/api/items")
 def get_items(
     search: str = "",
-    store: str = Query("all", pattern="^(all|mushroom|somethinghappens)$"),
+    store: str = Query("all", pattern="^(all|mushroom|somethinghappens|acorn)$"),
     sort: str = Query(
         "price_desc",
         pattern="^(price_desc|price_asc|date_desc|date_asc)$"
@@ -140,7 +141,7 @@ def get_random_items(
     count: int = 10,
     min_year: int | None = None,
     exclude: str = "",
-    store: str = Query("all", pattern="^(all|mushroom|somethinghappens)$"),
+    store: str = Query("all", pattern="^(all|mushroom|somethinghappens|acorn)$"),
 ):
     db = SessionLocal()
     query = db.query(Item)
@@ -166,7 +167,7 @@ def get_random_items(
 @app.get("/api/stats")
 def get_stats(
     search: str = "",
-    store: str = Query("all", pattern="^(all|mushroom|somethinghappens)$"),
+    store: str = Query("all", pattern="^(all|mushroom|somethinghappens|acorn)$"),
 ):
     db = SessionLocal()
     query = db.query(Item)
