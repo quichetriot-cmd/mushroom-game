@@ -93,6 +93,7 @@ def get_items(
         images = item.get_images()
         results.append({
             "id": item.id,
+            "store": item.store or "mushroom",
             "title": item.title,
             "price_yen": item.price_yen,
             "price_usd": item.price_usd,
@@ -115,6 +116,7 @@ def get_random_items(count: int = 10):
         images = item.get_images()
         results.append({
             "id": item.id,
+            "store": item.store or "mushroom",
             "title": item.title,
             "price_yen": item.price_yen,
             "price_usd": item.price_usd,
