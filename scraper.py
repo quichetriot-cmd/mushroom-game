@@ -71,11 +71,11 @@ def translate_text(text: str) -> str:
         return text
 
 
-def item_exists(db, title: str, price_usd: float) -> bool:
+def item_exists(db, store: str, title: str) -> bool:
     from models import Item
     existing = db.query(Item).filter(
-        Item.title == title,
-        Item.price_usd == price_usd
+        Item.store == store,
+        Item.title == title
     ).first()
     return existing is not None
 
@@ -264,7 +264,7 @@ def run_incremental_scrape(db, max_pages: int = 50) -> int:
             if not item_data:
                 continue
 
-            if item_exists(db, item_data['title'], item_data['price_usd']):
+            if item_exists(db, item_data['store'], item_data['title']):
                 consecutive_existing += 1
                 logging.info(f"  EXISTING ({consecutive_existing}/{MAX_CONSECUTIVE_EXISTING}): {item_data['title'][:40]}...")
 
@@ -308,7 +308,7 @@ def run_full_scrape(db, max_pages: int = 999) -> int:
             if not item_data:
                 continue
 
-            if item_exists(db, item_data['title'], item_data['price_usd']):
+            if item_exists(db, item_data['store'], item_data['title']):
                 skipped += 1
             else:
                 if add_item_to_db(db, item_data):
@@ -423,7 +423,7 @@ def run_sh_scrape(db) -> int:
             if not item_data:
                 continue
 
-            if item_exists(db, item_data['title'], item_data['price_usd']):
+            if item_exists(db, item_data['store'], item_data['title']):
                 skipped += 1
             else:
                 if add_item_to_db(db, item_data):
