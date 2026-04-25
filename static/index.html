@@ -211,6 +211,16 @@
             border: 1px solid #4ade80;
             margin-top: 5px;
         }
+        .store-badge[data-store="somethinghappens"] {
+            background: #1a2a3a;
+            color: #60a5fa;
+            border-color: #60a5fa;
+        }
+        .store-badge[data-store="acorn"] {
+            background: #2a1f0f;
+            color: #f59e0b;
+            border-color: #f59e0b;
+        }
         
         .pagination {
             display: flex;
@@ -765,6 +775,7 @@
                     <button class="store-filter-btn active" data-store="all">All Stores</button>
                     <button class="store-filter-btn" data-store="mushroom">Mushroom</button>
                     <button class="store-filter-btn" data-store="somethinghappens">Something Happens</button>
+                    <button class="store-filter-btn" data-store="acorn">Acorn</button>
                 </div>
             </div>
             <div class="gallery-grid" id="galleryGrid"></div>
@@ -1042,6 +1053,7 @@ function formatDateShort(dateStr) {
 function formatStoreLabel(store) {
     if (!store || store === 'mushroom') return 'Mushroom';
     if (store === 'somethinghappens') return 'Something Happens';
+    if (store === 'acorn') return 'Acorn';
     return store.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
@@ -1135,7 +1147,7 @@ function renderGallery() {
                 <div class="gallery-item-title">${item.title}</div>
                 <div class="gallery-item-price">$${item.price_usd.toLocaleString()}</div>
                 <div class="gallery-item-date">${formatDate(item.sold_date)}</div>
-                <div class="store-badge">${formatStoreLabel(item.store)}</div>
+                <div class="store-badge" data-store="${item.store}">${formatStoreLabel(item.store)}</div>
             </div>
         </div>
     `;
@@ -1193,7 +1205,9 @@ function openModal(idx) {
     document.getElementById('modalPrice').textContent = '$' + item.price_usd.toLocaleString();
     document.getElementById('modalYen').textContent = '¥' + (item.price_yen || 0).toLocaleString();
     document.getElementById('modalDate').textContent = item.sold_date ? 'Sold: ' + formatDate(item.sold_date) : '';
-    document.getElementById('modalStore').textContent = formatStoreLabel(item.store);
+    const modalStoreBadge = document.getElementById('modalStore');
+    modalStoreBadge.textContent = formatStoreLabel(item.store);
+    modalStoreBadge.dataset.store = item.store || 'mushroom';
     document.getElementById('modalDesc').textContent = item.description || '';
     
     const measurements = extractMeasurements(item.description, item.title);
@@ -1418,7 +1432,7 @@ function showCard() {
     
     const measurements = extractMeasurements(item.description, item.title);
     let metaHtml = '';
-    metaHtml += `<div class="game-meta-item"><span class="game-meta-label">Store:</span><span class="game-meta-val"><span class="store-badge" style="font-size:10px;padding:1px 6px;">${formatStoreLabel(item.store)}</span></span></div>`;
+    metaHtml += `<div class="game-meta-item"><span class="game-meta-label">Store:</span><span class="game-meta-val"><span class="store-badge" data-store="${item.store}" style="font-size:10px;padding:1px 6px;">${formatStoreLabel(item.store)}</span></span></div>`;
     if (item.sold_date) metaHtml += `<div class="game-meta-item"><span class="game-meta-label">Sold:</span><span class="game-meta-val">${formatDate(item.sold_date)}</span></div>`;
     for (const [key, val] of Object.entries(measurements)) {
         metaHtml += `<div class="game-meta-item"><span class="game-meta-label">${key}:</span><span class="game-meta-val">${val}</span></div>`;
