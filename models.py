@@ -24,7 +24,7 @@ class Item(Base):
     sold_date = Column(DateTime, default=datetime.utcnow)
 
     __table_args__ = (
-        UniqueConstraint("title", "price_yen"),
+        UniqueConstraint("store", "title"),
     )
 
     def get_images(self):
