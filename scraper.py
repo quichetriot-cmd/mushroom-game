@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+import re
 import time
 import logging
 from datetime import datetime
@@ -23,6 +24,13 @@ MAX_CONSECUTIVE_EXISTING = 5
 # ── Something Happens config ──────────────────────────────────
 SH_BASE_URL = "https://www.somethinghappens-dressing.com"
 SH_MIN_PRICE_USD = 300
+
+# ── Acorn config ───────────────────────────────────────────────
+ACORN_BASE_URL = "https://acorn-onlinestore.com"
+ACORN_COLLECTION_URL = f"{ACORN_BASE_URL}/collections/all/products.json"
+ACORN_PAGE_SIZE = 100
+ACORN_PAGE_DELAY_SECONDS = 2
+ACORN_MAX_RETRIES = 5
 
 session = requests.Session()
 retry = Retry(
@@ -71,6 +79,16 @@ def translate_text(text: str) -> str:
         return text
 
 
+def parse_iso_datetime(value: str):
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+        return parsed.replace(tzinfo=None)
+    except Exception:
+        return None
+
+
 def item_exists(db, store: str, title: str) -> bool:
     from models import Item
     existing = db.query(Item).filter(
@@ -105,6 +123,24 @@ def add_item_to_db(db, item_data: dict) -> bool:
 def get_item_count(db) -> int:
     from models import Item
     return db.query(Item).count()
+
+
+def build_tag_description(tags: list[str]) -> str:
+    cleaned_tags = []
+    seen = set()
+    for tag in tags:
+        normalized = clean_text(tag)
+        if not normalized:
+            continue
+        if re.fullmatch(r"20\d{6}", normalized):
+            continue
+        if normalized.lower() in seen:
+            continue
+        seen.add(normalized.lower())
+        cleaned_tags.append(normalized)
+        if len(cleaned_tags) >= 16:
+            break
+    return " / ".join(cleaned_tags)
 
 
 # ── Mushroom scraper ──────────────────────────────────────────
@@ -442,3 +478,239 @@ def run_sh_scrape(db) -> int:
     logging.info("="*50)
 
     return new_items
+
+
+# ── Acorn scraper ──────────────────────────────────────────────
+
+def fetch_acorn_products_page(page: int) -> list[dict]:
+    params = {
+        "limit": ACORN_PAGE_SIZE,
+        "page": page,
+    }
+
+    for attempt in range(1, ACORN_MAX_RETRIES + 1):
+        try:
+            response = session.get(ACORN_COLLECTION_URL, params=params, timeout=30)
+            if response.status_code == 429:
+                wait_seconds = min(60, 5 * attempt)
+                logging.warning(f"Acorn rate limited on page {page}. Waiting {wait_seconds}s before retry {attempt}/{ACORN_MAX_RETRIES}.")
+                time.sleep(wait_seconds)
+                continue
+
+            response.raise_for_status()
+            return response.json().get("products", [])
+        except Exception as e:
+            if attempt == ACORN_MAX_RETRIES:
+                raise RuntimeError(f"Acorn page {page} failed after {ACORN_MAX_RETRIES} attempts: {e}") from e
+            wait_seconds = min(60, 3 * attempt)
+            logging.warning(f"Acorn page {page} request failed ({e}). Waiting {wait_seconds}s before retry {attempt}/{ACORN_MAX_RETRIES}.")
+            time.sleep(wait_seconds)
+
+    return []
+
+
+def parse_acorn_product(product: dict) -> Optional[dict]:
+    try:
+        variants = product.get("variants", [])
+        if not variants:
+            return None
+
+        primary_variant = variants[0]
+        title = clean_text(product.get("title", ""))
+        handle = clean_text(product.get("handle", ""))
+        if not title or not handle:
+            return None
+
+        price_yen = int(primary_variant.get("price") or 0)
+        tags = product.get("tags", []) or []
+        body_html = product.get("body_html") or ""
+        description = clean_text(BeautifulSoup(body_html, "html.parser").get_text(separator=" ", strip=True))
+        if not description:
+            description = build_tag_description(tags)
+
+        return {
+            "store": "acorn",
+            "external_id": str(product.get("id", "")),
+            "handle": handle,
+            "title": title,
+            "price_yen": price_yen,
+            "price_usd": round(price_yen / YEN_TO_USD) if price_yen else 0,
+            "description": description,
+            "images": [img.get("src") for img in product.get("images", [])[:10] if img.get("src")],
+            "tags": tags,
+            "is_available": bool(primary_variant.get("available", True)),
+            "created_at": parse_iso_datetime(product.get("created_at")),
+            "published_at": parse_iso_datetime(product.get("published_at")),
+            "updated_at": parse_iso_datetime(product.get("updated_at")),
+        }
+    except Exception as e:
+        logging.error(f"Error parsing Acorn product: {e}")
+        return None
+
+
+def upsert_tracked_product(db, product_data: dict):
+    from models import TrackedProduct
+
+    tracked = db.query(TrackedProduct).filter(
+        TrackedProduct.store == product_data["store"],
+        TrackedProduct.handle == product_data["handle"],
+    ).first()
+
+    if tracked is None:
+        tracked = TrackedProduct(
+            store=product_data["store"],
+            external_id=product_data["external_id"],
+            handle=product_data["handle"],
+            title=product_data["title"],
+            price_yen=product_data["price_yen"],
+            price_usd=product_data["price_usd"],
+            is_available=product_data["is_available"],
+            description=product_data["description"],
+            tags=json.dumps(product_data["tags"]),
+            images=json.dumps(product_data["images"]),
+            created_at=product_data["created_at"],
+            published_at=product_data["published_at"],
+            updated_at=product_data["updated_at"],
+            last_seen_at=datetime.utcnow(),
+        )
+        if not product_data["is_available"]:
+            tracked.sold_detected_at = datetime.utcnow()
+        db.add(tracked)
+        db.flush()
+        return tracked, True
+
+    was_available = tracked.is_available
+    tracked.external_id = product_data["external_id"]
+    tracked.title = product_data["title"]
+    tracked.price_yen = product_data["price_yen"]
+    tracked.price_usd = product_data["price_usd"]
+    tracked.is_available = product_data["is_available"]
+    tracked.description = product_data["description"]
+    tracked.tags = json.dumps(product_data["tags"])
+    tracked.images = json.dumps(product_data["images"])
+    tracked.created_at = product_data["created_at"]
+    tracked.published_at = product_data["published_at"]
+    tracked.updated_at = product_data["updated_at"]
+    tracked.last_seen_at = datetime.utcnow()
+
+    if was_available and not tracked.is_available and tracked.sold_detected_at is None:
+        tracked.sold_detected_at = datetime.utcnow()
+
+    return tracked, False
+
+
+def export_acorn_sold_item(db, tracked_product) -> bool:
+    from models import Item
+
+    sold_date_dt = tracked_product.published_at or tracked_product.created_at or tracked_product.sold_detected_at or datetime.utcnow()
+    sold_date = sold_date_dt.strftime("%Y-%m-%d")
+    item_data = {
+        "store": "acorn",
+        "title": tracked_product.title,
+        "price_yen": tracked_product.price_yen or 0,
+        "price_usd": tracked_product.price_usd or 0,
+        "description": tracked_product.description or "",
+        "images": tracked_product.get_images(),
+        "sold_date": sold_date,
+    }
+
+    if tracked_product.exported_item_id:
+        item = db.query(Item).filter(Item.id == tracked_product.exported_item_id).first()
+        if item:
+            item.title = item_data["title"]
+            item.price_yen = item_data["price_yen"]
+            item.price_usd = item_data["price_usd"]
+            item.description = item_data["description"]
+            item.images = json.dumps(item_data["images"])
+            item.sold_date = datetime.strptime(item_data["sold_date"], "%Y-%m-%d").date()
+            db.flush()
+            return False
+
+    existing_item = db.query(Item).filter(
+        Item.store == "acorn",
+        Item.title == tracked_product.title,
+    ).first()
+    if existing_item:
+        tracked_product.exported_item_id = existing_item.id
+        existing_item.price_yen = item_data["price_yen"]
+        existing_item.price_usd = item_data["price_usd"]
+        existing_item.description = item_data["description"]
+        existing_item.images = json.dumps(item_data["images"])
+        existing_item.sold_date = datetime.strptime(item_data["sold_date"], "%Y-%m-%d").date()
+        db.flush()
+        return False
+
+    item = Item(
+        store=item_data["store"],
+        title=item_data["title"],
+        price_yen=item_data["price_yen"],
+        price_usd=item_data["price_usd"],
+        description=item_data["description"],
+        images=json.dumps(item_data["images"]),
+        sold_date=datetime.strptime(item_data["sold_date"], "%Y-%m-%d").date(),
+    )
+    db.add(item)
+    db.flush()
+    tracked_product.exported_item_id = item.id
+    return True
+
+
+def run_acorn_scrape(db) -> int:
+    from models import TrackedProduct
+
+    logging.info("=" * 50)
+    logging.info("ACORN SYNC - Tracking all products, exporting sold items only...")
+    logging.info("=" * 50)
+
+    page = 1
+    new_tracked = 0
+    exported_sold = 0
+    updated_tracked = 0
+
+    while True:
+        try:
+            products = fetch_acorn_products_page(page)
+        except Exception as e:
+            logging.error(f"Acorn sync stopped on page {page}: {e}")
+            break
+
+        if not products:
+            logging.info(f"Acorn returned no products on page {page}.")
+            break
+
+        logging.info(f"Acorn page {page} — {len(products)} products")
+
+        for product in products:
+            try:
+                product_data = parse_acorn_product(product)
+                if not product_data:
+                    continue
+
+                tracked_product, is_new = upsert_tracked_product(db, product_data)
+                if is_new:
+                    new_tracked += 1
+                else:
+                    updated_tracked += 1
+
+                if not tracked_product.is_available:
+                    if export_acorn_sold_item(db, tracked_product):
+                        exported_sold += 1
+
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                logging.error(f"Acorn product sync failed for {product.get('handle')}: {e}")
+
+        page += 1
+        time.sleep(ACORN_PAGE_DELAY_SECONDS)
+
+    total_tracked = db.query(TrackedProduct).filter(TrackedProduct.store == "acorn").count()
+    logging.info("=" * 50)
+    logging.info("ACORN SYNC COMPLETE")
+    logging.info(f"  New tracked products: {new_tracked}")
+    logging.info(f"  Updated tracked products: {updated_tracked}")
+    logging.info(f"  Newly exported sold items: {exported_sold}")
+    logging.info(f"  Total tracked products: {total_tracked}")
+    logging.info("=" * 50)
+
+    return exported_sold
