@@ -106,6 +106,12 @@
             margin-bottom: 16px;
             flex-wrap: wrap;
         }
+          .store-filter-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
         .search-input {
             flex: 1;
             min-width: 200px;
@@ -127,7 +133,23 @@
         }
         .sort-btn:hover { background: #252525; color: #aaa; border-color: #444; }
         .sort-btn.active { background: #333; color: #fff; border-color: #444; }
-        
+          .store-filter-btn {
+            padding: 10px 14px;
+            background: #121212;
+            border: 1px solid #2f2f2f;
+            border-radius: 999px;
+            color: #9a9a9a;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .store-filter-btn.active {
+            background: #1a3a2a;
+            border-color: #4ade80;
+            color: #4ade80;
+        }
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -738,7 +760,11 @@
                 <button class="sort-btn active" data-sort="price_desc">Price ↓</button>
                 <button class="sort-btn" data-sort="price_asc">Price ↑</button>
                 <button class="sort-btn" data-sort="date_desc">Newest</button>
-            </div>
+            <div class="store-filter-group">
+                    <button class="store-filter-btn active" data-store="all">All Stores</button>
+                    <button class="store-filter-btn" data-store="mushroom">Mushroom</button>
+                    <button class="store-filter-btn" data-store="somethinghappens">Something Happens</button>
+                </div>
             <div class="gallery-grid" id="galleryGrid"></div>
             <div class="pagination">
                 <button class="page-btn" id="prevBtn">←</button>
@@ -885,6 +911,7 @@ let currentSort = 'price_desc';
 let currentSearch = '';
 let page = 1;
 let totalItems = 0;
+let currentStore = 'all';
 
 // Game state
 let deck = [];
@@ -1010,8 +1037,14 @@ function formatDateShort(dateStr) {
     return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 }
 
+function formatStoreLabel(store) {
+    if (!store || store === 'mushroom') return 'Mushroom';
+    if (store === 'somethinghappens') return 'Something Happens';
+    return store.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 
-// ========== API ==========
+
+    // ========== API ==========
 async function fetchItems(params = {}) {
     const url = new URL(API_BASE + '/api/items', window.location.origin);
     Object.entries(params).forEach(([k, v]) => {
@@ -1032,8 +1065,12 @@ async function fetchRandomItems(minYear, count = 20, excludeIds = []) {
     return res.json();
 }
 
-async function fetchStats() {
-    const res = await fetch(API_BASE + '/api/stats');
+async function fetchStats(params = {}) {
+    const url = new URL(API_BASE + '/api/stats', window.location.origin);
+    Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
+    });
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch stats');
     return res.json();
 }
@@ -1042,10 +1079,10 @@ async function fetchStats() {
 async function init() {
     try {
         document.getElementById('loadingText').textContent = 'Loading inventory...';
-        statsData = await fetchStats();
+        statsData = await fetchStats({ store: currentStore });
         document.getElementById('statsBadge').textContent = `${statsData.total_items.toLocaleString()} items`;
         totalItems = statsData.total_items;
-        allItems = await fetchItems({ sort: currentSort, limit: ITEMS_PER_PAGE });
+        allItems = await fetchItems({ sort: currentSort, store: currentStore, limit: ITEMS_PER_PAGE });
         
         document.getElementById('loadingScreen').classList.add('hidden');
         document.getElementById('app').classList.add('active');
