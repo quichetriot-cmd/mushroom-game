@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from models import Base, Item
-from scraper import run_smart_scrape
+from scraper import run_smart_scrape, run_sh_scrape
 
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///vintage.db")
@@ -35,12 +35,14 @@ scrape_lock = threading.Lock()
 
 
 def run_scrape():
+    """Run both Mushroom and Something Happens scrapers."""
     if not scrape_lock.acquire(blocking=False):
         print("Scrape already running")
         return
     try:
         db = SessionLocal()
         run_smart_scrape(db)
+        run_sh_scrape(db)
         db.close()
     except Exception as e:
         print(f"Scrape failed: {e}")
@@ -48,8 +50,9 @@ def run_scrape():
         scrape_lock.release()
 
 
+# Run every day at 2:46 PM
 scheduler = BackgroundScheduler()
-scheduler.add_job(run_scrape, "cron", hour=6)
+scheduler.add_job(run_scrape, "cron", hour=14, minute=46)
 scheduler.start()
 
 
