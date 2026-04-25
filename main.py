@@ -1,62 +1,15 @@
-import json
-import os
-import threading
-from datetime import datetime
-
-from fastapi import FastAPI, Query
-from fastapi.staticfiles import StaticFiles
-
-from sqlalchemy import case, create_engine, func
-from sqlalchemy.orm import sessionmaker
-
-from apscheduler.schedulers.background import BackgroundScheduler
-
-from models import Base, Item
-from scraper import run_smart_scrape, run_sh_scrape
-
-
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///vintage.db")
-
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://")
-
-if DATABASE_URL.startswith("postgresql://"):
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
-
-
-engine = create_engine(DATABASE_URL, future=True)
-SessionLocal = sessionmaker(bind=engine)
-
-Base.metadata.create_all(bind=engine)
-
-app = FastAPI()
-
-scrape_lock = threading.Lock()
-YEN_PER_USD = 150
-
-
-def effective_price_yen_expression():
-    return case(
-        (
-            (Item.price_yen.is_not(None)) & (Item.price_yen > 0),
-            Item.price_yen,
-        ),
-        else_=func.round(func.coalesce(Item.price_usd, 0) * YEN_PER_USD),
-    )
-
-
-def serialize_item(item: Item) -> dict:
-    price_yen = item.price_yen
     if not price_yen and item.price_usd is not None:
         price_yen = round(item.price_usd * YEN_PER_USD)
 
     sold_date = item.sold_date
+    if store == "somethinghappens":
+        sold_date = None
     if hasattr(sold_date, "isoformat"):
         sold_date = sold_date.isoformat()
 
     return {
         "id": item.id,
-        "store": item.store or "mushroom",
+        "store": store,
         "title": item.title,
         "price_yen": price_yen or 0,
         "price_usd": item.price_usd,
