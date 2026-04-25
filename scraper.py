@@ -382,7 +382,7 @@ def sh_parse_product(product: dict) -> Optional[dict]:
         return {
             'store': 'somethinghappens',
             'title': clean_text(title),
-            'price_yen': 0,
+            'price_yen': round(price_usd * YEN_TO_USD),
             'price_usd': round(price_usd),
             'description': description,
             'images': images,
