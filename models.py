@@ -11,6 +11,8 @@ class Item(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
+    store = Column(String, index=True, default="mushroom", nullable=False, server_default="mushroom")
+
     title = Column(String, index=True)
     price_yen = Column(Integer, index=True)
     price_usd = Column(Float)
