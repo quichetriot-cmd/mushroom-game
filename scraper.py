@@ -13,11 +13,16 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
+# ── Mushroom config ───────────────────────────────────────────
 BASE_URL = "https://vintage-mushroom.net"
 CATEGORY_URL = f"{BASE_URL}/?mode=cate&csid=0&cbid=1809250&sort=n"
 YEN_TO_USD = 150
 MIN_PRICE_YEN = 65000
 MAX_CONSECUTIVE_EXISTING = 5
+
+# ── Something Happens config ──────────────────────────────────
+SH_BASE_URL = "https://www.somethinghappens-dressing.com"
+SH_MIN_PRICE_USD = 300
 
 session = requests.Session()
 retry = Retry(
@@ -35,6 +40,8 @@ session.headers.update({
     'Accept-Language': 'en-US,en;q=0.5',
 })
 
+
+# ── Shared helpers ────────────────────────────────────────────
 
 def clean_text(text: str) -> str:
     if not text:
@@ -63,6 +70,44 @@ def translate_text(text: str) -> str:
         logging.warning(f"Translation failed: {e}")
         return text
 
+
+def item_exists(db, title: str, price_usd: float) -> bool:
+    from models import Item
+    existing = db.query(Item).filter(
+        Item.title == title,
+        Item.price_usd == price_usd
+    ).first()
+    return existing is not None
+
+
+def add_item_to_db(db, item_data: dict) -> bool:
+    from models import Item
+    try:
+        sold_date = datetime.strptime(item_data['sold_date'], '%Y-%m-%d').date()
+        item = Item(
+            store=item_data.get('store', 'mushroom'),
+            title=item_data['title'],
+            price_yen=item_data['price_yen'],
+            price_usd=item_data['price_usd'],
+            description=item_data['description'],
+            images=json.dumps(item_data['images']),
+            sold_date=sold_date
+        )
+        db.add(item)
+        db.commit()
+        return True
+    except Exception as e:
+        logging.error(f"Error adding item to DB: {e}")
+        db.rollback()
+        return False
+
+
+def get_item_count(db) -> int:
+    from models import Item
+    return db.query(Item).count()
+
+
+# ── Mushroom scraper ──────────────────────────────────────────
 
 def parse_timestamp(url: str) -> Optional[str]:
     if "cmsp_timestamp=" not in url:
@@ -197,48 +242,12 @@ def get_product_links(page_num: int) -> Optional[list]:
         return None
 
 
-def item_exists(db, title: str, price_yen: int) -> bool:
-    from models import Item
-    existing = db.query(Item).filter(
-        Item.title == title,
-        Item.price_yen == price_yen
-    ).first()
-    return existing is not None
-
-
-def add_item_to_db(db, item_data: dict) -> bool:
-    from models import Item
-    try:
-        sold_date = datetime.strptime(item_data['sold_date'], '%Y-%m-%d').date()
-        item = Item(
-            store=item_data.get('store', 'mushroom'),
-            title=item_data['title'],
-            price_yen=item_data['price_yen'],
-            price_usd=item_data['price_usd'],
-            description=item_data['description'],
-            images=json.dumps(item_data['images']),
-            sold_date=sold_date
-        )
-        db.add(item)
-        db.commit()
-        return True
-    except Exception as e:
-        logging.error(f"Error adding item to DB: {e}")
-        db.rollback()
-        return False
-
-
-def get_item_count(db) -> int:
-    from models import Item
-    return db.query(Item).count()
-
-
 def run_incremental_scrape(db, max_pages: int = 50) -> int:
     new_items = 0
     consecutive_existing = 0
 
     logging.info("="*50)
-    logging.info("INCREMENTAL SCRAPE - Checking for new items...")
+    logging.info("MUSHROOM INCREMENTAL SCRAPE - Checking for new items...")
     logging.info("="*50)
 
     for page in range(1, max_pages + 1):
@@ -255,7 +264,7 @@ def run_incremental_scrape(db, max_pages: int = 50) -> int:
             if not item_data:
                 continue
 
-            if item_exists(db, item_data['title'], item_data['price_yen']):
+            if item_exists(db, item_data['title'], item_data['price_usd']):
                 consecutive_existing += 1
                 logging.info(f"  EXISTING ({consecutive_existing}/{MAX_CONSECUTIVE_EXISTING}): {item_data['title'][:40]}...")
 
@@ -282,7 +291,7 @@ def run_full_scrape(db, max_pages: int = 999) -> int:
     skipped = 0
 
     logging.info("="*50)
-    logging.info("FULL SCRAPE - Getting all items...")
+    logging.info("MUSHROOM FULL SCRAPE - Getting all items...")
     logging.info("="*50)
 
     for page in range(1, max_pages + 1):
@@ -299,7 +308,7 @@ def run_full_scrape(db, max_pages: int = 999) -> int:
             if not item_data:
                 continue
 
-            if item_exists(db, item_data['title'], item_data['price_yen']):
+            if item_exists(db, item_data['title'], item_data['price_usd']):
                 skipped += 1
             else:
                 if add_item_to_db(db, item_data):
@@ -312,7 +321,7 @@ def run_full_scrape(db, max_pages: int = 999) -> int:
         time.sleep(1)
 
     logging.info("="*50)
-    logging.info(f"FULL SCRAPE COMPLETE")
+    logging.info(f"MUSHROOM FULL SCRAPE COMPLETE")
     logging.info(f"  New items: {new_items}")
     logging.info(f"  Skipped (duplicates): {skipped}")
     logging.info(f"  Total in database: {get_item_count(db)}")
@@ -322,10 +331,114 @@ def run_full_scrape(db, max_pages: int = 999) -> int:
 
 
 def run_smart_scrape(db) -> int:
-    count = get_item_count(db)
+    from models import Item
+    count = db.query(Item).filter(Item.store == 'mushroom').count()
     if count == 0:
-        logging.info("Database is empty. Running full scrape...")
+        logging.info("No mushroom items. Running full scrape...")
         return run_full_scrape(db)
     else:
-        logging.info(f"Database has {count} items. Running incremental scrape...")
+        logging.info(f"Database has {count} mushroom items. Running incremental scrape...")
         return run_incremental_scrape(db)
+
+
+# ── Something Happens scraper ─────────────────────────────────
+
+def sh_parse_product(product: dict) -> Optional[dict]:
+    try:
+        title = product.get('title', '').strip()
+        if not title:
+            return None
+
+        variants = product.get('variants', [])
+        if not variants:
+            return None
+
+        # Only want sold items
+        if variants[0].get('available', True):
+            return None
+
+        price_usd = float(variants[0].get('price', 0))
+        if price_usd < SH_MIN_PRICE_USD:
+            return None
+
+        images = [img['src'] for img in product.get('images', [])[:10]]
+        if not images:
+            return None
+
+        # Strip HTML from description then translate
+        body_html = product.get('body_html', '') or ''
+        soup = BeautifulSoup(body_html, 'html.parser')
+        description = soup.get_text(separator=' ', strip=True)
+        description = clean_text(description)
+        if description:
+            description = translate_text(description)
+
+        published_at = product.get('published_at', '')
+        try:
+            sold_date = datetime.fromisoformat(published_at).strftime('%Y-%m-%d')
+        except:
+            sold_date = datetime.now().strftime('%Y-%m-%d')
+
+        return {
+            'store': 'somethinghappens',
+            'title': clean_text(title),
+            'price_yen': 0,
+            'price_usd': round(price_usd),
+            'description': description,
+            'images': images,
+            'sold_date': sold_date,
+        }
+
+    except Exception as e:
+        logging.error(f"Error parsing SH product: {e}")
+        return None
+
+
+def run_sh_scrape(db) -> int:
+    new_items = 0
+    skipped = 0
+    page = 1
+
+    logging.info("="*50)
+    logging.info("SOMETHING HAPPENS SCRAPE - Getting all sold items...")
+    logging.info("="*50)
+
+    while True:
+        url = f"{SH_BASE_URL}/collections/sold/products.json?limit=250&page={page}"
+        try:
+            response = session.get(url, timeout=30)
+            response.raise_for_status()
+            products = response.json().get('products', [])
+        except Exception as e:
+            logging.error(f"Error fetching SH page {page}: {e}")
+            break
+
+        if not products:
+            break
+
+        logging.info(f"Page {page} — {len(products)} products")
+
+        for product in products:
+            item_data = sh_parse_product(product)
+            if not item_data:
+                continue
+
+            if item_exists(db, item_data['title'], item_data['price_usd']):
+                skipped += 1
+            else:
+                if add_item_to_db(db, item_data):
+                    new_items += 1
+                    logging.info(f"  NEW: ${item_data['price_usd']:,} - {item_data['title'][:50]}...")
+
+            time.sleep(0.3)
+
+        page += 1
+        time.sleep(1)
+
+    logging.info("="*50)
+    logging.info(f"SOMETHING HAPPENS SCRAPE COMPLETE")
+    logging.info(f"  New items: {new_items}")
+    logging.info(f"  Skipped (duplicates): {skipped}")
+    logging.info("="*50)
+
+    return new_items
