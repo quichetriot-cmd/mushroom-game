@@ -156,6 +156,7 @@ def scrape_product_page(product_url: str) -> Optional[dict]:
             sold_date = datetime.now().strftime("%Y-%m-%d")
 
         return {
+            'store': 'mushroom',
             'title': clean_text(title),
             'price_yen': price,
             'price_usd': round(price / YEN_TO_USD),
@@ -210,6 +211,7 @@ def add_item_to_db(db, item_data: dict) -> bool:
     try:
         sold_date = datetime.strptime(item_data['sold_date'], '%Y-%m-%d').date()
         item = Item(
+            store=item_data.get('store', 'mushroom'),
             title=item_data['title'],
             price_yen=item_data['price_yen'],
             price_usd=item_data['price_usd'],
