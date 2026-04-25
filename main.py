@@ -6,7 +6,7 @@ from datetime import datetime
 from fastapi import FastAPI, Query
 from fastapi.staticfiles import StaticFiles
 
-from sqlalchemy import create_engine, func
+from sqlalchemy import case, create_engine, func
 from sqlalchemy.orm import sessionmaker
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -32,6 +32,38 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 scrape_lock = threading.Lock()
+YEN_PER_USD = 150
+
+
+def effective_price_yen_expression():
+    return case(
+        (
+            (Item.price_yen.is_not(None)) & (Item.price_yen > 0),
+            Item.price_yen,
+        ),
+        else_=func.round(func.coalesce(Item.price_usd, 0) * YEN_PER_USD),
+    )
+
+
+def serialize_item(item: Item) -> dict:
+    price_yen = item.price_yen
+    if not price_yen and item.price_usd is not None:
+        price_yen = round(item.price_usd * YEN_PER_USD)
+
+    sold_date = item.sold_date
+    if hasattr(sold_date, "isoformat"):
+        sold_date = sold_date.isoformat()
+
+    return {
+        "id": item.id,
+        "store": item.store or "mushroom",
+        "title": item.title,
+        "price_yen": price_yen or 0,
+        "price_usd": item.price_usd,
+        "description": item.description,
+        "images": item.get_images(),
+        "sold_date": sold_date,
+    }
 
 
 def run_scrape():
@@ -66,6 +98,7 @@ def startup_scrape():
 @app.get("/api/items")
 def get_items(
     search: str = "",
+    store: str = Query("all", pattern="^(all|mushroom|somethinghappens)$"),
     sort: str = Query(
         "price_desc",
         pattern="^(price_desc|price_asc|date_desc|date_asc)$"
@@ -76,66 +109,72 @@ def get_items(
     limit = min(limit, 500)
     db = SessionLocal()
     query = db.query(Item)
+    effective_price_yen = effective_price_yen_expression()
 
     if search:
         query = query.filter(Item.title.ilike(f"%{search}%"))
 
+    if store != "all":
+        query = query.filter(Item.store == store)
+
     if sort == "price_desc":
-        query = query.order_by(Item.price_yen.desc())
+        query = query.order_by(effective_price_yen.desc(), Item.sold_date.desc(), Item.id.desc())
     elif sort == "price_asc":
-        query = query.order_by(Item.price_yen.asc())
+        query = query.order_by(effective_price_yen.asc(), Item.id.asc())
     elif sort == "date_desc":
-        query = query.order_by(Item.sold_date.desc())
+        query = query.order_by(Item.sold_date.desc(), Item.id.desc())
     elif sort == "date_asc":
-        query = query.order_by(Item.sold_date.asc())
+        query = query.order_by(Item.sold_date.asc(), Item.id.asc())
 
     items = query.offset(skip).limit(limit).all()
-    results = []
-
-    for item in items:
-        images = item.get_images()
-        results.append({
-            "id": item.id,
-            "store": item.store or "mushroom",
-            "title": item.title,
-            "price_yen": item.price_yen,
-            "price_usd": item.price_usd,
-            "description": item.description,
-            "images": images,
-            "sold_date": item.sold_date
-        })
-
+    results = [serialize_item(item) for item in items]
     db.close()
     return results
 
 
 @app.get("/api/items/random")
-def get_random_items(count: int = 10):
+def get_random_items(
+    count: int = 10,
+    min_year: int | None = None,
+    exclude: str = "",
+    store: str = Query("all", pattern="^(all|mushroom|somethinghappens)$"),
+):
     db = SessionLocal()
-    items = db.query(Item).order_by(func.random()).limit(count).all()
-    results = []
+    query = db.query(Item)
 
-    for item in items:
-        images = item.get_images()
-        results.append({
-            "id": item.id,
-            "store": item.store or "mushroom",
-            "title": item.title,
-            "price_yen": item.price_yen,
-            "price_usd": item.price_usd,
-            "description": item.description,
-            "images": images,
-            "sold_date": item.sold_date
-        })
+    if min_year:
+        query = query.filter(Item.sold_date >= datetime(min_year, 1, 1))
 
+    if store != "all":
+        query = query.filter(Item.store == store)
+
+    exclude_ids = []
+    if exclude:
+        exclude_ids = [int(value) for value in exclude.split(",") if value.isdigit()]
+        if exclude_ids:
+            query = query.filter(~Item.id.in_(exclude_ids))
+
+    items = query.order_by(func.random()).limit(count).all()
+    results = [serialize_item(item) for item in items]
     db.close()
     return results
 
 
 @app.get("/api/stats")
-def get_stats():
+def get_stats(
+    search: str = "",
+    store: str = Query("all", pattern="^(all|mushroom|somethinghappens)$"),
+):
     db = SessionLocal()
-    total = db.query(Item).count()
+    query = db.query(Item)
+
+    if search:
+        query = query.filter(Item.title.ilike(f"%{search}%"))
+
+    if store != "all":
+        query = query.filter(Item.store == store)
+
+    total = query.count()
     db.close()
     return {
         "total_items": total
