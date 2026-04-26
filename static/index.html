@@ -975,10 +975,56 @@ function detectGarmentCategory(title) {
     return 'tops';
 }
 
+function extractSHMeasurements(desc) {
+    // Matches SH format: "SIZE INFORMATION SIZE (actual size) - Label1 Label2...\nVal1cm Val2cm..."
+    const sizeInfoMatch = desc.match(/SIZE\s+INFORMATION\s+SIZE\s*\(actual size\)\s*-\s*([^\d]+?)\s*(\d[\d\s.cm]+)/i);
+    if (!sizeInfoMatch) return null;
+
+    const labelStr = sizeInfoMatch[1].trim();
+    const valueStr = sizeInfoMatch[2].trim();
+
+    // Extract numeric cm values in order
+    const values = [...valueStr.matchAll(/(\d+(?:\.\d+)?)\s*cm/gi)].map(m => parseFloat(m[1]));
+    if (!values.length) return null;
+
+    // Split on known primary measurement keywords, keeping the keyword as the label
+    const labelTokens = labelStr
+        .split(/(?=\b(?:Shoulder|Body|Length|Sleeve|Waist|Chest|Hip|Inseam)\b)/i)
+        .map(s => s.trim().toLowerCase())
+        .filter(Boolean);
+
+    const labelMap = {
+        'shoulder': 'Shoulder',
+        'body':     'Chest',
+        'length':   'Length',
+        'sleeve':   'Sleeve',
+        'waist':    'Waist',
+        'chest':    'Chest',
+        'hip':      'Hip',
+        'inseam':   'Inseam',
+    };
+
+    const m = {};
+    labelTokens.forEach((label, i) => {
+        if (i >= values.length) return;
+        const key = Object.keys(labelMap).find(k => label.startsWith(k));
+        if (key) {
+            const displayKey = labelMap[key];
+            if (!m[displayKey]) m[displayKey] = cmToInches(values[i]) + '"';
+        }
+    });
+
+    return Object.keys(m).length ? m : null;
+}
+
 function extractMeasurements(desc, title = '') {
     if (!desc) return {};
     const category = detectGarmentCategory(title);
     if (category === 'accessory') return {};
+
+    // Try Something Happens format first
+    const shMeasurements = extractSHMeasurements(desc);
+    if (shMeasurements) return shMeasurements;
     
     let actualSizeMatch = desc.match(/Actual (?:size|measurements):\s*((?:Shoulder|Width|Body|W\s*\d).+?cm.+?)(?=\s+Approximately\s*:|Condition|Degree|Details|:\s*[A-Z]{1,2}\s+Details)/i);
     if (!actualSizeMatch) {
