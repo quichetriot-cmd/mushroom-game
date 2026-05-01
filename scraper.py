@@ -714,3 +714,204 @@ def run_acorn_scrape(db) -> int:
     logging.info("=" * 50)
 
     return exported_sold
+
+# ── BerBerJin config ───────────────────────────────────────────
+BBJ_BASE_URL = "https://webstore.berberjin.com"
+BBJ_SOLD_URL = f"{BBJ_BASE_URL}/view/category/sold"
+BBJ_MIN_PRICE_YEN = 28000
+BBJ_PAGE_DELAY_SECONDS = 2
+BBJ_ITEM_DELAY_SECONDS = 1
+
+
+def make_bbj_session():
+    s = requests.Session()
+    adapter = HTTPAdapter(max_retries=Retry(total=4, backoff_factor=1.5,
+                                            status_forcelist=[429, 500, 502, 503]))
+    s.mount("https://", adapter)
+    s.headers.update({
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/124.0.0.0 Safari/537.36",
+        "Accept-Language": "ja,en-US;q=0.9,en;q=0.8",
+        "Referer": BBJ_BASE_URL,
+    })
+    return s
+
+
+def fetch_bbj_category_page(s, page: int) -> list[str]:
+    """Return list of item URLs from one sold category page."""
+    try:
+        r = s.get(BBJ_SOLD_URL, params={"sort": "order", "page": page}, timeout=20)
+        r.raise_for_status()
+    except Exception as e:
+        logging.warning(f"BBJ category page {page} fetch failed: {e}")
+        return []
+
+    soup = BeautifulSoup(r.text, "html.parser")
+    urls = []
+    for a in soup.select("ul.item-list a[href*='/view/item/']"):
+        href = a["href"]
+        if href.startswith("/"):
+            href = BBJ_BASE_URL + href
+        # strip category_page_id param — we'll confirm sold on item page
+        href = href.split("?")[0]
+        if href not in urls:
+            urls.append(href)
+    return urls
+
+
+def parse_bbj_item_page(s, url: str) -> Optional[dict]:
+    """Scrape a single BBJ item page. Returns None if not sold, ¥0, or below min price."""
+    try:
+        r = s.get(url, timeout=20)
+        r.raise_for_status()
+    except Exception as e:
+        logging.warning(f"BBJ item fetch failed {url}: {e}")
+        return None
+
+    soup = BeautifulSoup(r.text, "html.parser")
+
+    # ── Confirm sold ──────────────────────────────────────────
+    sold_btn = soup.select_one("div.sell-period-btn p")
+    if not sold_btn or sold_btn.get_text(strip=True).lower() != "sold out":
+        return None  # still available
+
+    # ── Price ─────────────────────────────────────────────────
+    price_el = soup.select_one("span.dtl-price-num")
+    if not price_el:
+        return None
+    price_str = price_el.get_text(strip=True).replace(",", "")
+    try:
+        price_tax_inc = int(price_str)
+    except ValueError:
+        return None
+    if price_tax_inc == 0:
+        return None
+    # BBJ prices are tax-inclusive (×1.1); convert to pre-tax yen
+    price_yen = round(price_tax_inc / 1.1)
+    if price_yen < BBJ_MIN_PRICE_YEN:
+        return None
+
+    # ── Title ─────────────────────────────────────────────────
+    title_el = soup.select_one("section.contents-area h2")
+    if not title_el:
+        return None
+    title = title_el.get_text(strip=True)
+
+    # ── Images ────────────────────────────────────────────────
+    images = []
+    for img in soup.select("ul.item-detail-img img"):
+        src = img.get("src", "")
+        if src and "makeshop" in src and src not in images:
+            images.append(src)
+    if not images:
+        return None
+
+    # ── Item ID from URL ──────────────────────────────────────
+    item_id_match = re.search(r"/item/(\d+)", url)
+    item_id = item_id_match.group(1) if item_id_match else url.split("/")[-1]
+
+    # ── Description (raw Japanese) ────────────────────────────
+    desc_el = soup.select_one("div.item-detail-txt span.content")
+    description_raw = desc_el.get_text(separator=" ", strip=True) if desc_el else ""
+
+    # ── Sold date: look for date announcement in description ──
+    sold_date = None
+    date_match = re.search(r"(\d{4})年(\d{1,2})月(\d{1,2})日", description_raw)
+    if date_match:
+        try:
+            sold_date = datetime(int(date_match.group(1)),
+                                 int(date_match.group(2)),
+                                 int(date_match.group(3)))
+        except ValueError:
+            pass
+
+    # ── Translate description ─────────────────────────────────
+    description = translate_text(description_raw) if description_raw else ""
+
+    return {
+        "title":       title,
+        "price_yen":   price_yen,
+        "price_usd":   round(price_yen / YEN_TO_USD, 2),
+        "description": description,
+        "images":      json.dumps(images[:10]),
+        "sold_date":   sold_date,
+        "store":       "berberjin",
+    }
+
+
+def run_bbj_scrape(db) -> int:
+    """Scrape BerBerJin sold category, newest-first. Stops after 5 consecutive known items."""
+    s = make_bbj_session()
+    added = 0
+    consecutive_existing = 0
+    page = 1
+
+    logging.info("=" * 50)
+    logging.info("BERBERJIN SCRAPE START")
+
+    while True:
+        logging.info(f"BBJ category page {page}...")
+        item_urls = fetch_bbj_category_page(s, page)
+        if not item_urls:
+            logging.info(f"BBJ: no items on page {page}, stopping.")
+            break
+
+        for url in item_urls:
+            item_id_match = re.search(r"/item/(\d+)", url)
+            item_id = item_id_match.group(1) if item_id_match else None
+
+            # Check duplicate by store + external_id pattern via title proxy
+            # Use item_id as a quick pre-check against existing items
+            existing = db.query(Item).filter(
+                Item.store == "berberjin",
+                Item.title.like(f"%{item_id}%") if item_id else Item.title == ""
+            ).first() if item_id else None
+
+            # Proper check: query by store + item_id stored in description field marker
+            # Actually check by store + title after parsing
+            time.sleep(BBJ_ITEM_DELAY_SECONDS)
+            data = parse_bbj_item_page(s, url)
+
+            if data is None:
+                # Skipped (not sold, ¥0, or below threshold) — don't count as existing
+                continue
+
+            # Check if already in DB by store + title
+            if db.query(Item).filter(
+                Item.store == "berberjin",
+                Item.title == data["title"]
+            ).first():
+                consecutive_existing += 1
+                logging.info(f"BBJ: already exists '{data['title'][:50]}' "
+                             f"({consecutive_existing}/5)")
+                if consecutive_existing >= 5:
+                    logging.info("BBJ: 5 consecutive existing items, stopping.")
+                    goto_done = True
+                    break
+                continue
+
+            consecutive_existing = 0
+            try:
+                item = Item(**data)
+                db.add(item)
+                db.commit()
+                added += 1
+                logging.info(f"BBJ: added '{data['title'][:50]}' ¥{data['price_yen']:,}")
+            except Exception as e:
+                db.rollback()
+                logging.error(f"BBJ: insert failed for '{data['title'][:50]}': {e}")
+        else:
+            goto_done = False
+
+        if goto_done:
+            break
+
+        page += 1
+        time.sleep(BBJ_PAGE_DELAY_SECONDS)
+
+    logging.info("=" * 50)
+    logging.info("BERBERJIN SCRAPE COMPLETE")
+    logging.info(f"  Items added: {added}")
+    logging.info("=" * 50)
+    return added
