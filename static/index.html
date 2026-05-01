@@ -221,6 +221,11 @@
             color: #f59e0b;
             border-color: #f59e0b;
         }
+        .store-badge[data-store="berberjin"] {
+            background: #1a1a2e;
+            color: #c084fc;
+            border-color: #c084fc;
+        }
         
         .pagination {
             display: flex;
@@ -776,6 +781,7 @@
                     <button class="store-filter-btn" data-store="mushroom">Mushroom</button>
                     <button class="store-filter-btn" data-store="somethinghappens">Something Happens</button>
                     <button class="store-filter-btn" data-store="acorn">Acorn</button>
+                    <button class="store-filter-btn" data-store="berberjin">BerBerJin</button>
                 </div>
             </div>
             <div class="gallery-grid" id="galleryGrid"></div>
@@ -1132,6 +1138,7 @@ function formatStoreLabel(store) {
     if (!store || store === 'mushroom') return 'Mushroom';
     if (store === 'somethinghappens') return 'Something Happens';
     if (store === 'acorn') return 'Acorn';
+    if (store === 'berberjin') return 'BerBerJin';
     return store.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
