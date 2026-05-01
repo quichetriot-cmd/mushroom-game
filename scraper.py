@@ -845,12 +845,13 @@ def run_bbj_scrape(db) -> int:
     s = make_bbj_session()
     added = 0
     consecutive_existing = 0
+    done = False
     page = 1
 
     logging.info("=" * 50)
     logging.info("BERBERJIN SCRAPE START")
 
-    while True:
+    while not done:
         logging.info(f"BBJ category page {page}...")
         item_urls = fetch_bbj_category_page(s, page)
         if not item_urls:
@@ -858,39 +859,29 @@ def run_bbj_scrape(db) -> int:
             break
 
         for url in item_urls:
-            item_id_match = re.search(r"/item/(\d+)", url)
-            item_id = item_id_match.group(1) if item_id_match else None
-
-            # Check duplicate by store + external_id pattern via title proxy
-            # Use item_id as a quick pre-check against existing items
-            existing = db.query(Item).filter(
-                Item.store == "berberjin",
-                Item.title.like(f"%{item_id}%") if item_id else Item.title == ""
-            ).first() if item_id else None
-
-            # Proper check: query by store + item_id stored in description field marker
-            # Actually check by store + title after parsing
             time.sleep(BBJ_ITEM_DELAY_SECONDS)
             data = parse_bbj_item_page(s, url)
 
             if data is None:
-                # Skipped (not sold, ¥0, or below threshold) — don't count as existing
+                # Not sold, ¥0, or below threshold — skip, don't count as existing
                 continue
 
             # Check if already in DB by store + title
-            if db.query(Item).filter(
+            already = db.query(Item).filter(
                 Item.store == "berberjin",
                 Item.title == data["title"]
-            ).first():
+            ).first()
+
+            if already:
                 consecutive_existing += 1
-                logging.info(f"BBJ: already exists '{data['title'][:50]}' "
-                             f"({consecutive_existing}/5)")
+                logging.info(f"BBJ: exists ({consecutive_existing}/5) '{data['title'][:50]}'")
                 if consecutive_existing >= 5:
-                    logging.info("BBJ: 5 consecutive existing items, stopping.")
-                    goto_done = True
+                    logging.info("BBJ: 5 consecutive existing items — stopping.")
+                    done = True
                     break
                 continue
 
+            # New item — reset streak and insert
             consecutive_existing = 0
             try:
                 item = Item(**data)
@@ -900,15 +891,11 @@ def run_bbj_scrape(db) -> int:
                 logging.info(f"BBJ: added '{data['title'][:50]}' ¥{data['price_yen']:,}")
             except Exception as e:
                 db.rollback()
-                logging.error(f"BBJ: insert failed for '{data['title'][:50]}': {e}")
-        else:
-            goto_done = False
+                logging.warning(f"BBJ: insert failed (likely duplicate) '{data['title'][:50]}': {e}")
 
-        if goto_done:
-            break
-
-        page += 1
-        time.sleep(BBJ_PAGE_DELAY_SECONDS)
+        if not done:
+            page += 1
+            time.sleep(BBJ_PAGE_DELAY_SECONDS)
 
     logging.info("=" * 50)
     logging.info("BERBERJIN SCRAPE COMPLETE")
