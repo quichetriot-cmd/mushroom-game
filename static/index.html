@@ -976,49 +976,59 @@ function detectGarmentCategory(title) {
 }
 
 function extractSHMeasurements(desc) {
-    // Handle INFOMATION typo
-    const d = desc.replace(/SIZE\s+INFOMATION/gi, 'SIZE INFORMATION');
+    // Normalize typos and alternate headers
+    const d = desc
+        .replace(/SIZE\s+INFOMATION/gi, 'SIZE INFORMATION')
+        .replace(/^(SIZE\s+-\s+SIZE\b)/gim, 'SIZE INFORMATION SIZE');  // Payday-style
 
-    // Grab everything after SIZE INFORMATION until MATERIAL/CONDITION
     const blockMatch = d.match(/SIZE\s+INFORMATION\s+([\s\S]+?)(?=MATERIAL|CONDITION|$)/i);
     if (!blockMatch) return null;
     const block = blockMatch[1];
 
-    // Split on first cm value — everything before is labels, after is values
-    const firstNumIdx = block.search(/\d+(?:\.\d+)?\s*cm/i);
+    // Strip qualifiers like '50cm from armpit' → '50cm'
+    const cleanBlock = block.replace(/(\d+(?:\.\d+)?)\s*cm\s+from\s+\w+/gi,
+        m => m.match(/(\d+(?:\.\d+)?)\s*cm/i)[0]);
+
+    const firstNumIdx = cleanBlock.search(/\d+(?:\.\d+)?\s*cm/i);
     if (firstNumIdx === -1) return null;
 
-    const labelArea = block.substring(0, firstNumIdx)
-        .replace(/SIZE\s*\([^)]*\)/gi, ' ')   // remove SIZE(...) markers
-        .replace(/W\d+\s*\/?\s*L\d+/gi, ' ')  // remove W30/L31 notation
+    const labelArea = cleanBlock.substring(0, firstNumIdx)
+        .replace(/SIZE\s*\([^)]*\)/gi, ' ')
+        .replace(/W\d+\s*\/?\s*L\d+/gi, ' ')
+        .replace(/Actual\s+Measurements\s*:/gi, ' ')
         .replace(/-/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
 
-    const valueArea = block.substring(firstNumIdx);
+    const valueArea = cleanBlock.substring(firstNumIdx);
     const values = [...valueArea.matchAll(/(\d+(?:\.\d+)?)\s*cm/gi)].map(m => parseFloat(m[1]));
     if (!values.length) return null;
 
-    // Order matters: specific patterns before general ones
+    // 'Waist length' with no Inseam keyword = Waist + Inseam pair
+    const normalizedLabels = labelArea.replace(/\bWaist\s+length\b/gi, 'Waist Inseam');
+
     const keywords = [
-        { re: /shoulder/i,         label: 'Shoulder' },
-        { re: /body\s*width/i,     label: 'Chest' },
-        { re: /width\s+length/i,   label: 'Chest' },   // 'Width length' variant
-        { re: /\blength\b/i,       label: 'Length' },
-        { re: /sleeve/i,           label: 'Sleeve' },
-        { re: /waist/i,            label: 'Waist' },
-        { re: /inseam/i,           label: 'Inseam' },
-        { re: /rise/i,             label: 'Rise' },
-        { re: /watari/i,           label: 'Thigh' },
-        { re: /total\s*length/i,   label: 'Total Length' },
-        { re: /hem/i,              label: 'Hem' },
-        { re: /\bwidth\b/i,        label: 'Chest' },   // standalone width, lowest priority
+        { re: /shoulder/i,                 label: 'Shoulder' },
+        { re: /body\s*width/i,             label: 'Chest' },
+        { re: /width\s+of\s+the\s+body/i,  label: 'Chest' },
+        { re: /width\s+length/i,           label: 'Chest' },
+        { re: /raglan/i,                   label: 'Raglan' },
+        { re: /skirt/i,                    label: 'Skirt' },
+        { re: /sleeve/i,                   label: 'Sleeve' },
+        { re: /waist/i,                    label: 'Waist' },
+        { re: /inseam/i,                   label: 'Inseam' },
+        { re: /rise/i,                     label: 'Rise' },
+        { re: /watari/i,                   label: 'Thigh' },
+        { re: /total\s*length/i,           label: 'Total Length' },
+        { re: /hem/i,                      label: 'Hem' },
+        { re: /\blength\b/i,               label: 'Length' },
+        { re: /\bwidth\b/i,                label: 'Chest' },
     ];
 
     const seen = new Set();
     const positions = [];
     for (const kw of keywords) {
-        const idx = labelArea.search(kw.re);
+        const idx = normalizedLabels.search(kw.re);
         if (idx !== -1 && !seen.has(kw.label)) {
             seen.add(kw.label);
             positions.push({ index: idx, label: kw.label });
@@ -1027,13 +1037,12 @@ function extractSHMeasurements(desc) {
     positions.sort((a, b) => a.index - b.index);
     if (!positions.length) return null;
 
-    // If bottoms (has Waist or Inseam), skip Chest/Length which appear as context noise
     const isBottoms = positions.some(p => p.label === 'Waist' || p.label === 'Inseam');
 
     const m = {};
     positions.forEach(({ label }, i) => {
         if (i >= values.length) return;
-        if (isBottoms && (label === 'Chest' || label === 'Length')) return;
+        if (isBottoms && label === 'Chest') return;
         if (!m[label]) m[label] = cmToInches(values[i]) + '"';
     });
 
