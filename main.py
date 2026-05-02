@@ -35,6 +35,18 @@ app = FastAPI()
 scrape_lock = threading.Lock()
 YEN_PER_USD = 150
 SCRAPING_DISABLED = os.getenv("DISABLE_SCRAPE", "").lower() in {"1", "true", "yes"}
+VALID_STORES = {"mushroom", "somethinghappens", "acorn", "berberjin"}
+
+
+def parse_store_filter(store_value):
+    stores = [
+        value.strip().lower()
+        for value in (store_value or "").split(",")
+        if value.strip()
+    ]
+    if not stores or "all" in stores:
+        return []
+    return [store for store in stores if store in VALID_STORES]
 
 
 def effective_price_yen_expression():
@@ -148,6 +160,7 @@ def get_random_items(
     min_year: Optional[int] = None,
     exclude: str = "",
     store: str = Query("all", pattern="^(all|mushroom|somethinghappens|acorn|berberjin)$"),
+    stores: str = "",
 ):
     db = SessionLocal()
     query = db.query(Item)
@@ -155,8 +168,9 @@ def get_random_items(
     if min_year:
         query = query.filter(Item.sold_date >= datetime(min_year, 1, 1))
 
-    if store != "all":
-        query = query.filter(Item.store == store)
+    selected_stores = parse_store_filter(stores or store)
+    if selected_stores:
+        query = query.filter(Item.store.in_(selected_stores))
 
     exclude_ids = []
     if exclude:
