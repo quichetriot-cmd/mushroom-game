@@ -2,6 +2,7 @@ import json
 import os
 import threading
 from datetime import datetime
+from typing import Optional
 
 from fastapi import FastAPI, Query
 from fastapi.staticfiles import StaticFiles
@@ -33,6 +34,7 @@ app = FastAPI()
 
 scrape_lock = threading.Lock()
 YEN_PER_USD = 150
+SCRAPING_DISABLED = os.getenv("DISABLE_SCRAPE", "").lower() in {"1", "true", "yes"}
 
 
 def effective_price_yen_expression():
@@ -89,12 +91,15 @@ def run_scrape():
 
 # Run every day at 2:49 PM
 scheduler = BackgroundScheduler()
-scheduler.add_job(run_scrape, "cron", hour=14, minute=49)
-scheduler.start()
+if not SCRAPING_DISABLED:
+    scheduler.add_job(run_scrape, "cron", hour=14, minute=49)
+    scheduler.start()
 
 
 @app.on_event("startup")
 def startup_scrape():
+    if SCRAPING_DISABLED:
+        return
     thread = threading.Thread(target=run_scrape)
     thread.daemon = True
     thread.start()
@@ -140,7 +145,7 @@ def get_items(
 @app.get("/api/items/random")
 def get_random_items(
     count: int = 10,
-    min_year: int | None = None,
+    min_year: Optional[int] = None,
     exclude: str = "",
     store: str = Query("all", pattern="^(all|mushroom|somethinghappens|acorn|berberjin)$"),
 ):
