@@ -1358,7 +1358,16 @@ function showFilterScreen() {
     const yearGrid = document.getElementById('yearGrid');
     yearGrid.innerHTML = '';
     
-    for (let year = 2015; year <= 2025; year++) {
+    // Quick button for 2026+
+    const quickBtn = document.createElement('button');
+    quickBtn.className = 'year-btn quick-btn';
+    quickBtn.textContent = '⭐ 2026+';
+    quickBtn.dataset.year = 2026;
+    quickBtn.onclick = () => selectYear(2026);
+    quickBtn.style.cssText = 'grid-column: 1 / -1; background: #1a3a2a; color: #4ade80; border-color: #4ade80; font-weight: 800;';
+    yearGrid.appendChild(quickBtn);
+
+    for (let year = 2015; year <= 2026; year++) {
         const btn = document.createElement('button');
         btn.className = 'year-btn';
         btn.textContent = year;
@@ -1393,7 +1402,8 @@ async function selectYear(year) {
     document.querySelectorAll('.year-btn').forEach(btn => {
         btn.classList.toggle('selected', parseInt(btn.dataset.year) === year);
     });
-    document.getElementById('filterInfo').textContent = `Training on items from ${year} onward`;
+    const label = year === 2026 ? '2026 and newer listings' : `${year} onward`;
+    document.getElementById('filterInfo').textContent = `Training on items from ${label}`;
     document.getElementById('startBtn').classList.add('active');
     document.getElementById('studyStats').innerHTML = getStudyStatsHtml();
 }
