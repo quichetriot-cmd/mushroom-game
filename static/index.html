@@ -397,10 +397,71 @@
         }
         .game-card.hidden { display: none; }
         
+        .game-photo {
+            position: relative;
+            aspect-ratio: 1;
+            background: #0a0a0a;
+            overflow: hidden;
+        }
         .game-image {
             width: 100%;
-            aspect-ratio: 1;
+            height: 100%;
             object-fit: cover;
+            display: block;
+            cursor: pointer;
+            user-select: none;
+        }
+        .game-image.single {
+            cursor: default;
+        }
+        .game-photo-btn {
+            position: absolute;
+            top: 50%;
+            width: 42px;
+            height: 42px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 999px;
+            background: rgba(10, 10, 10, 0.72);
+            color: #fff;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            transform: translateY(-50%);
+            transition: all 0.18s ease;
+            z-index: 2;
+        }
+        .game-photo-btn:hover {
+            background: rgba(34, 34, 34, 0.9);
+            border-color: rgba(255, 255, 255, 0.36);
+            transform: translateY(-50%) scale(1.05);
+        }
+        .game-photo-btn:active {
+            transform: translateY(-50%) scale(0.96);
+        }
+        .game-photo-btn.prev {
+            left: 10px;
+        }
+        .game-photo-btn.next {
+            right: 10px;
+        }
+        .game-photo-btn.hidden {
+            display: none;
+        }
+        .game-photo-count {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(10, 10, 10, 0.72);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            z-index: 2;
+        }
+        .game-photo-count.hidden {
+            display: none;
         }
         .game-body { padding: 20px; }
         .game-title {
@@ -814,7 +875,12 @@
             </div>
             
             <div class="game-card" id="gameCard">
-                <img class="game-image" id="gameImg" src="">
+                <div class="game-photo">
+                    <button class="game-photo-btn prev hidden" id="gamePhotoPrev" type="button" aria-label="Previous photo">←</button>
+                    <img class="game-image single" id="gameImg" src="" alt="">
+                    <button class="game-photo-btn next hidden" id="gamePhotoNext" type="button" aria-label="Next photo">→</button>
+                    <div class="game-photo-count hidden" id="gamePhotoCount">1 / 1</div>
+                </div>
                 <div class="game-body">
                     <div class="game-title" id="gameTitle"></div>
                     <div class="game-meta" id="gameMeta"></div>
@@ -946,6 +1012,7 @@ let selectedYear = null;
 let gameMode = '20';
 let gameCurrency = 'usd';
 let sessionItemIds = new Set();
+let gameImageIndex = 0;
 
 // Spaced repetition
 let studyHistory = JSON.parse(localStorage.getItem('vStudyHistory2') || '{}');
@@ -1497,10 +1564,42 @@ function startGame() {
     showCard();
 }
 
+function getGameImages(item) {
+    return Array.isArray(item?.images) ? item.images.filter(Boolean) : [];
+}
+
+function updateGamePhoto() {
+    const item = deck[cardIndex];
+    const images = getGameImages(item);
+    const hasMultiplePhotos = images.length > 1;
+    const img = document.getElementById('gameImg');
+    const prevBtn = document.getElementById('gamePhotoPrev');
+    const nextBtn = document.getElementById('gamePhotoNext');
+    const count = document.getElementById('gamePhotoCount');
+    
+    if (gameImageIndex >= images.length) gameImageIndex = 0;
+    img.src = images[gameImageIndex] || '';
+    img.alt = item?.title || '';
+    img.classList.toggle('single', !hasMultiplePhotos);
+    
+    prevBtn.classList.toggle('hidden', !hasMultiplePhotos);
+    nextBtn.classList.toggle('hidden', !hasMultiplePhotos);
+    count.classList.toggle('hidden', !hasMultiplePhotos);
+    count.textContent = hasMultiplePhotos ? `${gameImageIndex + 1} / ${images.length}` : '1 / 1';
+}
+
+function changeGamePhoto(direction) {
+    const images = getGameImages(deck[cardIndex]);
+    if (images.length <= 1) return;
+    gameImageIndex = (gameImageIndex + direction + images.length) % images.length;
+    updateGamePhoto();
+}
+
 function showCard() {
     const item = deck[cardIndex];
     sessionItemIds.add(item.id);
-    document.getElementById('gameImg').src = item.images?.[0] || '';
+    gameImageIndex = 0;
+    updateGamePhoto();
     document.getElementById('gameTitle').textContent = item.title;
     document.getElementById('guessInput').value = '';
     
@@ -1646,6 +1745,9 @@ document.getElementById('submitBtn').onclick = submitGuess;
 document.getElementById('nextCardBtn').onclick = nextCard;
 document.getElementById('restartBtn').onclick = () => showFilterScreen();
 document.getElementById('quitBtn').onclick = quitEndless;
+document.getElementById('gameImg').onclick = () => changeGamePhoto(1);
+document.getElementById('gamePhotoPrev').onclick = () => changeGamePhoto(-1);
+document.getElementById('gamePhotoNext').onclick = () => changeGamePhoto(1);
 
 document.querySelectorAll('.quick-btn').forEach(btn => {
     btn.onclick = () => { document.getElementById('guessInput').value = btn.dataset.val; };
