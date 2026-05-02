@@ -1358,14 +1358,7 @@ function showFilterScreen() {
     const yearGrid = document.getElementById('yearGrid');
     yearGrid.innerHTML = '';
     
-    // Quick button for 2026+
-    const quickBtn = document.createElement('button');
-    quickBtn.className = 'year-btn quick-btn';
-    quickBtn.textContent = '⭐ 2026+';
-    quickBtn.dataset.year = 2026;
-    quickBtn.onclick = () => selectYear(2026);
-    quickBtn.style.cssText = 'grid-column: 1 / -1; background: #1a3a2a; color: #4ade80; border-color: #4ade80; font-weight: 800;';
-    yearGrid.appendChild(quickBtn);
+  
 
     for (let year = 2015; year <= 2026; year++) {
         const btn = document.createElement('button');
