@@ -13,7 +13,7 @@ from sqlalchemy.orm import sessionmaker
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from models import Base, Item
-from scraper import run_smart_scrape, run_sh_scrape, run_acorn_scrape, run_bbj_scrape
+from scraper import run_smart_scrape
 
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///vintage.db")
@@ -35,7 +35,7 @@ app = FastAPI()
 scrape_lock = threading.Lock()
 YEN_PER_USD = 150
 SCRAPING_DISABLED = os.getenv("DISABLE_SCRAPE", "").lower() in {"1", "true", "yes"}
-VALID_STORES = {"mushroom", "somethinghappens", "acorn", "berberjin"}
+VALID_STORES = {"mushroom"}
 
 
 def parse_store_filter(store_value):
@@ -66,8 +66,6 @@ def serialize_item(item: Item) -> dict:
         price_yen = round(item.price_usd * YEN_PER_USD)
 
     sold_date = item.sold_date
-    if store == "somethinghappens":
-        sold_date = None
     if hasattr(sold_date, "isoformat"):
         sold_date = sold_date.isoformat()
 
@@ -84,16 +82,13 @@ def serialize_item(item: Item) -> dict:
 
 
 def run_scrape():
-    """Run both Mushroom and Something Happens scrapers."""
+    """Run Mushroom scraper."""
     if not scrape_lock.acquire(blocking=False):
         print("Scrape already running")
         return
     try:
         db = SessionLocal()
         run_smart_scrape(db)
-        run_sh_scrape(db)
-        run_acorn_scrape(db)
-        run_bbj_scrape(db)
         db.close()
     except Exception as e:
         print(f"Scrape failed: {e}")
@@ -120,7 +115,7 @@ def startup_scrape():
 @app.get("/api/items")
 def get_items(
     search: str = "",
-    store: str = Query("all", pattern="^(all|mushroom|somethinghappens|acorn|berberjin)$"),
+    store: str = Query("all", pattern="^(all|mushroom)$"),
     sort: str = Query(
         "price_desc",
         pattern="^(price_desc|price_asc|date_desc|date_asc)$"
@@ -159,8 +154,7 @@ def get_random_items(
     count: int = 10,
     min_year: Optional[int] = None,
     exclude: str = "",
-    store: str = Query("all", pattern="^(all|mushroom|somethinghappens|acorn|berberjin)$"),
-    stores: str = "",
+    store: str = Query("all", pattern="^(all|mushroom)$"),
 ):
     db = SessionLocal()
     query = db.query(Item)
@@ -168,7 +162,7 @@ def get_random_items(
     if min_year:
         query = query.filter(Item.sold_date >= datetime(min_year, 1, 1))
 
-    selected_stores = parse_store_filter(stores or store)
+    selected_stores = parse_store_filter(store)
     if selected_stores:
         query = query.filter(Item.store.in_(selected_stores))
 
@@ -187,7 +181,7 @@ def get_random_items(
 @app.get("/api/stats")
 def get_stats(
     search: str = "",
-    store: str = Query("all", pattern="^(all|mushroom|somethinghappens|acorn|berberjin)$"),
+    store: str = Query("all", pattern="^(all|mushroom)$"),
 ):
     db = SessionLocal()
     query = db.query(Item)
